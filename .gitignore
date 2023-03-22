@@ -1,0 +1,8 @@
+config.toml
+config2.toml
+main
+*.json
+.idea
+cover.out
+missed-blocks-checker
+dist
