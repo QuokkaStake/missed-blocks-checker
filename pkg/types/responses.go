@@ -64,3 +64,13 @@ func (s *BlockSignature) ToSignature(height int64) Signature {
 		Signed:        s.BlockIDFlag == 2,
 	}
 }
+
+type EventResult struct {
+	Query string    `json:"query"`
+	Data  EventData `json:"data"`
+}
+
+type EventData struct {
+	Type  string                 `json:"type"`
+	Value map[string]interface{} `json:"value"`
+}

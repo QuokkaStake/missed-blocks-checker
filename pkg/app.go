@@ -6,6 +6,7 @@ import (
 	"main/pkg/logger"
 	statePkg "main/pkg/state"
 	"main/pkg/tendermint"
+	"main/pkg/types"
 
 	"github.com/rs/zerolog"
 )
@@ -39,15 +40,39 @@ func NewApp(configPath string) *App {
 }
 
 func (a *App) Start() {
+	go a.ListenForEvents()
 	a.Populate()
 
 	select {}
 }
 
+func (a *App) ListenForEvents() {
+	wsClient := tendermint.NewWebsocketClient(a.Logger, a.Config.ChainConfig.RPCEndpoints[0], a.Config)
+	go wsClient.Listen()
+
+	for {
+		select {
+		case result := <-wsClient.Channel:
+			block, ok := result.(*types.Block)
+			if !ok {
+				a.Logger.Warn().Msg("Event is not a block!")
+				continue
+			}
+
+			a.State.AddBlock(block)
+			count := a.State.GetBlocksCountSinceLatest(constants.StoreBlocks)
+
+			a.Logger.Info().
+				Int64("count", count).
+				Msg("Added blocks into state")
+		}
+	}
+}
+
 func (a *App) Populate() {
 	block, err := a.RPC.GetLatestBlock()
 	if err != nil {
-		panic(err)
+		a.Logger.Fatal().Err(err).Msg("Error querying for last block")
 	}
 
 	blockParsed := block.Result.Block.ToBlock()
@@ -78,13 +103,13 @@ func (a *App) Populate() {
 			constants.BlockSearchPagination,
 		)
 		if err != nil {
-			panic(err)
+			a.Logger.Fatal().Err(err).Msg("Error querying for blocks search")
 		}
 
 		for _, block := range blocks.Result.Blocks {
 			a.State.AddBlock(block.Block.ToBlock())
 		}
 
-		startBlockToFetch -= 100
+		startBlockToFetch -= constants.BlockSearchPagination
 	}
 }

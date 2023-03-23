@@ -1,10 +1,14 @@
 package state
 
-import "main/pkg/types"
+import (
+	"main/pkg/types"
+	"sync"
+)
 
 type State struct {
 	Blocks          map[int64]*types.Block
 	LastBlockHeight int64
+	Mutex           sync.Mutex
 }
 
 func NewState() *State {
@@ -15,6 +19,9 @@ func NewState() *State {
 }
 
 func (s *State) AddBlock(block *types.Block) {
+	s.Mutex.Lock()
+	defer s.Mutex.Unlock()
+
 	s.Blocks[block.Height] = block
 
 	if block.Height > s.LastBlockHeight {
