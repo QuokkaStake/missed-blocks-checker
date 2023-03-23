@@ -12,10 +12,10 @@ import (
 )
 
 type App struct {
-	Logger *zerolog.Logger
-	Config *configPkg.Config
-	RPC    *tendermint.RPC
-	State  *statePkg.State
+	Logger       *zerolog.Logger
+	Config       *configPkg.Config
+	RPC          *tendermint.RPC
+	StateManager *statePkg.Manager
 }
 
 func NewApp(configPath string) *App {
@@ -30,12 +30,13 @@ func NewApp(configPath string) *App {
 
 	log := logger.GetLogger(config.LogConfig)
 	rpc := tendermint.NewRPC(config.ChainConfig.RPCEndpoints, log)
+	stateManager := statePkg.NewManager(log, config)
 
 	return &App{
-		Logger: log,
-		Config: config,
-		RPC:    rpc,
-		State:  statePkg.NewState(),
+		Logger:       log,
+		Config:       config,
+		RPC:          rpc,
+		StateManager: stateManager,
 	}
 }
 
@@ -59,11 +60,12 @@ func (a *App) ListenForEvents() {
 				continue
 			}
 
-			a.State.AddBlock(block)
-			count := a.State.GetBlocksCountSinceLatest(constants.StoreBlocks)
+			a.StateManager.AddBlock(block)
+			count := a.StateManager.GetBlocksCountSinceLatest(constants.StoreBlocks)
 
 			a.Logger.Info().
 				Int64("count", count).
+				Int64("height", block.Height).
 				Msg("Added blocks into state")
 		}
 	}
@@ -81,14 +83,16 @@ func (a *App) Populate() {
 		Int64("height", blockParsed.Height).
 		Msg("Last chain block")
 
-	a.State.AddBlock(blockParsed)
+	a.StateManager.AddBlock(blockParsed)
 
 	startBlockToFetch := blockParsed.Height
 
 	for {
-		count := a.State.GetBlocksCountSinceLatest(constants.StoreBlocks)
-		if count >= 10000 {
-			a.Logger.Info().Msg("Got enough blocks for populating")
+		count := a.StateManager.GetBlocksCountSinceLatest(constants.StoreBlocks)
+		if count >= constants.StoreBlocks {
+			a.Logger.Info().
+				Int64("count", count).
+				Msg("Got enough blocks for populating")
 			break
 		}
 
@@ -107,7 +111,7 @@ func (a *App) Populate() {
 		}
 
 		for _, block := range blocks.Result.Blocks {
-			a.State.AddBlock(block.Block.ToBlock())
+			a.StateManager.AddBlock(block.Block.ToBlock())
 		}
 
 		startBlockToFetch -= constants.BlockSearchPagination
