@@ -41,6 +41,8 @@ func NewApp(configPath string) *App {
 }
 
 func (a *App) Start() {
+	a.StateManager.Init()
+
 	go a.ListenForEvents()
 	a.Populate()
 

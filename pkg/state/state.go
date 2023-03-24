@@ -40,3 +40,11 @@ func (s *State) GetBlocksCountSinceLatest(expected int64) int64 {
 
 	return expectedCount
 }
+
+func (s *State) TrimBlocksBefore(trimHeight int64) {
+	for height, _ := range s.Blocks {
+		if height <= trimHeight {
+			delete(s.Blocks, height)
+		}
+	}
+}

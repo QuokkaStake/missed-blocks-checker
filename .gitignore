@@ -6,3 +6,4 @@ main
 cover.out
 missed-blocks-checker
 dist
+*.sqlite

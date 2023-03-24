@@ -52,15 +52,14 @@ func (b *TendermintBlock) ToBlock() *Block {
 		Height: height,
 		Time:   b.Header.Time,
 		Signatures: utils.Map(b.LastCommit.Signatures, func(s BlockSignature) Signature {
-			return s.ToSignature(height)
+			return s.ToSignature()
 		}),
 	}
 }
 
-func (s *BlockSignature) ToSignature(height int64) Signature {
+func (s *BlockSignature) ToSignature() Signature {
 	return Signature{
 		ValidatorAddr: s.ValidatorAddress,
-		Height:        height,
 		Signed:        s.BlockIDFlag == 2,
 	}
 }

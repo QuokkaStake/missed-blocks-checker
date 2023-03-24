@@ -17,7 +17,6 @@ func (b *Block) Hash() string {
 }
 
 type Signature struct {
-	Height        int64
 	ValidatorAddr string
 	Signed        bool
 }
