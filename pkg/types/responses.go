@@ -1,7 +1,7 @@
 package types
 
 import (
-	"fmt"
+	"main/pkg/logger"
 	"strconv"
 	"time"
 )
@@ -45,7 +45,10 @@ type BlockSearchResult struct {
 func (b *TendermintBlock) ToBlock() *Block {
 	height, err := strconv.ParseInt(b.Header.Height, 10, 64)
 	if err != nil {
-		panic(fmt.Sprintf("Could not convert block height to string: %s", b.Header.Height))
+		logger.GetDefaultLogger().Fatal().
+			Err(err).
+			Str("height", b.Header.Height).
+			Msg("Could not convert block height to string")
 	}
 
 	signatures := make(map[string]int32, len(b.LastCommit.Signatures))

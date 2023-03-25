@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"fmt"
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/logger"
@@ -54,6 +55,8 @@ func (a *App) ListenForEvents() {
 	wsClient := tendermint.NewWebsocketClient(a.Logger, a.Config.ChainConfig.RPCEndpoints[0], a.Config)
 	go wsClient.Listen()
 
+	var olderSnapshot *statePkg.Snapshot
+
 	for {
 		select {
 		case result := <-wsClient.Channel:
@@ -63,17 +66,28 @@ func (a *App) ListenForEvents() {
 				continue
 			}
 
+			a.Logger.Debug().Int64("height", block.Height).Msg("Got new block from Tendermint")
 			a.StateManager.AddBlock(block)
+
 			count := a.StateManager.GetBlocksCountSinceLatest(constants.StoreBlocks)
 
+			a.Logger.Info().
+				Int64("count", count).
+				Int64("height", block.Height).
+				Msg("Added blocks into state")
+
 			if count < constants.StoreBlocks {
+				a.Logger.Debug().
+					Int64("count", count).
+					Int64("expected", constants.BlocksWindow).
+					Msg("Not enough blocks for producing a snapshot, skipping.")
 				continue
 			}
 
 			snapshot := a.StateManager.GetSnapshot()
 
 			for _, entry := range snapshot.Entries {
-				a.Logger.Info().
+				a.Logger.Debug().
 					Str("valoper", entry.OperatorAddress).
 					Str("moniker", entry.Moniker).
 					Int64("signed", entry.SignatureInfo.Signed).
@@ -83,10 +97,25 @@ func (a *App) ListenForEvents() {
 					Msg("Validator signing info")
 			}
 
-			a.Logger.Info().
-				Int64("count", count).
-				Int64("height", block.Height).
-				Msg("Added blocks into state")
+			if olderSnapshot == nil {
+				a.Logger.Info().Msg("No older snapshot present, cannot generate snapshot diff")
+				olderSnapshot = snapshot
+				continue
+			}
+
+			diff := snapshot.GetDiff(olderSnapshot)
+			olderSnapshot = snapshot
+
+			if diff.Empty() {
+				a.Logger.Debug().Msg("Snapshot diff is empty, no events to send.")
+				continue
+			}
+
+			for _, entry := range diff.Entries {
+				a.Logger.Debug().
+					Str("diff", fmt.Sprintf("%+v", entry)).
+					Msg("Snapshot diff entry")
+			}
 		}
 	}
 }

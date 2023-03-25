@@ -71,3 +71,7 @@ type SignatureInto struct {
 	NotSigned   int64
 	Proposed    int64
 }
+
+func (s *SignatureInto) GetNotSigned() int64 {
+	return s.NotSigned + s.NoSignature
+}
