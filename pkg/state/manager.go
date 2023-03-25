@@ -62,3 +62,19 @@ func (m *Manager) AddBlock(block *types.Block) error {
 func (m *Manager) GetBlocksCountSinceLatest(expected int64) int64 {
 	return m.State.GetBlocksCountSinceLatest(expected)
 }
+
+func (m *Manager) GetSnapshot() *Snapshot {
+	entries := make(map[string]SnapshotEntry, len(m.State.Validators))
+
+	for _, validator := range m.State.Validators {
+		entries[validator.OperatorAddress] = SnapshotEntry{
+			OperatorAddress: validator.OperatorAddress,
+			Moniker:         validator.Moniker,
+			Status:          validator.Status,
+			Jailed:          validator.Jailed,
+			SignatureInfo:   m.State.GetValidatorMissedBlocks(validator),
+		}
+	}
+
+	return NewSnapshot(entries)
+}

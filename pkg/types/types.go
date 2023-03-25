@@ -39,6 +39,7 @@ type Validator struct {
 	ConsensusAddress string
 	OperatorAddress  string
 	Status           int32
+	Jailed           bool
 }
 
 func ValidatorFromCosmosValidator(validator stakingTypes.Validator) *Validator {
@@ -60,6 +61,7 @@ func ValidatorFromCosmosValidator(validator stakingTypes.Validator) *Validator {
 		ConsensusAddress: fmt.Sprintf("%x", addr),
 		OperatorAddress:  validator.OperatorAddress,
 		Status:           int32(validator.Status),
+		Jailed:           validator.Jailed,
 	}
 }
 

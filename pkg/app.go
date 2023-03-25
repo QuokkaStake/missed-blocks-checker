@@ -70,19 +70,16 @@ func (a *App) ListenForEvents() {
 				continue
 			}
 
-			for _, validator := range a.StateManager.State.Validators {
-				if validator.Status != constants.ValidatorStatusBonded {
-					continue
-				}
+			snapshot := a.StateManager.GetSnapshot()
 
-				info := a.StateManager.State.GetValidatorMissedBlocks(validator)
+			for _, entry := range snapshot.Entries {
 				a.Logger.Info().
-					Str("valoper", validator.OperatorAddress).
-					Str("moniker", validator.Moniker).
-					Int64("signed", info.Signed).
-					Int64("not_signed", info.NotSigned).
-					Int64("no_signature", info.NoSignature).
-					Int64("proposed", info.Proposed).
+					Str("valoper", entry.OperatorAddress).
+					Str("moniker", entry.Moniker).
+					Int64("signed", entry.SignatureInfo.Signed).
+					Int64("not_signed", entry.SignatureInfo.NotSigned).
+					Int64("no_signature", entry.SignatureInfo.NoSignature).
+					Int64("proposed", entry.SignatureInfo.Proposed).
 					Msg("Validator signing info")
 			}
 
