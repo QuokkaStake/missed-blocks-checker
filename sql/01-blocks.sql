@@ -1,4 +1,5 @@
 CREATE TABLE IF NOT EXISTS blocks (
     height BIGINT NOT NULL PRIMARY KEY,
-    time BIGINT NOT NULL
+    time BIGINT NOT NULL,
+    proposer TEXT NOT NULL
 );

@@ -91,9 +91,10 @@ func (d *Database) InsertBlock(block *types.Block) error {
 
 	_, err = tx.ExecContext(
 		ctx,
-		"INSERT INTO blocks (height, time) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+		"INSERT INTO blocks (height, time, proposer) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
 		block.Height,
 		block.Time.Unix(),
+		block.Proposer,
 	)
 	if err != nil {
 		d.Logger.Error().Err(err).Msg("Error saving block")
@@ -105,13 +106,13 @@ func (d *Database) InsertBlock(block *types.Block) error {
 		return err
 	}
 
-	for _, signature := range block.Signatures {
+	for key, signature := range block.Signatures {
 		_, err = tx.ExecContext(
 			ctx,
-			"INSERT INTO signatures (height, validator_address, signed) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
+			"INSERT INTO signatures (height, validator_address, signature) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
 			block.Height,
-			signature.ValidatorAddr,
-			signature.Signed,
+			key,
+			signature,
 		)
 		if err != nil {
 			d.Logger.Error().Err(err).Msg("Error saving signature")
@@ -137,7 +138,7 @@ func (d *Database) GetAllBlocks() (map[int64]*types.Block, error) {
 	blocks := map[int64]*types.Block{}
 
 	// Getting blocks
-	blocksRows, err := d.Client.Query("SELECT height, time FROM blocks")
+	blocksRows, err := d.Client.Query("SELECT height, time, proposer FROM blocks")
 	if err != nil {
 		d.Logger.Error().Err(err).Msg("Error getting all blocks")
 		return blocks, err
@@ -145,22 +146,28 @@ func (d *Database) GetAllBlocks() (map[int64]*types.Block, error) {
 
 	for blocksRows.Next() {
 		var (
-			blockHeight int64
-			blockTime   int64
+			blockHeight   int64
+			blockTime     int64
+			blockProposer string
 		)
 
-		err = blocksRows.Scan(&blockHeight, &blockTime)
+		err = blocksRows.Scan(&blockHeight, &blockTime, &blockProposer)
 		if err != nil {
 			d.Logger.Error().Err(err).Msg("Error fetching block data")
 			return blocks, err
 		}
 
-		block := &types.Block{Height: blockHeight, Time: time.Unix(blockTime, 0)}
+		block := &types.Block{
+			Height:     blockHeight,
+			Time:       time.Unix(blockTime, 0),
+			Proposer:   blockProposer,
+			Signatures: map[string]int32{},
+		}
 		blocks[block.Height] = block
 	}
 
 	// Fetching signatures
-	signaturesRows, err := d.Client.Query("SELECT height, validator_address, signed FROM signatures")
+	signaturesRows, err := d.Client.Query("SELECT height, validator_address, signature FROM signatures")
 	if err != nil {
 		d.Logger.Error().Err(err).Msg("Error getting all blocks")
 		return blocks, err
@@ -169,19 +176,14 @@ func (d *Database) GetAllBlocks() (map[int64]*types.Block, error) {
 	for signaturesRows.Next() {
 		var (
 			signatureHeight int64
-			validatorAddr   string
-			signed          bool
+			validatorAddr   []byte
+			signature       int32
 		)
 
-		err = signaturesRows.Scan(&signatureHeight, &validatorAddr, &signed)
+		err = signaturesRows.Scan(&signatureHeight, &validatorAddr, &signature)
 		if err != nil {
 			d.Logger.Error().Err(err).Msg("Error fetching signature data")
 			return blocks, err
-		}
-
-		signature := types.Signature{
-			ValidatorAddr: validatorAddr,
-			Signed:        signed,
 		}
 
 		_, ok := blocks[signatureHeight]
@@ -191,7 +193,7 @@ func (d *Database) GetAllBlocks() (map[int64]*types.Block, error) {
 				Msg("Got signature for block we do not have, which should never happen.")
 		}
 
-		blocks[signatureHeight].Signatures = append(blocks[signatureHeight].Signatures, signature)
+		blocks[signatureHeight].Signatures[string(validatorAddr)] = signature
 	}
 
 	return blocks, nil

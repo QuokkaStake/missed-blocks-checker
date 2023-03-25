@@ -42,6 +42,7 @@ func NewApp(configPath string) *App {
 
 func (a *App) Start() {
 	a.StateManager.Init()
+	a.UpdateValidators()
 
 	go a.ListenForEvents()
 	a.Populate()
@@ -65,12 +66,43 @@ func (a *App) ListenForEvents() {
 			a.StateManager.AddBlock(block)
 			count := a.StateManager.GetBlocksCountSinceLatest(constants.StoreBlocks)
 
+			if count < constants.StoreBlocks {
+				continue
+			}
+
+			for _, validator := range a.StateManager.State.Validators {
+				if validator.Status != constants.ValidatorStatusBonded {
+					continue
+				}
+
+				info := a.StateManager.State.GetValidatorMissedBlocks(validator)
+				a.Logger.Info().
+					Str("valoper", validator.OperatorAddress).
+					Str("moniker", validator.Moniker).
+					Int64("signed", info.Signed).
+					Int64("not_signed", info.NotSigned).
+					Int64("no_signature", info.NoSignature).
+					Int64("proposed", info.Proposed).
+					Msg("Validator signing info")
+			}
+
 			a.Logger.Info().
 				Int64("count", count).
 				Int64("height", block.Height).
 				Msg("Added blocks into state")
 		}
 	}
+}
+
+func (a *App) UpdateValidators() error {
+	validators, err := a.RPC.GetValidators()
+	if err != nil {
+		return err
+
+	}
+
+	a.StateManager.State.SetValidators(validators)
+	return nil
 }
 
 func (a *App) Populate() {

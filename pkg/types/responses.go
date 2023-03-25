@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"main/pkg/utils"
 	"strconv"
 	"time"
 )
@@ -21,8 +20,9 @@ type TendermintBlock struct {
 }
 
 type BlockHeader struct {
-	Height string    `json:"height"`
-	Time   time.Time `json:"time"`
+	Height   string    `json:"height"`
+	Time     time.Time `json:"time"`
+	Proposer string    `json:"proposer_address"`
 }
 
 type BlockLastCommit struct {
@@ -48,19 +48,17 @@ func (b *TendermintBlock) ToBlock() *Block {
 		panic(fmt.Sprintf("Could not convert block height to string: %s", b.Header.Height))
 	}
 
-	return &Block{
-		Height: height,
-		Time:   b.Header.Time,
-		Signatures: utils.Map(b.LastCommit.Signatures, func(s BlockSignature) Signature {
-			return s.ToSignature()
-		}),
-	}
-}
+	signatures := make(map[string]int32, len(b.LastCommit.Signatures))
 
-func (s *BlockSignature) ToSignature() Signature {
-	return Signature{
-		ValidatorAddr: s.ValidatorAddress,
-		Signed:        s.BlockIDFlag == 2,
+	for _, signature := range b.LastCommit.Signatures {
+		signatures[signature.ValidatorAddress] = int32(signature.BlockIDFlag)
+	}
+
+	return &Block{
+		Height:     height,
+		Time:       b.Header.Time,
+		Proposer:   b.Header.Proposer,
+		Signatures: signatures,
 	}
 }
 
@@ -72,4 +70,17 @@ type EventResult struct {
 type EventData struct {
 	Type  string                 `json:"type"`
 	Value map[string]interface{} `json:"value"`
+}
+
+type AbciQueryResponse struct {
+	Result AbciQueryResult `json:"result"`
+}
+
+type AbciQueryResult struct {
+	Response AbciResponse `json:"response"`
+}
+
+type AbciResponse struct {
+	Code  int    `json:"code"`
+	Value []byte `json:"value"`
 }
