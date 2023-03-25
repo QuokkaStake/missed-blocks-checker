@@ -25,9 +25,7 @@ func NewDatabase(logger *zerolog.Logger, config *configPkg.Config) *Database {
 }
 
 func (d *Database) Init() {
-	path := "database.sqlite"
-
-	db, err := sql.Open("sqlite3", path)
+	db, err := sql.Open("sqlite3", d.Config.DatabaseConfig.Path)
 
 	if err != nil {
 		d.Logger.Fatal().Err(err).Msg("Could not open sqlite database")
@@ -42,7 +40,7 @@ func (d *Database) Init() {
 
 	d.Logger.Info().
 		Str("version", version).
-		Str("path", path).
+		Str("path", d.Config.DatabaseConfig.Path).
 		Msg("sqlite database connected")
 
 	entries, err := migrations.FS.ReadDir(".")
