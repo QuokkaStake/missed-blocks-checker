@@ -49,7 +49,6 @@ func NewApp(configPath string) *App {
 
 func (a *App) Start() {
 	a.StateManager.Init()
-	a.UpdateValidators()
 
 	go a.ListenForEvents()
 	go a.PopulateInBackground()
@@ -71,8 +70,19 @@ func (a *App) ListenForEvents() {
 				continue
 			}
 
+			if err := a.UpdateValidators(); err != nil {
+				a.Logger.Error().
+					Err(err).
+					Msg("Error updating validators")
+
+			}
+
 			a.Logger.Debug().Int64("height", block.Height).Msg("Got new block from Tendermint")
-			a.StateManager.AddBlock(block)
+			if err := a.StateManager.AddBlock(block); err != nil {
+				a.Logger.Error().
+					Err(err).
+					Msg("Error inserting new block")
+			}
 
 			count := a.StateManager.GetBlocksCountSinceLatest(a.Config.ChainConfig.StoreBlocks)
 
@@ -172,7 +182,11 @@ func (a *App) Populate() {
 		Int64("height", blockParsed.Height).
 		Msg("Last chain block")
 
-	a.StateManager.AddBlock(blockParsed)
+	if err := a.StateManager.AddBlock(blockParsed); err != nil {
+		a.Logger.Fatal().
+			Err(err).
+			Msg("Error inserting last block")
+	}
 
 	startBlockToFetch := blockParsed.Height
 
@@ -201,7 +215,11 @@ func (a *App) Populate() {
 		}
 
 		for _, block := range blocks.Result.Blocks {
-			a.StateManager.AddBlock(block.Block.ToBlock())
+			if err := a.StateManager.AddBlock(block.Block.ToBlock()); err != nil {
+				a.Logger.Fatal().
+					Err(err).
+					Msg("Error inserting older block")
+			}
 		}
 
 		startBlockToFetch -= constants.BlockSearchPagination
