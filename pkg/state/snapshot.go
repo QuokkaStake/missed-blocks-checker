@@ -1,6 +1,7 @@
 package state
 
 import (
+	"main/pkg/events"
 	"main/pkg/types"
 )
 
@@ -29,12 +30,29 @@ func (snapshot *Snapshot) GetDiff(olderSnapshot *Snapshot) *SnapshotDiff {
 			continue
 		}
 
-		if olderEntry.SignatureInfo.GetNotSigned() != entry.SignatureInfo.GetNotSigned() {
-			entries = append(entries, ValidatorGroupChanged{
+		signedBlocksEqual := olderEntry.SignatureInfo.GetNotSigned() != entry.SignatureInfo.GetNotSigned()
+		jailedEqual := olderEntry.Jailed == entry.Jailed
+
+		if signedBlocksEqual && jailedEqual {
+			entries = append(entries, events.ValidatorGroupChanged{
 				Moniker:            entry.Moniker,
 				OperatorAddress:    entry.OperatorAddress,
 				MissedBlocksBefore: olderEntry.SignatureInfo.GetNotSigned(),
 				MissedBlocksAfter:  entry.SignatureInfo.GetNotSigned(),
+			})
+		}
+
+		if entry.Jailed && !olderEntry.Jailed {
+			entries = append(entries, events.ValidatorJailed{
+				Moniker:         entry.Moniker,
+				OperatorAddress: entry.OperatorAddress,
+			})
+		}
+
+		if !entry.Jailed && olderEntry.Jailed {
+			entries = append(entries, events.ValidatorUnjailed{
+				Moniker:         entry.Moniker,
+				OperatorAddress: entry.OperatorAddress,
 			})
 		}
 	}
