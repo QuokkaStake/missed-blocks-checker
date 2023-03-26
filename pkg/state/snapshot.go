@@ -2,6 +2,7 @@ package state
 
 import (
 	"main/pkg/events"
+	"main/pkg/report"
 	"main/pkg/types"
 )
 
@@ -21,8 +22,8 @@ func NewSnapshot(entries map[string]SnapshotEntry) *Snapshot {
 	return &Snapshot{Entries: entries}
 }
 
-func (snapshot *Snapshot) GetDiff(olderSnapshot *Snapshot) *SnapshotDiff {
-	var entries []SnapshotDiffEntry
+func (snapshot *Snapshot) GetReport(olderSnapshot *Snapshot) *report.Report {
+	var entries []report.ReportEntry
 
 	for valoper, entry := range snapshot.Entries {
 		olderEntry, ok := olderSnapshot.Entries[valoper]
@@ -57,5 +58,5 @@ func (snapshot *Snapshot) GetDiff(olderSnapshot *Snapshot) *SnapshotDiff {
 		}
 	}
 
-	return &SnapshotDiff{Entries: entries}
+	return &report.Report{Entries: entries}
 }

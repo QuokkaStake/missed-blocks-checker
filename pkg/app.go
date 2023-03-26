@@ -5,6 +5,8 @@ import (
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/logger"
+	reportersPkg "main/pkg/reporters"
+	"main/pkg/reporters/telegram"
 	statePkg "main/pkg/state"
 	"main/pkg/tendermint"
 	"main/pkg/types"
@@ -19,6 +21,7 @@ type App struct {
 	RPC              *tendermint.RPC
 	StateManager     *statePkg.Manager
 	WebsocketManager *tendermint.WebsocketManager
+	Reporters        []reportersPkg.Reporter
 	IsPopulating     bool
 }
 
@@ -37,18 +40,33 @@ func NewApp(configPath string) *App {
 	stateManager := statePkg.NewManager(log, config)
 	websocketManager := tendermint.NewWebsocketManager(log, config)
 
+	reporters := []reportersPkg.Reporter{
+		telegram.NewReporter(config, log),
+	}
+
 	return &App{
 		Logger:           log,
 		Config:           config,
 		RPC:              rpc,
 		StateManager:     stateManager,
 		WebsocketManager: websocketManager,
+		Reporters:        reporters,
 		IsPopulating:     false,
 	}
 }
 
 func (a *App) Start() {
 	a.StateManager.Init()
+
+	for _, reporter := range a.Reporters {
+		reporter.Init()
+
+		if reporter.Enabled() {
+			a.Logger.Debug().Str("name", reporter.Name()).Msg("Reporter is enabled")
+		} else {
+			a.Logger.Debug().Str("name", reporter.Name()).Msg("Reporter is disabled")
+		}
+	}
 
 	go a.ListenForEvents()
 	go a.PopulateInBackground()
@@ -113,23 +131,32 @@ func (a *App) ListenForEvents() {
 			}
 
 			if olderSnapshot == nil {
-				a.Logger.Info().Msg("No older snapshot present, cannot generate snapshot diff")
+				a.Logger.Info().Msg("No older snapshot present, cannot generate report")
 				olderSnapshot = snapshot
 				continue
 			}
 
-			diff := snapshot.GetDiff(olderSnapshot)
+			report := snapshot.GetReport(olderSnapshot)
 			olderSnapshot = snapshot
 
-			if diff.Empty() {
-				a.Logger.Debug().Msg("Snapshot diff is empty, no events to send.")
+			if report.Empty() {
+				a.Logger.Debug().Msg("Report is empty, no events to send.")
 				continue
 			}
 
-			for _, entry := range diff.Entries {
+			for _, entry := range report.Entries {
 				a.Logger.Debug().
-					Str("diff", fmt.Sprintf("%+v", entry)).
-					Msg("Snapshot diff entry")
+					Str("entry", fmt.Sprintf("%+v", entry)).
+					Msg("Report entry")
+			}
+
+			for _, reporter := range a.Reporters {
+				if err := reporter.Send(report); err != nil {
+					a.Logger.Error().
+						Err(err).
+						Str("name", reporter.Name()).
+						Msg("Error sending report")
+				}
 			}
 		}
 	}

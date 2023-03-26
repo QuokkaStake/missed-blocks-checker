@@ -4,7 +4,6 @@ go 1.19
 
 require (
 	github.com/BurntSushi/toml v1.2.1
-	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/cosmos/cosmos-sdk v0.47.1
 	github.com/google/uuid v1.3.0
 	github.com/mattn/go-sqlite3 v1.14.9
@@ -12,6 +11,7 @@ require (
 	github.com/rs/zerolog v1.29.0
 	github.com/spf13/cobra v1.6.1
 	github.com/tendermint/tendermint v0.35.9
+	gopkg.in/telebot.v3 v3.1.3
 )
 
 require (
