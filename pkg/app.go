@@ -8,15 +8,18 @@ import (
 	statePkg "main/pkg/state"
 	"main/pkg/tendermint"
 	"main/pkg/types"
+	"time"
 
 	"github.com/rs/zerolog"
 )
 
 type App struct {
-	Logger       *zerolog.Logger
-	Config       *configPkg.Config
-	RPC          *tendermint.RPC
-	StateManager *statePkg.Manager
+	Logger           *zerolog.Logger
+	Config           *configPkg.Config
+	RPC              *tendermint.RPC
+	StateManager     *statePkg.Manager
+	WebsocketManager *tendermint.WebsocketManager
+	IsPopulating     bool
 }
 
 func NewApp(configPath string) *App {
@@ -32,12 +35,15 @@ func NewApp(configPath string) *App {
 	log := logger.GetLogger(config.LogConfig)
 	rpc := tendermint.NewRPC(config.ChainConfig.RPCEndpoints, log)
 	stateManager := statePkg.NewManager(log, config)
+	websocketManager := tendermint.NewWebsocketManager(log, config)
 
 	return &App{
-		Logger:       log,
-		Config:       config,
-		RPC:          rpc,
-		StateManager: stateManager,
+		Logger:           log,
+		Config:           config,
+		RPC:              rpc,
+		StateManager:     stateManager,
+		WebsocketManager: websocketManager,
+		IsPopulating:     false,
 	}
 }
 
@@ -46,20 +52,19 @@ func (a *App) Start() {
 	a.UpdateValidators()
 
 	go a.ListenForEvents()
-	a.Populate()
+	go a.PopulateInBackground()
 
 	select {}
 }
 
 func (a *App) ListenForEvents() {
-	wsClient := tendermint.NewWebsocketClient(a.Logger, a.Config.ChainConfig.RPCEndpoints[0], a.Config)
-	go wsClient.Listen()
+	a.WebsocketManager.Listen()
 
 	var olderSnapshot *statePkg.Snapshot
 
 	for {
 		select {
-		case result := <-wsClient.Channel:
+		case result := <-a.WebsocketManager.Channel:
 			block, ok := result.(*types.Block)
 			if !ok {
 				a.Logger.Warn().Msg("Event is not a block!")
@@ -69,17 +74,17 @@ func (a *App) ListenForEvents() {
 			a.Logger.Debug().Int64("height", block.Height).Msg("Got new block from Tendermint")
 			a.StateManager.AddBlock(block)
 
-			count := a.StateManager.GetBlocksCountSinceLatest(constants.StoreBlocks)
+			count := a.StateManager.GetBlocksCountSinceLatest(a.Config.ChainConfig.StoreBlocks)
 
 			a.Logger.Info().
 				Int64("count", count).
 				Int64("height", block.Height).
 				Msg("Added blocks into state")
 
-			if count < constants.StoreBlocks {
+			if count < a.Config.ChainConfig.StoreBlocks {
 				a.Logger.Debug().
 					Int64("count", count).
-					Int64("expected", constants.BlocksWindow).
+					Int64("expected", a.Config.ChainConfig.BlocksWindow).
 					Msg("Not enough blocks for producing a snapshot, skipping.")
 				continue
 			}
@@ -131,7 +136,31 @@ func (a *App) UpdateValidators() error {
 	return nil
 }
 
+func (a *App) PopulateInBackground() {
+	a.Populate()
+
+	ticker := time.NewTicker(60 * time.Second)
+	quit := make(chan struct{})
+
+	for {
+		select {
+		case <-ticker.C:
+			a.Populate()
+		case <-quit:
+			ticker.Stop()
+			return
+		}
+	}
+}
+
 func (a *App) Populate() {
+	if a.IsPopulating {
+		a.Logger.Debug().Msg("App is populating already, not populating again")
+		return
+	}
+
+	a.IsPopulating = true
+
 	block, err := a.RPC.GetLatestBlock()
 	if err != nil {
 		a.Logger.Fatal().Err(err).Msg("Error querying for last block")
@@ -148,17 +177,18 @@ func (a *App) Populate() {
 	startBlockToFetch := blockParsed.Height
 
 	for {
-		count := a.StateManager.GetBlocksCountSinceLatest(constants.StoreBlocks)
-		if count >= constants.StoreBlocks {
+		count := a.StateManager.GetBlocksCountSinceLatest(a.Config.ChainConfig.StoreBlocks)
+		if count >= a.Config.ChainConfig.StoreBlocks {
 			a.Logger.Info().
 				Int64("count", count).
 				Msg("Got enough blocks for populating")
+			a.IsPopulating = false
 			break
 		}
 
 		a.Logger.Info().
 			Int64("count", count).
-			Int64("required", constants.StoreBlocks).
+			Int64("required", a.Config.ChainConfig.StoreBlocks).
 			Msg("Not enough blocks, fetching more blocks...")
 
 		blocks, err := a.RPC.GetBlocksFromTo(

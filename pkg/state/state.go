@@ -64,13 +64,13 @@ func (s *State) SetValidators(validators []*types.Validator) {
 	s.Validators = validators
 }
 
-func (s *State) GetValidatorMissedBlocks(validator *types.Validator) types.SignatureInto {
+func (s *State) GetValidatorMissedBlocks(validator *types.Validator, blocksToCheck int64) types.SignatureInto {
 	s.Mutex.Lock()
 	defer s.Mutex.Unlock()
 
 	signatureInfo := types.SignatureInto{}
 
-	for height := s.LastBlockHeight; height > s.LastBlockHeight-constants.BlocksWindow; height-- {
+	for height := s.LastBlockHeight; height > s.LastBlockHeight-blocksToCheck; height-- {
 		if _, ok := s.Blocks[height]; !ok {
 			continue
 		}

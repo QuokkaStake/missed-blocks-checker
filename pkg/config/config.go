@@ -30,6 +30,8 @@ func (c *DatabaseConfig) Validate() error {
 type ChainConfig struct {
 	Name         string   `toml:"name"`
 	RPCEndpoints []string `toml:"rpc-endpoints"`
+	StoreBlocks  int64    `toml:"store-blocks" default:"20000"`
+	BlocksWindow int64    `toml:"blocks-window" default:"10000"`
 }
 
 func (c *ChainConfig) Validate() error {

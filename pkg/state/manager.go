@@ -3,7 +3,6 @@ package state
 import (
 	"github.com/rs/zerolog"
 	configPkg "main/pkg/config"
-	"main/pkg/constants"
 	"main/pkg/types"
 )
 
@@ -44,7 +43,7 @@ func (m *Manager) AddBlock(block *types.Block) error {
 
 	// newly added block, need to trim older blocks
 	if m.State.LastBlockHeight == block.Height {
-		trimHeight := block.Height - constants.StoreBlocks
+		trimHeight := block.Height - m.Config.ChainConfig.StoreBlocks
 		m.Logger.Debug().
 			Int64("height", block.Height).
 			Int64("trim_height", trimHeight).
@@ -72,7 +71,7 @@ func (m *Manager) GetSnapshot() *Snapshot {
 			Moniker:         validator.Moniker,
 			Status:          validator.Status,
 			Jailed:          validator.Jailed,
-			SignatureInfo:   m.State.GetValidatorMissedBlocks(validator),
+			SignatureInfo:   m.State.GetValidatorMissedBlocks(validator, m.Config.ChainConfig.BlocksWindow),
 		}
 	}
 
