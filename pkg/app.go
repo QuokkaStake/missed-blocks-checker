@@ -30,6 +30,7 @@ func NewApp(configPath string) *App {
 	if err != nil {
 		logger.GetDefaultLogger().Fatal().Err(err).Msg("Could not load config")
 	}
+	config.SetDefaultMissedBlocksGroups()
 
 	if err = config.Validate(); err != nil {
 		logger.GetDefaultLogger().Fatal().Err(err).Msg("Provided config is invalid!")
@@ -136,7 +137,7 @@ func (a *App) ListenForEvents() {
 				continue
 			}
 
-			report := snapshot.GetReport(olderSnapshot)
+			report := snapshot.GetReport(olderSnapshot, a.Config)
 			olderSnapshot = snapshot
 
 			if report.Empty() {

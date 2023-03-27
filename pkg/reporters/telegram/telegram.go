@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"fmt"
+	"html"
 	"html/template"
 	"main/pkg/events"
 	reportPkg "main/pkg/report"
@@ -81,27 +82,27 @@ func (reporter *Reporter) Enabled() bool {
 	return reporter.Token != "" && reporter.Chat != 0
 }
 
-func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.ReportEntry) template.HTML {
+func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.ReportEntry) string {
 	switch entry := rawEntry.(type) {
 	case events.ValidatorGroupChanged:
-		return template.HTML(fmt.Sprintf(
-			"%s is skipping blocks (%d -> %d)",
+		return fmt.Sprintf(
+			"<strong>%s %s</strong> %s",
+			entry.GetEmoji(),
 			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
-			entry.MissedBlocksBefore,
-			entry.MissedBlocksAfter,
-		))
+			html.EscapeString(entry.GetDescription()),
+		)
 	case events.ValidatorJailed:
-		return template.HTML(fmt.Sprintf(
+		return fmt.Sprintf(
 			"%s is jailed",
 			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
-		))
+		)
 	case events.ValidatorUnjailed:
-		return template.HTML(fmt.Sprintf(
+		return fmt.Sprintf(
 			"%s is unjailed",
 			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
-		))
+		)
 	default:
-		return template.HTML(fmt.Sprintf("Unsupported event %+v\n", entry))
+		return fmt.Sprintf("Unsupported event %+v\n", entry)
 	}
 }
 
@@ -109,7 +110,9 @@ func (reporter *Reporter) Send(report *reportPkg.Report) error {
 	var sb strings.Builder
 
 	for _, entry := range report.Entries {
-		sb.WriteString(string(reporter.SerializeEntry(entry) + "\n"))
+		fmt.Printf("entry: %s\n", reporter.SerializeEntry(entry))
+		fmt.Printf("entry2: %+v\n", entry)
+		sb.WriteString(reporter.SerializeEntry(entry) + "\n")
 	}
 
 	reportString := sb.String()
@@ -158,14 +161,14 @@ func (reporter *Reporter) BotReply(c tele.Context, msg string) error {
 	return nil
 }
 
-func (reporter *Reporter) SerializeDate(date time.Time) template.HTML {
-	return template.HTML(date.Format(time.RFC822))
+func (reporter *Reporter) SerializeDate(date time.Time) string {
+	return date.Format(time.RFC822)
 }
 
-func (reporter *Reporter) SerializeLink(link types.Link) template.HTML {
+func (reporter *Reporter) SerializeLink(link types.Link) string {
 	if link.Href == "" {
-		return template.HTML(link.Text)
+		return link.Text
 	}
 
-	return template.HTML(fmt.Sprintf("<a href='%s'>%s</a>", link.Href, link.Text))
+	return fmt.Sprintf("<a href='%s'>%s</a>", link.Href, link.Text)
 }
