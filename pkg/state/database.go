@@ -143,7 +143,10 @@ func (d *Database) GetAllBlocks() (map[int64]*types.Block, error) {
 		d.Logger.Error().Err(err).Msg("Error getting all blocks")
 		return blocks, err
 	}
-	defer blocksRows.Close()
+	defer func() {
+		_ = blocksRows.Close()
+		_ = blocksRows.Err() // or modify return value
+	}()
 
 	for blocksRows.Next() {
 		var (
@@ -173,7 +176,10 @@ func (d *Database) GetAllBlocks() (map[int64]*types.Block, error) {
 		d.Logger.Error().Err(err).Msg("Error getting all blocks")
 		return blocks, err
 	}
-	defer signaturesRows.Close()
+	defer func() {
+		_ = signaturesRows.Close()
+		_ = signaturesRows.Err() // or modify return value
+	}()
 
 	for signaturesRows.Next() {
 		var (
@@ -248,7 +254,10 @@ func (d *Database) GetAllNotifiers() (*types.Notifiers, error) {
 		d.Logger.Error().Err(err).Msg("Error getting all blocks")
 		return &notifiers, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+		_ = rows.Err() // or modify return value
+	}()
 
 	for rows.Next() {
 		var (
