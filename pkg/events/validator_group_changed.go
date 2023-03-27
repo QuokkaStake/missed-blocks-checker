@@ -15,7 +15,7 @@ type ValidatorGroupChanged struct {
 
 func (e *ValidatorGroupChanged) GetDescription() string {
 	// increasing
-	if e.MissedBlocksGroupBefore.Start < e.MissedBlocksGroupAfter.Start {
+	if e.IsIncreasing() {
 		return e.MissedBlocksGroupAfter.DescStart
 	}
 
@@ -25,10 +25,14 @@ func (e *ValidatorGroupChanged) GetDescription() string {
 
 func (e *ValidatorGroupChanged) GetEmoji() string {
 	// increasing
-	if e.MissedBlocksGroupBefore.Start < e.MissedBlocksGroupAfter.Start {
+	if e.IsIncreasing() {
 		return e.MissedBlocksGroupAfter.EmojiStart
 	}
 
 	// decreasing
 	return e.MissedBlocksGroupAfter.EmojiEnd
+}
+
+func (e *ValidatorGroupChanged) IsIncreasing() bool {
+	return e.MissedBlocksGroupBefore.Start < e.MissedBlocksGroupAfter.Start
 }

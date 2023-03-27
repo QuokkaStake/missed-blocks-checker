@@ -1,6 +1,8 @@
 package types
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 type WSError struct {
 	Error error

@@ -1,9 +1,11 @@
 package state
 
 import (
+	"main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/types"
 	"sync"
+	"time"
 )
 
 type State struct {
@@ -137,4 +139,48 @@ func (s *State) GetValidatorMissedBlocks(validator *types.Validator, blocksToChe
 	}
 
 	return signatureInfo
+}
+
+func (s *State) GetEarliestBlock() *types.Block {
+	earliestHeight := s.lastBlockHeight
+
+	for height, _ := range s.blocks {
+		if height < earliestHeight {
+			earliestHeight = height
+		}
+	}
+
+	return s.blocks[earliestHeight]
+}
+
+func (s *State) GetBlockTime() time.Duration {
+	latestHeight := s.lastBlockHeight
+	latestBlock := s.blocks[latestHeight]
+
+	earliestBlock := s.GetEarliestBlock()
+	earliestHeight := earliestBlock.Height
+
+	heightDiff := latestHeight - earliestHeight
+	timeDiff := latestBlock.Time.Sub(earliestBlock.Time)
+
+	timeDiffNano := timeDiff.Nanoseconds()
+	blockTimeNano := timeDiffNano / heightDiff
+	return time.Duration(blockTimeNano) * time.Nanosecond
+}
+
+func (s *State) GetTimeTillJail(
+	validator *types.Validator,
+	appConfig *config.Config,
+) (time.Duration, bool) {
+	validator, found := s.GetValidator(validator.OperatorAddress)
+	if !found {
+		return 0, false
+	}
+
+	missedBlocks := s.GetValidatorMissedBlocks(validator, appConfig.ChainConfig.StoreBlocks)
+	needToSign := appConfig.ChainConfig.GetBlocksSignCount()
+	blocksToJail := needToSign - missedBlocks.GetNotSigned()
+	blockTime := s.GetBlockTime()
+	nanoToJail := blockTime.Nanoseconds() * blocksToJail
+	return time.Duration(nanoToJail) * time.Nanosecond, true
 }

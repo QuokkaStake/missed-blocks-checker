@@ -82,11 +82,22 @@ func (reporter *Reporter) Enabled() bool {
 func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.ReportEntry) string {
 	switch entry := rawEntry.(type) {
 	case events.ValidatorGroupChanged:
+		timeToJailStr := ""
+
+		if entry.IsIncreasing() {
+			if timeToJail, ok := reporter.Manager.GetTimeTillJail(entry.Validator); ok {
+				timeToJailStr = fmt.Sprintf(" (%s till jail)", timeToJail.Round(time.Second))
+			} else {
+				reporter.Logger.Warn().Msg("Could not calculate time to jail")
+			}
+		}
+
 		return fmt.Sprintf(
-			"<strong>%s %s</strong> %s",
+			"<strong>%s %s</strong> %s %s",
 			entry.GetEmoji(),
 			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 			html.EscapeString(entry.GetDescription()),
+			timeToJailStr,
 		)
 	case events.ValidatorJailed:
 		return fmt.Sprintf(

@@ -3,6 +3,7 @@ package state
 import (
 	configPkg "main/pkg/config"
 	"main/pkg/types"
+	"time"
 
 	"github.com/rs/zerolog"
 )
@@ -105,4 +106,8 @@ func (m *Manager) RemoveNotifier(operatorAddress, reporter, notifier string) boo
 
 func (m *Manager) GetValidator(operatorAddress string) (*types.Validator, bool) {
 	return m.State.GetValidator(operatorAddress)
+}
+
+func (m *Manager) GetTimeTillJail(validator *types.Validator) (time.Duration, bool) {
+	return m.State.GetTimeTillJail(validator, m.Config)
 }
