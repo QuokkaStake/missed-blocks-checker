@@ -32,6 +32,14 @@ func (m *Manager) Init() {
 
 	m.State.Blocks = blocks
 	m.Logger.Info().Msg("Loaded older blocks from database")
+
+	notifiers, err := m.Database.GetAllNotifiers()
+	if err != nil {
+		m.Logger.Fatal().Err(err).Msg("Could not get notifiers from the database")
+	}
+
+	m.State.Notifiers = notifiers
+	m.Logger.Info().Msg("Loaded notifiers from database")
 }
 
 func (m *Manager) AddBlock(block *types.Block) error {
@@ -73,4 +81,13 @@ func (m *Manager) GetSnapshot() *Snapshot {
 	}
 
 	return NewSnapshot(entries)
+}
+
+func (m *Manager) AddNotifier(operatorAddress, reporter, notifier string) bool {
+	if added := m.State.Notifiers.AddNotifier(operatorAddress, reporter, notifier); !added {
+		return false
+	}
+
+	err := m.Database.InsertNotifier(operatorAddress, reporter, notifier)
+	return err == nil
 }

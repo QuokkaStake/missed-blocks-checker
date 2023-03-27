@@ -9,6 +9,7 @@ import (
 type State struct {
 	Blocks          map[int64]*types.Block
 	Validators      []*types.Validator
+	Notifiers       *types.Notifiers
 	LastBlockHeight int64
 	Mutex           sync.Mutex
 }
@@ -62,6 +63,13 @@ func (s *State) SetValidators(validators []*types.Validator) {
 	defer s.Mutex.Unlock()
 
 	s.Validators = validators
+}
+
+func (s *State) SetNotifiers(notifiers *types.Notifiers) {
+	s.Mutex.Lock()
+	defer s.Mutex.Unlock()
+
+	s.Notifiers = notifiers
 }
 
 func (s *State) GetValidatorMissedBlocks(validator *types.Validator, blocksToCheck int64) types.SignatureInto {

@@ -20,6 +20,16 @@ func Map[T, V any](slice []T, f func(T) V) []V {
 	return out
 }
 
+func Contains[T comparable](slice []T, elt T) bool {
+	for _, innerElt := range slice {
+		if elt == innerElt {
+			return true
+		}
+	}
+
+	return false
+}
+
 func SplitStringIntoChunks(msg string, maxLineLength int) []string {
 	msgsByNewline := strings.Split(msg, "\n")
 	outMessages := []string{}

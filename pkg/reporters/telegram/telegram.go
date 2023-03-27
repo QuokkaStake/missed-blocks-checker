@@ -3,9 +3,9 @@ package telegram
 import (
 	"fmt"
 	"html"
-	"html/template"
 	"main/pkg/events"
 	reportPkg "main/pkg/report"
+	statePkg "main/pkg/state"
 	"main/pkg/types"
 	"strings"
 	"time"
@@ -25,8 +25,8 @@ type Reporter struct {
 
 	TelegramBot *tele.Bot
 	Logger      zerolog.Logger
-	Templates   map[string]*template.Template
 	Config      *config.Config
+	Manager     *statePkg.Manager
 }
 
 const (
@@ -36,14 +36,15 @@ const (
 func NewReporter(
 	appConfig *config.Config,
 	logger *zerolog.Logger,
+	manager *statePkg.Manager,
 ) *Reporter {
 	return &Reporter{
-		Token:     appConfig.TelegramConfig.Token,
-		Chat:      appConfig.TelegramConfig.Chat,
-		Admins:    appConfig.TelegramConfig.Admins,
-		Config:    appConfig,
-		Logger:    logger.With().Str("component", "telegram_reporter").Logger(),
-		Templates: make(map[string]*template.Template, 0),
+		Token:   appConfig.TelegramConfig.Token,
+		Chat:    appConfig.TelegramConfig.Chat,
+		Admins:  appConfig.TelegramConfig.Admins,
+		Config:  appConfig,
+		Logger:  logger.With().Str("component", "telegram_reporter").Logger(),
+		Manager: manager,
 	}
 }
 
@@ -72,7 +73,7 @@ func (reporter *Reporter) Init() {
 	//bot.Handle("/status", reporter.HandleListNodesStatus)
 	//bot.Handle("/config", reporter.HandleGetConfig)
 	//bot.Handle("/alias", reporter.HandleSetAlias)
-	//bot.Handle("/aliases", reporter.HandleGetAliases)
+	bot.Handle("/subscribe", reporter.HandleSubscribe)
 
 	reporter.TelegramBot = bot
 	go reporter.TelegramBot.Start()
@@ -110,8 +111,6 @@ func (reporter *Reporter) Send(report *reportPkg.Report) error {
 	var sb strings.Builder
 
 	for _, entry := range report.Entries {
-		fmt.Printf("entry: %s\n", reporter.SerializeEntry(entry))
-		fmt.Printf("entry2: %+v\n", entry)
 		sb.WriteString(reporter.SerializeEntry(entry) + "\n")
 	}
 

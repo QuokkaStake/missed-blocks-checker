@@ -42,7 +42,7 @@ func NewApp(configPath string) *App {
 	websocketManager := tendermint.NewWebsocketManager(log, config)
 
 	reporters := []reportersPkg.Reporter{
-		telegram.NewReporter(config, log),
+		telegram.NewReporter(config, log, stateManager),
 	}
 
 	return &App{

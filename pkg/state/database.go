@@ -235,3 +235,54 @@ func (d *Database) TrimBlocksBefore(height int64) error {
 
 	return nil
 }
+
+func (d *Database) GetAllNotifiers() (*types.Notifiers, error) {
+	notifiers := make(types.Notifiers)
+
+	rows, err := d.Client.Query("SELECT operator_address, reporter, notifier FROM notifiers")
+	if err != nil {
+		d.Logger.Error().Err(err).Msg("Error getting all blocks")
+		return &notifiers, err
+	}
+
+	for rows.Next() {
+		var (
+			operatorAddress string
+			reporter        string
+			notifier        string
+		)
+
+		err = rows.Scan(&operatorAddress, &reporter, &notifier)
+		if err != nil {
+			d.Logger.Error().Err(err).Msg("Error fetching notifier data")
+			return &notifiers, err
+		}
+
+		if _, ok := notifiers[operatorAddress]; !ok {
+			notifiers[operatorAddress] = make(map[string][]string)
+		}
+
+		if _, ok := notifiers[operatorAddress][reporter]; !ok {
+			notifiers[operatorAddress][reporter] = make([]string, 1)
+		}
+
+		notifiers[operatorAddress][reporter] = append(notifiers[operatorAddress][reporter], notifier)
+	}
+
+	return &notifiers, nil
+}
+
+func (d *Database) InsertNotifier(operatorAddress, reporter, notifier string) error {
+	_, err := d.Client.Exec(
+		"INSERT INTO notifiers (operator_address, reporter, notifier) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
+		operatorAddress,
+		reporter,
+		notifier,
+	)
+	if err != nil {
+		d.Logger.Error().Err(err).Msg("Could not insert notifier")
+		return err
+	}
+
+	return nil
+}
