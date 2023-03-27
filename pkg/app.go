@@ -170,7 +170,7 @@ func (a *App) UpdateValidators() error {
 
 	}
 
-	a.StateManager.State.SetValidators(validators)
+	a.StateManager.State.SetValidators(validators.ToMap())
 	return nil
 }
 

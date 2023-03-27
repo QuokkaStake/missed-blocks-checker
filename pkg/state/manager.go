@@ -30,7 +30,7 @@ func (m *Manager) Init() {
 		m.Logger.Fatal().Err(err).Msg("Could not get blocks from the database")
 	}
 
-	m.State.Blocks = blocks
+	m.State.SetBlocks(blocks)
 	m.Logger.Info().Msg("Loaded older blocks from database")
 
 	notifiers, err := m.Database.GetAllNotifiers()
@@ -38,7 +38,7 @@ func (m *Manager) Init() {
 		m.Logger.Fatal().Err(err).Msg("Could not get notifiers from the database")
 	}
 
-	m.State.Notifiers = notifiers
+	m.State.SetNotifiers(notifiers)
 	m.Logger.Info().Msg("Loaded notifiers from database")
 }
 
@@ -50,7 +50,7 @@ func (m *Manager) AddBlock(block *types.Block) error {
 	}
 
 	// newly added block, need to trim older blocks
-	if m.State.LastBlockHeight == block.Height {
+	if m.State.GetLastBlockHeight() == block.Height {
 		trimHeight := block.Height - m.Config.ChainConfig.StoreBlocks
 		m.Logger.Debug().
 			Int64("height", block.Height).
@@ -71,9 +71,10 @@ func (m *Manager) GetBlocksCountSinceLatest(expected int64) int64 {
 }
 
 func (m *Manager) GetSnapshot() *Snapshot {
-	entries := make(map[string]SnapshotEntry, len(m.State.Validators))
+	validators := m.State.GetValidators()
+	entries := make(map[string]SnapshotEntry, len(validators))
 
-	for _, validator := range m.State.Validators {
+	for _, validator := range validators {
 		entries[validator.OperatorAddress] = SnapshotEntry{
 			Validator:     validator,
 			SignatureInfo: m.State.GetValidatorMissedBlocks(validator, m.Config.ChainConfig.BlocksWindow),
@@ -84,7 +85,7 @@ func (m *Manager) GetSnapshot() *Snapshot {
 }
 
 func (m *Manager) AddNotifier(operatorAddress, reporter, notifier string) bool {
-	if added := m.State.Notifiers.AddNotifier(operatorAddress, reporter, notifier); !added {
+	if added := m.State.AddNotifier(operatorAddress, reporter, notifier); !added {
 		return false
 	}
 

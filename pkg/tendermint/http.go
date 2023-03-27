@@ -60,7 +60,7 @@ func (rpc *RPC) GetBlocksFromTo(from, to, limit int64) (*types.BlockSearchRespon
 	return &response, nil
 }
 
-func (rpc *RPC) GetValidators() ([]*types.Validator, error) {
+func (rpc *RPC) GetValidators() (types.Validators, error) {
 	data := stakingTypes.QueryValidatorsRequest{
 		Pagination: &queryTypes.PageRequest{
 			Limit: constants.ValidatorsQueryPagination,
