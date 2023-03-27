@@ -1,9 +1,10 @@
 package state
 
 import (
-	"github.com/rs/zerolog"
 	configPkg "main/pkg/config"
 	"main/pkg/types"
+
+	"github.com/rs/zerolog"
 )
 
 type Manager struct {

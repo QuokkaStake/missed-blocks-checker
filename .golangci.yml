@@ -10,7 +10,9 @@ linters-settings:
     rules:
       - name: var-declaration
         disabled: true
-
+issues:
+  exclude:
+    - S1000
 linters:
   enable-all: true
   disable:

@@ -3,12 +3,13 @@ package state
 import (
 	"context"
 	"database/sql"
-	_ "github.com/mattn/go-sqlite3"
-	"github.com/rs/zerolog"
 	configPkg "main/pkg/config"
 	"main/pkg/types"
 	migrations "main/sql"
 	"time"
+
+	_ "github.com/mattn/go-sqlite3"
+	"github.com/rs/zerolog"
 )
 
 type Database struct {
@@ -68,6 +69,7 @@ func (d *Database) Init() {
 				Err(err).
 				Msg("Could not prepare migration")
 		}
+		defer statement.Close()
 		if _, err := statement.Exec(); err != nil {
 			d.Logger.Fatal().
 				Str("name", entry.Name()).
@@ -141,6 +143,7 @@ func (d *Database) GetAllBlocks() (map[int64]*types.Block, error) {
 		d.Logger.Error().Err(err).Msg("Error getting all blocks")
 		return blocks, err
 	}
+	defer blocksRows.Close()
 
 	for blocksRows.Next() {
 		var (
@@ -170,6 +173,7 @@ func (d *Database) GetAllBlocks() (map[int64]*types.Block, error) {
 		d.Logger.Error().Err(err).Msg("Error getting all blocks")
 		return blocks, err
 	}
+	defer signaturesRows.Close()
 
 	for signaturesRows.Next() {
 		var (
@@ -244,6 +248,7 @@ func (d *Database) GetAllNotifiers() (*types.Notifiers, error) {
 		d.Logger.Error().Err(err).Msg("Error getting all blocks")
 		return &notifiers, err
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var (

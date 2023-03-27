@@ -137,12 +137,12 @@ type LogConfig struct {
 	JSONOutput bool   `toml:"json" default:"false"`
 }
 
-func (c *Config) Validate() error {
-	if err := c.ChainConfig.Validate(); err != nil {
+func (config *Config) Validate() error {
+	if err := config.ChainConfig.Validate(); err != nil {
 		return fmt.Errorf("error in chain config: %s", err)
 	}
 
-	if err := c.DatabaseConfig.Validate(); err != nil {
+	if err := config.DatabaseConfig.Validate(); err != nil {
 		return fmt.Errorf("error in database config: %s", err)
 	}
 

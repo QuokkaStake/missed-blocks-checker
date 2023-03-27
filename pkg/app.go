@@ -93,7 +93,6 @@ func (a *App) ListenForEvents() {
 				a.Logger.Error().
 					Err(err).
 					Msg("Error updating validators")
-
 			}
 
 			a.Logger.Debug().Int64("height", block.Height).Msg("Got new block from Tendermint")
@@ -167,7 +166,6 @@ func (a *App) UpdateValidators() error {
 	validators, err := a.RPC.GetValidators()
 	if err != nil {
 		return err
-
 	}
 
 	a.StateManager.State.SetValidators(validators.ToMap())

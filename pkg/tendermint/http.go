@@ -3,13 +3,14 @@ package tendermint
 import (
 	"encoding/json"
 	"fmt"
-	queryTypes "github.com/cosmos/cosmos-sdk/types/query"
 	"main/pkg/constants"
 	"main/pkg/utils"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	queryTypes "github.com/cosmos/cosmos-sdk/types/query"
 
 	"main/pkg/types"
 
@@ -88,9 +89,7 @@ func (rpc *RPC) GetValidators() (types.Validators, error) {
 		return nil, err
 	}
 
-	return utils.Map(validatorsResponse.Validators, func(validator stakingTypes.Validator) *types.Validator {
-		return types.ValidatorFromCosmosValidator(validator)
-	}), nil
+	return utils.Map(validatorsResponse.Validators, types.ValidatorFromCosmosValidator), nil
 }
 
 func (rpc *RPC) Get(url string, target interface{}) error {

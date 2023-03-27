@@ -51,7 +51,7 @@ func (s *State) TrimBlocksBefore(trimHeight int64) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	for height, _ := range s.blocks {
+	for height := range s.blocks {
 		if height <= trimHeight {
 			delete(s.blocks, height)
 		}

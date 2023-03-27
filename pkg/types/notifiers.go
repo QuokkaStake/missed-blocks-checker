@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"main/pkg/utils"
 )
 
@@ -26,16 +25,14 @@ func (n Notifiers) AddNotifier(operatorAddress, reporter, notifier string) (*Not
 		Notifier:        notifier,
 	}
 
-	fmt.Printf("add notifier %+v\n", n)
-
 	if _, found := utils.Find(n, func(notifier *Notifier) bool {
 		return notifier.Equals(newNotifier)
 	}); found {
 		return &n, false
 	}
 
-	newN := append(n, newNotifier)
-	return &newN, true
+	n = append(n, newNotifier)
+	return &n, true
 }
 
 func (n Notifiers) GetNotifiers(operatorAddress, reporter string) []string {
