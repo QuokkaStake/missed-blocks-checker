@@ -92,3 +92,7 @@ func (m *Manager) AddNotifier(operatorAddress, reporter, notifier string) bool {
 	err := m.Database.InsertNotifier(operatorAddress, reporter, notifier)
 	return err == nil
 }
+
+func (m *Manager) GetValidator(operatorAddress string) (*types.Validator, bool) {
+	return m.State.GetValidator(operatorAddress)
+}

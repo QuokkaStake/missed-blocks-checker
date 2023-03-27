@@ -91,6 +91,11 @@ func (s *State) GetValidators() types.ValidatorsMap {
 	return s.validators
 }
 
+func (s *State) GetValidator(operatorAddress string) (*types.Validator, bool) {
+	validator, found := s.validators[operatorAddress]
+	return validator, found
+}
+
 func (s *State) GetValidatorMissedBlocks(validator *types.Validator, blocksToCheck int64) types.SignatureInto {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
