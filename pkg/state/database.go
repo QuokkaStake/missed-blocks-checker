@@ -237,7 +237,7 @@ func (d *Database) TrimBlocksBefore(height int64) error {
 }
 
 func (d *Database) GetAllNotifiers() (*types.Notifiers, error) {
-	notifiers := make(types.Notifiers)
+	notifiers := make(types.Notifiers, 0)
 
 	rows, err := d.Client.Query("SELECT operator_address, reporter, notifier FROM notifiers")
 	if err != nil {
@@ -258,15 +258,13 @@ func (d *Database) GetAllNotifiers() (*types.Notifiers, error) {
 			return &notifiers, err
 		}
 
-		if _, ok := notifiers[operatorAddress]; !ok {
-			notifiers[operatorAddress] = make(map[string][]string)
+		newNotifier := &types.Notifier{
+			OperatorAddress: operatorAddress,
+			Reporter:        reporter,
+			Notifier:        notifier,
 		}
 
-		if _, ok := notifiers[operatorAddress][reporter]; !ok {
-			notifiers[operatorAddress][reporter] = make([]string, 1)
-		}
-
-		notifiers[operatorAddress][reporter] = append(notifiers[operatorAddress][reporter], notifier)
+		notifiers = append(notifiers, newNotifier)
 	}
 
 	return &notifiers, nil
@@ -281,6 +279,21 @@ func (d *Database) InsertNotifier(operatorAddress, reporter, notifier string) er
 	)
 	if err != nil {
 		d.Logger.Error().Err(err).Msg("Could not insert notifier")
+		return err
+	}
+
+	return nil
+}
+
+func (d *Database) RemoveNotifier(operatorAddress, reporter, notifier string) error {
+	_, err := d.Client.Exec(
+		"DELETE FROM notifiers WHERE operator_address = $1 AND reporter = $2 AND notifier = $3",
+		operatorAddress,
+		reporter,
+		notifier,
+	)
+	if err != nil {
+		d.Logger.Error().Err(err).Msg("Could not delete notifier")
 		return err
 	}
 

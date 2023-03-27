@@ -1,6 +1,8 @@
 package utils
 
-import "strings"
+import (
+	"strings"
+)
 
 func Filter[T any](slice []T, f func(T) bool) []T {
 	var n []T
@@ -28,6 +30,16 @@ func Contains[T comparable](slice []T, elt T) bool {
 	}
 
 	return false
+}
+
+func Find[T any](slice []*T, f func(*T) bool) (*T, bool) {
+	for _, elt := range slice {
+		if f(elt) {
+			return elt, true
+		}
+	}
+
+	return nil, false
 }
 
 func SplitStringIntoChunks(msg string, maxLineLength int) []string {

@@ -1,36 +1,70 @@
 package types
 
-import "main/pkg/utils"
+import (
+	"fmt"
+	"main/pkg/utils"
+)
 
-// Notifiers has the following struct:
-// notifiers[valoper][reporter] == [reporter1, reporter2]
-type Notifiers map[string]map[string][]string
+type Notifier struct {
+	OperatorAddress string
+	Reporter        string
+	Notifier        string
+}
 
-func (n Notifiers) AddNotifier(operatorAddress, reporter, notifier string) bool {
-	if _, ok := n[operatorAddress]; !ok {
-		n[operatorAddress] = make(map[string][]string)
+func (n Notifier) Equals(another *Notifier) bool {
+	return n.OperatorAddress == another.OperatorAddress &&
+		n.Reporter == another.Reporter &&
+		n.Notifier == another.Notifier
+}
+
+type Notifiers []*Notifier
+
+func (n Notifiers) AddNotifier(operatorAddress, reporter, notifier string) (*Notifiers, bool) {
+	newNotifier := &Notifier{
+		OperatorAddress: operatorAddress,
+		Reporter:        reporter,
+		Notifier:        notifier,
 	}
 
-	if _, ok := n[operatorAddress][reporter]; !ok {
-		n[operatorAddress][reporter] = make([]string, 1)
+	fmt.Printf("add notifier %+v\n", n)
+
+	if _, found := utils.Find(n, func(notifier *Notifier) bool {
+		return notifier.Equals(newNotifier)
+	}); found {
+		return &n, false
 	}
 
-	if utils.Contains(n[operatorAddress][reporter], notifier) {
-		return false
-	}
-
-	n[operatorAddress][reporter] = append(n[operatorAddress][reporter], notifier)
-	return true
+	newN := append(n, newNotifier)
+	return &newN, true
 }
 
 func (n Notifiers) GetNotifiers(operatorAddress, reporter string) []string {
-	if _, ok := n[operatorAddress]; !ok {
-		return []string{}
+	notifiers := utils.Filter(n, func(notifier *Notifier) bool {
+		return notifier.OperatorAddress == operatorAddress && notifier.Reporter == reporter
+	})
+
+	return utils.Map(notifiers, func(notifier *Notifier) string {
+		return notifier.Notifier
+	})
+}
+
+func (n Notifiers) RemoveNotifier(operatorAddress, reporter, notifier string) (*Notifiers, bool) {
+	deletedNotifier := &Notifier{
+		OperatorAddress: operatorAddress,
+		Reporter:        reporter,
+		Notifier:        notifier,
 	}
 
-	if _, ok := n[operatorAddress][reporter]; !ok {
-		return []string{}
+	if _, found := utils.Find(n, func(notifier *Notifier) bool {
+		return notifier.Equals(deletedNotifier)
+	}); !found {
+		return &n, false
 	}
 
-	return n[operatorAddress][reporter]
+	newN := utils.Filter(n, func(notifier *Notifier) bool {
+		return !notifier.Equals(deletedNotifier)
+	})
+
+	var newNNotifiers Notifiers = newN
+	return &newNNotifiers, true
 }

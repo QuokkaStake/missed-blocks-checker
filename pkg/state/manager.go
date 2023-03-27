@@ -93,6 +93,15 @@ func (m *Manager) AddNotifier(operatorAddress, reporter, notifier string) bool {
 	return err == nil
 }
 
+func (m *Manager) RemoveNotifier(operatorAddress, reporter, notifier string) bool {
+	if removed := m.State.RemoveNotifier(operatorAddress, reporter, notifier); !removed {
+		return false
+	}
+
+	err := m.Database.RemoveNotifier(operatorAddress, reporter, notifier)
+	return err == nil
+}
+
 func (m *Manager) GetValidator(operatorAddress string) (*types.Validator, bool) {
 	return m.State.GetValidator(operatorAddress)
 }

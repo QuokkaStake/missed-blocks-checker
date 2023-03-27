@@ -68,12 +68,8 @@ func (reporter *Reporter) Init() {
 		bot.Use(middleware.Whitelist(reporter.Admins...))
 	}
 
-	//bot.Handle("/help", reporter.HandleHelp)
-	//bot.Handle("/start", reporter.HandleHelp)
-	//bot.Handle("/status", reporter.HandleListNodesStatus)
-	//bot.Handle("/config", reporter.HandleGetConfig)
-	//bot.Handle("/alias", reporter.HandleSetAlias)
 	bot.Handle("/subscribe", reporter.HandleSubscribe)
+	bot.Handle("/unsubscribe", reporter.HandleUnubscribe)
 
 	reporter.TelegramBot = bot
 	go reporter.TelegramBot.Start()

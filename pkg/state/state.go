@@ -80,7 +80,21 @@ func (s *State) SetBlocks(blocks map[int64]*types.Block) {
 }
 
 func (s *State) AddNotifier(operatorAddress, reporter, notifier string) bool {
-	return s.notifiers.AddNotifier(operatorAddress, reporter, notifier)
+	notifiers, added := s.notifiers.AddNotifier(operatorAddress, reporter, notifier)
+	if added {
+		s.SetNotifiers(notifiers)
+	}
+
+	return added
+}
+
+func (s *State) RemoveNotifier(operatorAddress, reporter, notifier string) bool {
+	notifiers, removed := s.notifiers.RemoveNotifier(operatorAddress, reporter, notifier)
+	if removed {
+		s.SetNotifiers(notifiers)
+	}
+
+	return removed
 }
 
 func (s *State) GetLastBlockHeight() int64 {
