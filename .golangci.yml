@@ -42,3 +42,4 @@ linters:
     - testpackage
     - gci
     - musttag
+    - gofmt
