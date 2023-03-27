@@ -121,8 +121,8 @@ func (a *App) ListenForEvents() {
 
 			for _, entry := range snapshot.Entries {
 				a.Logger.Debug().
-					Str("valoper", entry.OperatorAddress).
-					Str("moniker", entry.Moniker).
+					Str("valoper", entry.Validator.OperatorAddress).
+					Str("moniker", entry.Validator.Moniker).
 					Int64("signed", entry.SignatureInfo.Signed).
 					Int64("not_signed", entry.SignatureInfo.NotSigned).
 					Int64("no_signature", entry.SignatureInfo.NoSignature).

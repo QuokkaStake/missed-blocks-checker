@@ -1,6 +1,7 @@
 package events
 
+import "main/pkg/types"
+
 type ValidatorUnjailed struct {
-	Moniker         string
-	OperatorAddress string
+	Validator *types.Validator
 }

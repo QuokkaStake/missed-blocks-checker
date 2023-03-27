@@ -7,11 +7,8 @@ import (
 )
 
 type SnapshotEntry struct {
-	OperatorAddress string
-	Moniker         string
-	Status          int32
-	Jailed          bool
-	SignatureInfo   types.SignatureInto
+	Validator     *types.Validator
+	SignatureInfo types.SignatureInto
 }
 
 type Snapshot struct {
@@ -32,28 +29,25 @@ func (snapshot *Snapshot) GetReport(olderSnapshot *Snapshot) *report.Report {
 		}
 
 		signedBlocksEqual := olderEntry.SignatureInfo.GetNotSigned() != entry.SignatureInfo.GetNotSigned()
-		jailedEqual := olderEntry.Jailed == entry.Jailed
+		jailedEqual := olderEntry.Validator.Jailed == entry.Validator.Jailed
 
 		if signedBlocksEqual && jailedEqual {
 			entries = append(entries, events.ValidatorGroupChanged{
-				Moniker:            entry.Moniker,
-				OperatorAddress:    entry.OperatorAddress,
+				Validator:          entry.Validator,
 				MissedBlocksBefore: olderEntry.SignatureInfo.GetNotSigned(),
 				MissedBlocksAfter:  entry.SignatureInfo.GetNotSigned(),
 			})
 		}
 
-		if entry.Jailed && !olderEntry.Jailed {
+		if entry.Validator.Jailed && !olderEntry.Validator.Jailed {
 			entries = append(entries, events.ValidatorJailed{
-				Moniker:         entry.Moniker,
-				OperatorAddress: entry.OperatorAddress,
+				Validator: entry.Validator,
 			})
 		}
 
-		if !entry.Jailed && olderEntry.Jailed {
+		if !entry.Validator.Jailed && olderEntry.Validator.Jailed {
 			entries = append(entries, events.ValidatorUnjailed{
-				Moniker:         entry.Moniker,
-				OperatorAddress: entry.OperatorAddress,
+				Validator: entry.Validator,
 			})
 		}
 	}

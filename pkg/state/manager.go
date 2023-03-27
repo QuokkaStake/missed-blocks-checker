@@ -67,11 +67,8 @@ func (m *Manager) GetSnapshot() *Snapshot {
 
 	for _, validator := range m.State.Validators {
 		entries[validator.OperatorAddress] = SnapshotEntry{
-			OperatorAddress: validator.OperatorAddress,
-			Moniker:         validator.Moniker,
-			Status:          validator.Status,
-			Jailed:          validator.Jailed,
-			SignatureInfo:   m.State.GetValidatorMissedBlocks(validator, m.Config.ChainConfig.BlocksWindow),
+			Validator:     validator,
+			SignatureInfo: m.State.GetValidatorMissedBlocks(validator, m.Config.ChainConfig.BlocksWindow),
 		}
 	}
 

@@ -1,8 +1,9 @@
 package events
 
+import "main/pkg/types"
+
 type ValidatorGroupChanged struct {
-	Moniker            string
-	OperatorAddress    string
+	Validator          *types.Validator
 	MissedBlocksBefore int64
 	MissedBlocksAfter  int64
 }

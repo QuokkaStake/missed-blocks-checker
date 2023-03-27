@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/google/uuid"
-	"main/pkg/logger"
+	"main/pkg/constants"
 	"time"
 )
 
@@ -42,18 +42,22 @@ type Validator struct {
 	Jailed           bool
 }
 
+func (v *Validator) Active() bool {
+	return v.Status == constants.ValidatorBonded
+}
+
 func ValidatorFromCosmosValidator(validator stakingTypes.Validator) *Validator {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	std.RegisterInterfaces(interfaceRegistry)
 	parseCodec := codec.NewProtoCodec(interfaceRegistry)
 
 	if err := validator.UnpackInterfaces(parseCodec); err != nil {
-		logger.GetDefaultLogger().Fatal().Err(err).Msg("Could not unpack interfaces for validator")
+		panic(err)
 	}
 
 	addr, err := validator.GetConsAddr()
 	if err != nil {
-		logger.GetDefaultLogger().Fatal().Err(err).Msg("Could not get cons addr for validator")
+		panic(err)
 	}
 
 	return &Validator{
@@ -74,4 +78,9 @@ type SignatureInto struct {
 
 func (s *SignatureInto) GetNotSigned() int64 {
 	return s.NotSigned + s.NoSignature
+}
+
+type Link struct {
+	Href string
+	Text string
 }

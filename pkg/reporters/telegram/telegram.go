@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"main/pkg/events"
 	reportPkg "main/pkg/report"
+	"main/pkg/types"
 	"strings"
 	"time"
 
@@ -80,27 +81,27 @@ func (reporter *Reporter) Enabled() bool {
 	return reporter.Token != "" && reporter.Chat != 0
 }
 
-func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.ReportEntry) string {
+func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.ReportEntry) template.HTML {
 	switch entry := rawEntry.(type) {
 	case events.ValidatorGroupChanged:
-		return fmt.Sprintf(
+		return template.HTML(fmt.Sprintf(
 			"%s is skipping blocks (%d -> %d)",
-			entry.Moniker,
+			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 			entry.MissedBlocksBefore,
 			entry.MissedBlocksAfter,
-		)
+		))
 	case events.ValidatorJailed:
-		return fmt.Sprintf(
+		return template.HTML(fmt.Sprintf(
 			"%s is jailed",
-			entry.Moniker,
-		)
+			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+		))
 	case events.ValidatorUnjailed:
-		return fmt.Sprintf(
+		return template.HTML(fmt.Sprintf(
 			"%s is unjailed",
-			entry.Moniker,
-		)
+			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+		))
 	default:
-		return fmt.Sprintf("Unsupported event %+v\n", entry)
+		return template.HTML(fmt.Sprintf("Unsupported event %+v\n", entry))
 	}
 }
 
@@ -108,7 +109,7 @@ func (reporter *Reporter) Send(report *reportPkg.Report) error {
 	var sb strings.Builder
 
 	for _, entry := range report.Entries {
-		sb.WriteString(reporter.SerializeEntry(entry) + "\n")
+		sb.WriteString(string(reporter.SerializeEntry(entry) + "\n"))
 	}
 
 	reportString := sb.String()
@@ -159,4 +160,12 @@ func (reporter *Reporter) BotReply(c tele.Context, msg string) error {
 
 func (reporter *Reporter) SerializeDate(date time.Time) template.HTML {
 	return template.HTML(date.Format(time.RFC822))
+}
+
+func (reporter *Reporter) SerializeLink(link types.Link) template.HTML {
+	if link.Href == "" {
+		return template.HTML(link.Text)
+	}
+
+	return template.HTML(fmt.Sprintf("<a href='%s'>%s</a>", link.Href, link.Text))
 }

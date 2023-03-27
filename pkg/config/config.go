@@ -2,10 +2,11 @@ package config
 
 import (
 	"fmt"
+	"main/pkg/types"
 	"os"
 
 	"github.com/BurntSushi/toml"
-	defaults "github.com/mcuadros/go-defaults"
+	"github.com/mcuadros/go-defaults"
 )
 
 type Config struct {
@@ -13,6 +14,7 @@ type Config struct {
 	LogConfig      LogConfig      `toml:"log"`
 	ChainConfig    ChainConfig    `toml:"chain"`
 	DatabaseConfig DatabaseConfig `toml:"database"`
+	ExplorerConfig ExplorerConfig `toml:"explorer"`
 }
 
 type DatabaseConfig struct {
@@ -25,6 +27,33 @@ func (c *DatabaseConfig) Validate() error {
 	}
 
 	return nil
+}
+
+type ExplorerConfig struct {
+	ValidatorLinkPattern string `toml:"validator-link-pattern"`
+	MintscanPrefix       string `toml:"mintscan-prefix"`
+}
+
+func (c *ExplorerConfig) GetValidatorLink(validator *types.Validator) types.Link {
+	if c.MintscanPrefix != "" {
+		return types.Link{
+			Href: fmt.Sprintf(
+				"https://mintscan.io/%s/validators/%s",
+				c.MintscanPrefix,
+				validator.OperatorAddress,
+			),
+			Text: validator.Moniker,
+		}
+	}
+
+	if c.ValidatorLinkPattern != "" {
+		return types.Link{
+			Href: fmt.Sprintf(c.ValidatorLinkPattern, validator.OperatorAddress),
+			Text: validator.Moniker,
+		}
+	}
+
+	return types.Link{Text: validator.Moniker}
 }
 
 type ChainConfig struct {
