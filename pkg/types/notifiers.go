@@ -35,7 +35,7 @@ func (n Notifiers) AddNotifier(operatorAddress, reporter, notifier string) (*Not
 	return &n, true
 }
 
-func (n Notifiers) GetNotifiers(operatorAddress, reporter string) []string {
+func (n Notifiers) GetNotifiersForReporter(operatorAddress, reporter string) []string {
 	notifiers := utils.Filter(n, func(notifier *Notifier) bool {
 		return notifier.OperatorAddress == operatorAddress && notifier.Reporter == reporter
 	})

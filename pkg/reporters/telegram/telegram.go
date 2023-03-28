@@ -92,21 +92,36 @@ func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.ReportEntry) string 
 			}
 		}
 
+		notifiers := reporter.Manager.GetNotifiersForReporter(entry.Validator.OperatorAddress, reporter.Name())
+		notifiersSerialized := " " + reporter.SerializeNotifiers(notifiers)
+
 		return fmt.Sprintf(
-			"<strong>%s %s</strong> %s %s",
+			// a string like "🟡 <validator> is skipping blocks (> 1.0%)  (XXX till jail) <notifier> <notifier2>"
+			"<strong>%s %s %s</strong>%s%s",
 			entry.GetEmoji(),
 			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 			html.EscapeString(entry.GetDescription()),
 			timeToJailStr,
+			notifiersSerialized,
 		)
 	case events.ValidatorJailed:
 		return fmt.Sprintf(
-			"%s is jailed",
+			"❌ %s was jailed",
 			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 		)
 	case events.ValidatorUnjailed:
 		return fmt.Sprintf(
-			"%s is unjailed",
+			"👌 %s was unjailed",
+			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+		)
+	case events.ValidatorActive:
+		return fmt.Sprintf(
+			"😔 %s is now not in the active set",
+			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+		)
+	case events.ValidatorInactive:
+		return fmt.Sprintf(
+			"✅ %s is now in the active set",
 			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 		)
 	default:
@@ -177,4 +192,16 @@ func (reporter *Reporter) SerializeLink(link types.Link) string {
 	}
 
 	return fmt.Sprintf("<a href='%s'>%s</a>", link.Href, link.Text)
+}
+
+func (reporter *Reporter) SerializeNotifiers(notifiers []string) string {
+	notifiersNormalized := utils.Map(notifiers, func(notifier string) string {
+		if strings.HasPrefix(notifier, "@") {
+			return notifier
+		}
+
+		return "@" + notifier
+	})
+
+	return strings.Join(notifiersNormalized, " ")
 }

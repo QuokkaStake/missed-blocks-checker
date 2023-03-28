@@ -59,6 +59,18 @@ func (snapshot *Snapshot) GetReport(olderSnapshot *Snapshot, appConfig *config.C
 				Validator: entry.Validator,
 			})
 		}
+
+		if entry.Validator.Active() && !olderEntry.Validator.Active() {
+			entries = append(entries, events.ValidatorActive{
+				Validator: entry.Validator,
+			})
+		}
+
+		if !entry.Validator.Active() && olderEntry.Validator.Active() {
+			entries = append(entries, events.ValidatorInactive{
+				Validator: entry.Validator,
+			})
+		}
 	}
 
 	return &report.Report{Entries: entries}

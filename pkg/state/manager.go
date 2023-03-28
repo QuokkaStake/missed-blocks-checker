@@ -104,6 +104,10 @@ func (m *Manager) RemoveNotifier(operatorAddress, reporter, notifier string) boo
 	return err == nil
 }
 
+func (m *Manager) GetNotifiersForReporter(operatorAddress, reporter string) []string {
+	return m.State.GetNotifiersForReporter(operatorAddress, reporter)
+}
+
 func (m *Manager) GetValidator(operatorAddress string) (*types.Validator, bool) {
 	return m.State.GetValidator(operatorAddress)
 }

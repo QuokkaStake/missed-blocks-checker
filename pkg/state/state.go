@@ -99,6 +99,10 @@ func (s *State) RemoveNotifier(operatorAddress, reporter, notifier string) bool 
 	return removed
 }
 
+func (s *State) GetNotifiersForReporter(operatorAddress, reporter string) []string {
+	return s.notifiers.GetNotifiersForReporter(operatorAddress, reporter)
+}
+
 func (s *State) GetLastBlockHeight() int64 {
 	return s.lastBlockHeight
 }

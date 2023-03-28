@@ -140,12 +140,12 @@ func (a *App) ListenForEvents() {
 			olderSnapshot = snapshot
 
 			if report.Empty() {
-				a.Logger.Debug().Msg("Report is empty, no events to send.")
+				a.Logger.Info().Msg("Report is empty, no events to send.")
 				continue
 			}
 
 			for _, entry := range report.Entries {
-				a.Logger.Debug().
+				a.Logger.Info().
 					Str("entry", fmt.Sprintf("%+v", entry)).
 					Msg("Report entry")
 			}
@@ -195,11 +195,14 @@ func (a *App) Populate() {
 		return
 	}
 
+	a.Logger.Debug().Msg("Populating current state...")
+
 	a.IsPopulating = true
 
 	block, err := a.RPC.GetLatestBlock()
 	if err != nil {
-		a.Logger.Fatal().Err(err).Msg("Error querying for last block")
+		a.Logger.Error().Err(err).Msg("Error querying for last block")
+		return
 	}
 
 	blockParsed := block.Result.Block.ToBlock()
@@ -209,9 +212,10 @@ func (a *App) Populate() {
 		Msg("Last chain block")
 
 	if err := a.StateManager.AddBlock(blockParsed); err != nil {
-		a.Logger.Fatal().
+		a.Logger.Error().
 			Err(err).
 			Msg("Error inserting last block")
+		return
 	}
 
 	startBlockToFetch := blockParsed.Height
@@ -237,14 +241,16 @@ func (a *App) Populate() {
 			constants.BlockSearchPagination,
 		)
 		if err != nil {
-			a.Logger.Fatal().Err(err).Msg("Error querying for blocks search")
+			a.Logger.Error().Err(err).Msg("Error querying for blocks search")
+			return
 		}
 
 		for _, block := range blocks.Result.Blocks {
 			if err := a.StateManager.AddBlock(block.Block.ToBlock()); err != nil {
-				a.Logger.Fatal().
+				a.Logger.Error().
 					Err(err).
 					Msg("Error inserting older block")
+				return
 			}
 		}
 
