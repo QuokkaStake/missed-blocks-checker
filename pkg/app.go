@@ -202,6 +202,7 @@ func (a *App) Populate() {
 	block, err := a.RPC.GetLatestBlock()
 	if err != nil {
 		a.Logger.Error().Err(err).Msg("Error querying for last block")
+		a.IsPopulating = false
 		return
 	}
 
@@ -215,6 +216,7 @@ func (a *App) Populate() {
 		a.Logger.Error().
 			Err(err).
 			Msg("Error inserting last block")
+		a.IsPopulating = false
 		return
 	}
 
@@ -242,6 +244,7 @@ func (a *App) Populate() {
 		)
 		if err != nil {
 			a.Logger.Error().Err(err).Msg("Error querying for blocks search")
+			a.IsPopulating = false
 			return
 		}
 
@@ -250,6 +253,7 @@ func (a *App) Populate() {
 				a.Logger.Error().
 					Err(err).
 					Msg("Error inserting older block")
+				a.IsPopulating = false
 				return
 			}
 		}
