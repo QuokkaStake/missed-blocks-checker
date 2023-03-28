@@ -45,6 +45,16 @@ func (n Notifiers) GetNotifiersForReporter(operatorAddress, reporter string) []s
 	})
 }
 
+func (n Notifiers) GetValidatorsForNotifier(reporter, notifier string) []string {
+	notifiers := utils.Filter(n, func(notifierInternal *Notifier) bool {
+		return notifierInternal.Notifier == notifier && notifierInternal.Reporter == reporter
+	})
+
+	return utils.Map(notifiers, func(notifier *Notifier) string {
+		return notifier.OperatorAddress
+	})
+}
+
 func (n Notifiers) RemoveNotifier(operatorAddress, reporter, notifier string) (*Notifiers, bool) {
 	deletedNotifier := &Notifier{
 		OperatorAddress: operatorAddress,

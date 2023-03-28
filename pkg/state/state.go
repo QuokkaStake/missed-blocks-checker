@@ -103,6 +103,10 @@ func (s *State) GetNotifiersForReporter(operatorAddress, reporter string) []stri
 	return s.notifiers.GetNotifiersForReporter(operatorAddress, reporter)
 }
 
+func (s *State) GetValidatorsForNotifier(reporter, notifier string) []string {
+	return s.notifiers.GetValidatorsForNotifier(reporter, notifier)
+}
+
 func (s *State) GetLastBlockHeight() int64 {
 	return s.lastBlockHeight
 }

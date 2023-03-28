@@ -108,10 +108,18 @@ func (m *Manager) GetNotifiersForReporter(operatorAddress, reporter string) []st
 	return m.State.GetNotifiersForReporter(operatorAddress, reporter)
 }
 
+func (m *Manager) GetValidatorsForNotifier(reporter, notifier string) []string {
+	return m.State.GetValidatorsForNotifier(reporter, notifier)
+}
+
 func (m *Manager) GetValidator(operatorAddress string) (*types.Validator, bool) {
 	return m.State.GetValidator(operatorAddress)
 }
 
 func (m *Manager) GetTimeTillJail(validator *types.Validator) (time.Duration, bool) {
 	return m.State.GetTimeTillJail(validator, m.Config)
+}
+
+func (m *Manager) GetValidatorMissedBlocks(validator *types.Validator) types.SignatureInto {
+	return m.State.GetValidatorMissedBlocks(validator, m.Config.ChainConfig.BlocksWindow)
 }
