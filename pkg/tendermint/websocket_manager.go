@@ -41,11 +41,12 @@ func (q *Queue) Has(emittable types.WebsocketEmittable) bool {
 }
 
 type WebsocketManager struct {
-	Logger  zerolog.Logger
-	Nodes   []*WebsocketClient
+	logger zerolog.Logger
+	nodes  []*WebsocketClient
+	queue  Queue
+	mutex  sync.Mutex
+
 	Channel chan types.WebsocketEmittable
-	Queue   Queue
-	Mutex   sync.Mutex
 }
 
 func NewWebsocketManager(logger *zerolog.Logger, appConfig *config.Config) *WebsocketManager {
@@ -56,35 +57,35 @@ func NewWebsocketManager(logger *zerolog.Logger, appConfig *config.Config) *Webs
 	}
 
 	return &WebsocketManager{
-		Logger:  logger.With().Str("component", "websocket_manager").Logger(),
-		Nodes:   nodes,
+		logger:  logger.With().Str("component", "websocket_manager").Logger(),
+		nodes:   nodes,
+		queue:   NewQueue(100),
 		Channel: make(chan types.WebsocketEmittable),
-		Queue:   NewQueue(100),
 	}
 }
 
 func (m *WebsocketManager) Listen() {
-	for _, node := range m.Nodes {
+	for _, node := range m.nodes {
 		go node.Listen()
 	}
 
-	for _, node := range m.Nodes {
+	for _, node := range m.nodes {
 		go func(c chan types.WebsocketEmittable) {
 			for msg := range c {
-				m.Mutex.Lock()
+				m.mutex.Lock()
 
-				if m.Queue.Has(msg) {
-					m.Logger.Trace().
+				if m.queue.Has(msg) {
+					m.logger.Trace().
 						Str("hash", msg.Hash()).
 						Msg("Message already received, not sending again.")
-					m.Mutex.Unlock()
+					m.mutex.Unlock()
 					continue
 				}
 
 				m.Channel <- msg
-				m.Queue.Add(msg)
+				m.queue.Add(msg)
 
-				m.Mutex.Unlock()
+				m.mutex.Unlock()
 			}
 		}(node.Channel)
 	}

@@ -18,17 +18,15 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const PaginationLimit = 100
-
 type RPC struct {
-	URLs   []string
-	Logger zerolog.Logger
+	urls   []string
+	logger zerolog.Logger
 }
 
 func NewRPC(urls []string, logger *zerolog.Logger) *RPC {
 	return &RPC{
-		URLs:   urls,
-		Logger: logger.With().Str("component", "rpc").Logger(),
+		urls:   urls,
+		logger: logger.With().Str("component", "rpc").Logger(),
 	}
 }
 
@@ -93,11 +91,11 @@ func (rpc *RPC) GetValidators() (types.Validators, error) {
 }
 
 func (rpc *RPC) Get(url string, target interface{}) error {
-	errors := make([]error, len(rpc.URLs))
+	errors := make([]error, len(rpc.urls))
 
-	for index, lcd := range rpc.URLs {
+	for index, lcd := range rpc.urls {
 		fullURL := lcd + url
-		rpc.Logger.Trace().Str("url", fullURL).Msg("Trying making request to LCD")
+		rpc.logger.Trace().Str("url", fullURL).Msg("Trying making request to LCD")
 
 		err := rpc.GetFull(
 			fullURL,
@@ -108,16 +106,16 @@ func (rpc *RPC) Get(url string, target interface{}) error {
 			return nil
 		}
 
-		rpc.Logger.Warn().Str("url", fullURL).Err(err).Msg("LCD request failed")
+		rpc.logger.Warn().Str("url", fullURL).Err(err).Msg("LCD request failed")
 		errors[index] = err
 	}
 
-	rpc.Logger.Warn().Str("url", url).Msg("All LCD requests failed")
+	rpc.logger.Warn().Str("url", url).Msg("All LCD requests failed")
 
 	var sb strings.Builder
 
 	sb.WriteString("All LCD requests failed:\n")
-	for index, url := range rpc.URLs {
+	for index, url := range rpc.urls {
 		sb.WriteString(fmt.Sprintf("#%d: %s -> %s\n", index+1, url, errors[index]))
 	}
 
@@ -135,16 +133,16 @@ func (rpc *RPC) GetFull(url string, target interface{}) error {
 
 	req.Header.Set("User-Agent", "missed-blocks-checker")
 
-	rpc.Logger.Debug().Str("url", url).Msg("Doing a query...")
+	rpc.logger.Debug().Str("url", url).Msg("Doing a query...")
 
 	res, err := client.Do(req)
 	if err != nil {
-		rpc.Logger.Warn().Str("url", url).Err(err).Msg("Query failed")
+		rpc.logger.Warn().Str("url", url).Err(err).Msg("Query failed")
 		return err
 	}
 	defer res.Body.Close()
 
-	rpc.Logger.Debug().Str("url", url).Dur("duration", time.Since(start)).Msg("Query is finished")
+	rpc.logger.Debug().Str("url", url).Dur("duration", time.Since(start)).Msg("Query is finished")
 
 	return json.NewDecoder(res.Body).Decode(target)
 }

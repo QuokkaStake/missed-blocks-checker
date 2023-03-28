@@ -13,50 +13,50 @@ import (
 )
 
 type Database struct {
-	Logger zerolog.Logger
-	Config *configPkg.Config
-	Client *sql.DB
+	logger zerolog.Logger
+	config *configPkg.Config
+	client *sql.DB
 }
 
 func NewDatabase(logger *zerolog.Logger, config *configPkg.Config) *Database {
 	return &Database{
-		Logger: logger.With().Str("component", "state_manager").Logger(),
-		Config: config,
+		logger: logger.With().Str("component", "state_manager").Logger(),
+		config: config,
 	}
 }
 
 func (d *Database) Init() {
-	db, err := sql.Open("sqlite3", d.Config.DatabaseConfig.Path)
+	db, err := sql.Open("sqlite3", d.config.DatabaseConfig.Path)
 
 	if err != nil {
-		d.Logger.Fatal().Err(err).Msg("Could not open sqlite database")
+		d.logger.Fatal().Err(err).Msg("Could not open sqlite database")
 	}
 
 	var version string
 	err = db.QueryRow("SELECT SQLITE_VERSION()").Scan(&version)
 
 	if err != nil {
-		d.Logger.Fatal().Err(err).Msg("Could not query sqlite database")
+		d.logger.Fatal().Err(err).Msg("Could not query sqlite database")
 	}
 
-	d.Logger.Info().
+	d.logger.Info().
 		Str("version", version).
-		Str("path", d.Config.DatabaseConfig.Path).
+		Str("path", d.config.DatabaseConfig.Path).
 		Msg("sqlite database connected")
 
 	entries, err := migrations.FS.ReadDir(".")
 	if err != nil {
-		d.Logger.Fatal().Err(err).Msg("Could not get migrations folder path")
+		d.logger.Fatal().Err(err).Msg("Could not get migrations folder path")
 	}
 
 	for _, entry := range entries {
-		d.Logger.Info().
+		d.logger.Info().
 			Str("name", entry.Name()).
 			Msg("Applying sqlite migration")
 
 		content, err := migrations.FS.ReadFile(entry.Name())
 		if err != nil {
-			d.Logger.Fatal().
+			d.logger.Fatal().
 				Str("name", entry.Name()).
 				Err(err).
 				Msg("Could not read migration content")
@@ -64,28 +64,28 @@ func (d *Database) Init() {
 
 		statement, err := db.Prepare(string(content))
 		if err != nil {
-			d.Logger.Fatal().
+			d.logger.Fatal().
 				Str("name", entry.Name()).
 				Err(err).
 				Msg("Could not prepare migration")
 		}
 		defer statement.Close()
 		if _, err := statement.Exec(); err != nil {
-			d.Logger.Fatal().
+			d.logger.Fatal().
 				Str("name", entry.Name()).
 				Err(err).
 				Msg("Could not execute migration")
 		}
 	}
 
-	d.Client = db
+	d.client = db
 }
 
 func (d *Database) InsertBlock(block *types.Block) error {
 	ctx := context.Background()
-	tx, err := d.Client.BeginTx(ctx, nil)
+	tx, err := d.client.BeginTx(ctx, nil)
 	if err != nil {
-		d.Logger.Error().Err(err).Msg("Could not create a transaction for saving a block")
+		d.logger.Error().Err(err).Msg("Could not create a transaction for saving a block")
 		return err
 	}
 
@@ -97,9 +97,9 @@ func (d *Database) InsertBlock(block *types.Block) error {
 		block.Proposer,
 	)
 	if err != nil {
-		d.Logger.Error().Err(err).Msg("Error saving block")
+		d.logger.Error().Err(err).Msg("Error saving block")
 		if err = tx.Rollback(); err != nil {
-			d.Logger.Error().Err(err).Msg("Error rolling back transaction")
+			d.logger.Error().Err(err).Msg("Error rolling back transaction")
 			return err
 		}
 
@@ -115,9 +115,9 @@ func (d *Database) InsertBlock(block *types.Block) error {
 			signature,
 		)
 		if err != nil {
-			d.Logger.Error().Err(err).Msg("Error saving signature")
+			d.logger.Error().Err(err).Msg("Error saving signature")
 			if err = tx.Rollback(); err != nil {
-				d.Logger.Error().Err(err).Msg("Error rolling back transaction")
+				d.logger.Error().Err(err).Msg("Error rolling back transaction")
 				return err
 			}
 
@@ -127,7 +127,7 @@ func (d *Database) InsertBlock(block *types.Block) error {
 
 	err = tx.Commit()
 	if err != nil {
-		d.Logger.Error().Err(err).Msg("Could not commit a transaction")
+		d.logger.Error().Err(err).Msg("Could not commit a transaction")
 		return err
 	}
 
@@ -138,9 +138,9 @@ func (d *Database) GetAllBlocks() (map[int64]*types.Block, error) {
 	blocks := map[int64]*types.Block{}
 
 	// Getting blocks
-	blocksRows, err := d.Client.Query("SELECT height, time, proposer FROM blocks")
+	blocksRows, err := d.client.Query("SELECT height, time, proposer FROM blocks")
 	if err != nil {
-		d.Logger.Error().Err(err).Msg("Error getting all blocks")
+		d.logger.Error().Err(err).Msg("Error getting all blocks")
 		return blocks, err
 	}
 	defer func() {
@@ -157,7 +157,7 @@ func (d *Database) GetAllBlocks() (map[int64]*types.Block, error) {
 
 		err = blocksRows.Scan(&blockHeight, &blockTime, &blockProposer)
 		if err != nil {
-			d.Logger.Error().Err(err).Msg("Error fetching block data")
+			d.logger.Error().Err(err).Msg("Error fetching block data")
 			return blocks, err
 		}
 
@@ -171,9 +171,9 @@ func (d *Database) GetAllBlocks() (map[int64]*types.Block, error) {
 	}
 
 	// Fetching signatures
-	signaturesRows, err := d.Client.Query("SELECT height, validator_address, signature FROM signatures")
+	signaturesRows, err := d.client.Query("SELECT height, validator_address, signature FROM signatures")
 	if err != nil {
-		d.Logger.Error().Err(err).Msg("Error getting all blocks")
+		d.logger.Error().Err(err).Msg("Error getting all blocks")
 		return blocks, err
 	}
 	defer func() {
@@ -190,13 +190,13 @@ func (d *Database) GetAllBlocks() (map[int64]*types.Block, error) {
 
 		err = signaturesRows.Scan(&signatureHeight, &validatorAddr, &signature)
 		if err != nil {
-			d.Logger.Error().Err(err).Msg("Error fetching signature data")
+			d.logger.Error().Err(err).Msg("Error fetching signature data")
 			return blocks, err
 		}
 
 		_, ok := blocks[signatureHeight]
 		if !ok {
-			d.Logger.Fatal().
+			d.logger.Fatal().
 				Int64("height", signatureHeight).
 				Msg("Got signature for block we do not have, which should never happen.")
 		}
@@ -209,17 +209,17 @@ func (d *Database) GetAllBlocks() (map[int64]*types.Block, error) {
 
 func (d *Database) TrimBlocksBefore(height int64) error {
 	ctx := context.Background()
-	tx, err := d.Client.BeginTx(ctx, nil)
+	tx, err := d.client.BeginTx(ctx, nil)
 	if err != nil {
-		d.Logger.Error().Err(err).Msg("Could not create a transaction for trimming blocks")
+		d.logger.Error().Err(err).Msg("Could not create a transaction for trimming blocks")
 		return err
 	}
 
 	_, err = tx.ExecContext(ctx, "DELETE FROM blocks WHERE height <= $1", height)
 	if err != nil {
-		d.Logger.Error().Err(err).Msg("Error trimming blocks")
+		d.logger.Error().Err(err).Msg("Error trimming blocks")
 		if err = tx.Rollback(); err != nil {
-			d.Logger.Error().Err(err).Msg("Error rolling back transaction")
+			d.logger.Error().Err(err).Msg("Error rolling back transaction")
 			return err
 		}
 
@@ -228,9 +228,9 @@ func (d *Database) TrimBlocksBefore(height int64) error {
 
 	_, err = tx.ExecContext(ctx, "DELETE FROM signatures WHERE height <= $1", height)
 	if err != nil {
-		d.Logger.Error().Err(err).Msg("Error trimming signatures")
+		d.logger.Error().Err(err).Msg("Error trimming signatures")
 		if err = tx.Rollback(); err != nil {
-			d.Logger.Error().Err(err).Msg("Error rolling back transaction")
+			d.logger.Error().Err(err).Msg("Error rolling back transaction")
 			return err
 		}
 
@@ -239,7 +239,7 @@ func (d *Database) TrimBlocksBefore(height int64) error {
 
 	err = tx.Commit()
 	if err != nil {
-		d.Logger.Error().Err(err).Msg("Could not commit a transaction")
+		d.logger.Error().Err(err).Msg("Could not commit a transaction")
 		return err
 	}
 
@@ -249,9 +249,9 @@ func (d *Database) TrimBlocksBefore(height int64) error {
 func (d *Database) GetAllNotifiers() (*types.Notifiers, error) {
 	notifiers := make(types.Notifiers, 0)
 
-	rows, err := d.Client.Query("SELECT operator_address, reporter, notifier FROM notifiers")
+	rows, err := d.client.Query("SELECT operator_address, reporter, notifier FROM notifiers")
 	if err != nil {
-		d.Logger.Error().Err(err).Msg("Error getting all blocks")
+		d.logger.Error().Err(err).Msg("Error getting all blocks")
 		return &notifiers, err
 	}
 	defer func() {
@@ -268,7 +268,7 @@ func (d *Database) GetAllNotifiers() (*types.Notifiers, error) {
 
 		err = rows.Scan(&operatorAddress, &reporter, &notifier)
 		if err != nil {
-			d.Logger.Error().Err(err).Msg("Error fetching notifier data")
+			d.logger.Error().Err(err).Msg("Error fetching notifier data")
 			return &notifiers, err
 		}
 
@@ -285,14 +285,14 @@ func (d *Database) GetAllNotifiers() (*types.Notifiers, error) {
 }
 
 func (d *Database) InsertNotifier(operatorAddress, reporter, notifier string) error {
-	_, err := d.Client.Exec(
+	_, err := d.client.Exec(
 		"INSERT INTO notifiers (operator_address, reporter, notifier) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
 		operatorAddress,
 		reporter,
 		notifier,
 	)
 	if err != nil {
-		d.Logger.Error().Err(err).Msg("Could not insert notifier")
+		d.logger.Error().Err(err).Msg("Could not insert notifier")
 		return err
 	}
 
@@ -300,14 +300,14 @@ func (d *Database) InsertNotifier(operatorAddress, reporter, notifier string) er
 }
 
 func (d *Database) RemoveNotifier(operatorAddress, reporter, notifier string) error {
-	_, err := d.Client.Exec(
+	_, err := d.client.Exec(
 		"DELETE FROM notifiers WHERE operator_address = $1 AND reporter = $2 AND notifier = $3",
 		operatorAddress,
 		reporter,
 		notifier,
 	)
 	if err != nil {
-		d.Logger.Error().Err(err).Msg("Could not delete notifier")
+		d.logger.Error().Err(err).Msg("Could not delete notifier")
 		return err
 	}
 

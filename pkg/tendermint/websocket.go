@@ -18,12 +18,13 @@ import (
 )
 
 type WebsocketClient struct {
-	Logger  zerolog.Logger
-	Config  *config.Config
-	URL     string
-	Client  *tmClient.WSClient
-	Active  bool
-	Error   error
+	logger zerolog.Logger
+	config *config.Config
+	url    string
+	client *tmClient.WSClient
+	active bool
+	error  error
+
 	Channel chan types.WebsocketEmittable
 }
 
@@ -33,14 +34,14 @@ func NewWebsocketClient(
 	config *config.Config,
 ) *WebsocketClient {
 	return &WebsocketClient{
-		Logger: logger.With().
+		logger: logger.With().
 			Str("component", "tendermint_ws_client").
 			Str("url", url).
 			Str("chain", config.ChainConfig.Name).
 			Logger(),
-		URL:     url,
-		Config:  config,
-		Active:  false,
+		url:     url,
+		config:  config,
+		active:  false,
 		Channel: make(chan types.WebsocketEmittable),
 	}
 }
@@ -53,40 +54,40 @@ func SetUnexportedField(field reflect.Value, value interface{}) {
 
 func (t *WebsocketClient) Listen() {
 	client, err := tmClient.NewWSWithOptions(
-		t.URL,
+		t.url,
 		"/websocket",
 		tmClient.WSOptions{PingPeriod: 1 * time.Second},
 	)
 
 	client.OnReconnect(func() {
-		t.Logger.Info().Msg("Reconnecting...")
+		t.logger.Info().Msg("Reconnecting...")
 		t.SubscribeToUpdates()
 	})
 
 	if err != nil {
-		t.Logger.Error().Err(err).Msg("Failed to create a client")
-		t.Error = err
+		t.logger.Error().Err(err).Msg("Failed to create a client")
+		t.error = err
 		t.Channel <- &types.WSError{Error: err}
 		return
 	}
 
 	// Patching WSS connections
-	if strings.HasPrefix(t.URL, "https") {
+	if strings.HasPrefix(t.url, "https") {
 		field := reflect.ValueOf(client).Elem().FieldByName("protocol")
 		SetUnexportedField(field, "wss")
 	}
 
-	t.Client = client
+	t.client = client
 
-	t.Logger.Trace().Msg("Connecting to a node...")
+	t.logger.Trace().Msg("Connecting to a node...")
 
 	if err = client.Start(); err != nil {
-		t.Error = err
+		t.error = err
 		t.Channel <- &types.WSError{Error: err}
-		t.Logger.Warn().Err(err).Msg("Error connecting to node")
+		t.logger.Warn().Err(err).Msg("Error connecting to node")
 	} else {
-		t.Logger.Debug().Msg("Connected to a node")
-		t.Active = true
+		t.logger.Debug().Msg("Connected to a node")
+		t.active = true
 	}
 
 	t.SubscribeToUpdates()
@@ -100,48 +101,48 @@ func (t *WebsocketClient) Listen() {
 }
 
 func (t *WebsocketClient) Stop() {
-	t.Logger.Info().Msg("Stopping the node...")
+	t.logger.Info().Msg("Stopping the node...")
 
-	if t.Client != nil {
-		if err := t.Client.Stop(); err != nil {
-			t.Logger.Warn().Err(err).Msg("Error stopping the node")
+	if t.client != nil {
+		if err := t.client.Stop(); err != nil {
+			t.logger.Warn().Err(err).Msg("Error stopping the node")
 		}
 	}
 }
 
 func (t *WebsocketClient) ProcessEvent(event rpcTypes.RPCResponse) {
 	if event.Error != nil && event.Error.Message != "" {
-		t.Logger.Error().Str("msg", event.Error.Error()).Msg("Got error in RPC response")
+		t.logger.Error().Str("msg", event.Error.Error()).Msg("Got error in RPC response")
 		t.Channel <- &types.WSError{Error: event.Error}
 		return
 	}
 
 	var resultEvent types.EventResult
 	if err := json.Unmarshal(event.Result, &resultEvent); err != nil {
-		t.Logger.Error().Err(err).Msg("Failed to parse event")
+		t.logger.Error().Err(err).Msg("Failed to parse event")
 		t.Channel <- &types.WSError{Error: err}
 		return
 	}
 
 	if resultEvent.Query == "" {
-		t.Logger.Debug().Msg("Event is empty, skipping.")
+		t.logger.Debug().Msg("Event is empty, skipping.")
 		return
 	}
 
 	if resultEvent.Query != constants.NewBlocksQuery {
-		t.Logger.Warn().Str("query", resultEvent.Query).Msg("Unsupported event, skipping")
+		t.logger.Warn().Str("query", resultEvent.Query).Msg("Unsupported event, skipping")
 		return
 	}
 
 	blockDataStr, err := json.Marshal(resultEvent.Data.Value)
 	if err != nil {
-		t.Logger.Err(err).Err(err).Msg("Could not marshal block data to string")
+		t.logger.Err(err).Err(err).Msg("Could not marshal block data to string")
 		return
 	}
 
 	var blockData types.SingleBlockResult
 	if err := json.Unmarshal(blockDataStr, &blockData); err != nil {
-		t.Logger.Error().Err(err).Msg("Failed to unmarshall event")
+		t.logger.Error().Err(err).Msg("Failed to unmarshall event")
 	}
 
 	block := blockData.Block.ToBlock()
@@ -149,17 +150,17 @@ func (t *WebsocketClient) ProcessEvent(event rpcTypes.RPCResponse) {
 }
 
 func (t *WebsocketClient) SubscribeToUpdates() {
-	t.Logger.Trace().Msg("Subscribing to updates...")
+	t.logger.Trace().Msg("Subscribing to updates...")
 
 	queries := []string{
 		constants.NewBlocksQuery,
 	}
 
 	for _, query := range queries {
-		if err := t.Client.Subscribe(context.Background(), query); err != nil {
-			t.Logger.Error().Err(err).Str("query", query).Msg("Failed to subscribe to query")
+		if err := t.client.Subscribe(context.Background(), query); err != nil {
+			t.logger.Error().Err(err).Str("query", query).Msg("Failed to subscribe to query")
 		} else {
-			t.Logger.Info().Str("query", query).Msg("Listening for incoming transactions")
+			t.logger.Info().Str("query", query).Msg("Listening for incoming transactions")
 		}
 	}
 }

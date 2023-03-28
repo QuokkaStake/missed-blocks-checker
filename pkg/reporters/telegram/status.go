@@ -30,7 +30,6 @@ func (reporter *Reporter) HandleStatus(c tele.Context) error {
 		}
 
 		link := reporter.Config.ExplorerConfig.GetValidatorLink(validator)
-		signatureInfo := reporter.Manager.GetValidatorMissedBlocks(validator)
 
 		if validator.Jailed {
 			sb.WriteString(fmt.Sprintf(
@@ -43,6 +42,7 @@ func (reporter *Reporter) HandleStatus(c tele.Context) error {
 				reporter.SerializeLink(link),
 			))
 		} else {
+			signatureInfo := reporter.Manager.GetValidatorMissedBlocks(validator)
 			sb.WriteString(fmt.Sprintf(
 				"<strong>%s:</strong> %d missed blocks (%.2f%%)\n",
 				reporter.SerializeLink(link),

@@ -9,58 +9,58 @@ import (
 )
 
 type Manager struct {
-	Logger   zerolog.Logger
-	Config   *configPkg.Config
-	State    *State
-	Database *Database
+	logger   zerolog.Logger
+	config   *configPkg.Config
+	state    *State
+	database *Database
 }
 
 func NewManager(logger *zerolog.Logger, config *configPkg.Config) *Manager {
 	return &Manager{
-		Logger:   logger.With().Str("component", "state_manager").Logger(),
-		Config:   config,
-		State:    NewState(),
-		Database: NewDatabase(logger, config),
+		logger:   logger.With().Str("component", "state_manager").Logger(),
+		config:   config,
+		state:    NewState(),
+		database: NewDatabase(logger, config),
 	}
 }
 
 func (m *Manager) Init() {
-	m.Database.Init()
+	m.database.Init()
 
-	blocks, err := m.Database.GetAllBlocks()
+	blocks, err := m.database.GetAllBlocks()
 	if err != nil {
-		m.Logger.Fatal().Err(err).Msg("Could not get blocks from the database")
+		m.logger.Fatal().Err(err).Msg("Could not get blocks from the database")
 	}
 
-	m.State.SetBlocks(blocks)
-	m.Logger.Info().Msg("Loaded older blocks from database")
+	m.state.SetBlocks(blocks)
+	m.logger.Info().Msg("Loaded older blocks from database")
 
-	notifiers, err := m.Database.GetAllNotifiers()
+	notifiers, err := m.database.GetAllNotifiers()
 	if err != nil {
-		m.Logger.Fatal().Err(err).Msg("Could not get notifiers from the database")
+		m.logger.Fatal().Err(err).Msg("Could not get notifiers from the database")
 	}
 
-	m.State.SetNotifiers(notifiers)
-	m.Logger.Info().Msg("Loaded notifiers from database")
+	m.state.SetNotifiers(notifiers)
+	m.logger.Info().Msg("Loaded notifiers from database")
 }
 
 func (m *Manager) AddBlock(block *types.Block) error {
-	m.State.AddBlock(block)
+	m.state.AddBlock(block)
 
-	if err := m.Database.InsertBlock(block); err != nil {
+	if err := m.database.InsertBlock(block); err != nil {
 		return err
 	}
 
 	// newly added block, need to trim older blocks
-	if m.State.GetLastBlockHeight() == block.Height {
-		trimHeight := block.Height - m.Config.ChainConfig.StoreBlocks
-		m.Logger.Debug().
+	if m.state.GetLastBlockHeight() == block.Height {
+		trimHeight := block.Height - m.config.ChainConfig.StoreBlocks
+		m.logger.Debug().
 			Int64("height", block.Height).
 			Int64("trim_height", trimHeight).
 			Msg("Need to trim blocks")
 
-		m.State.TrimBlocksBefore(trimHeight)
-		if err := m.Database.TrimBlocksBefore(trimHeight); err != nil {
+		m.state.TrimBlocksBefore(trimHeight)
+		if err := m.database.TrimBlocksBefore(trimHeight); err != nil {
 			return err
 		}
 	}
@@ -69,17 +69,17 @@ func (m *Manager) AddBlock(block *types.Block) error {
 }
 
 func (m *Manager) GetBlocksCountSinceLatest(expected int64) int64 {
-	return m.State.GetBlocksCountSinceLatest(expected)
+	return m.state.GetBlocksCountSinceLatest(expected)
 }
 
 func (m *Manager) GetSnapshot() *Snapshot {
-	validators := m.State.GetValidators()
+	validators := m.state.GetValidators()
 	entries := make(map[string]SnapshotEntry, len(validators))
 
 	for _, validator := range validators {
 		entries[validator.OperatorAddress] = SnapshotEntry{
 			Validator:     validator,
-			SignatureInfo: m.State.GetValidatorMissedBlocks(validator, m.Config.ChainConfig.BlocksWindow),
+			SignatureInfo: m.state.GetValidatorMissedBlocks(validator, m.config.ChainConfig.BlocksWindow),
 		}
 	}
 
@@ -87,39 +87,43 @@ func (m *Manager) GetSnapshot() *Snapshot {
 }
 
 func (m *Manager) AddNotifier(operatorAddress, reporter, notifier string) bool {
-	if added := m.State.AddNotifier(operatorAddress, reporter, notifier); !added {
+	if added := m.state.AddNotifier(operatorAddress, reporter, notifier); !added {
 		return false
 	}
 
-	err := m.Database.InsertNotifier(operatorAddress, reporter, notifier)
+	err := m.database.InsertNotifier(operatorAddress, reporter, notifier)
 	return err == nil
 }
 
 func (m *Manager) RemoveNotifier(operatorAddress, reporter, notifier string) bool {
-	if removed := m.State.RemoveNotifier(operatorAddress, reporter, notifier); !removed {
+	if removed := m.state.RemoveNotifier(operatorAddress, reporter, notifier); !removed {
 		return false
 	}
 
-	err := m.Database.RemoveNotifier(operatorAddress, reporter, notifier)
+	err := m.database.RemoveNotifier(operatorAddress, reporter, notifier)
 	return err == nil
 }
 
 func (m *Manager) GetNotifiersForReporter(operatorAddress, reporter string) []string {
-	return m.State.GetNotifiersForReporter(operatorAddress, reporter)
+	return m.state.GetNotifiersForReporter(operatorAddress, reporter)
 }
 
 func (m *Manager) GetValidatorsForNotifier(reporter, notifier string) []string {
-	return m.State.GetValidatorsForNotifier(reporter, notifier)
+	return m.state.GetValidatorsForNotifier(reporter, notifier)
 }
 
 func (m *Manager) GetValidator(operatorAddress string) (*types.Validator, bool) {
-	return m.State.GetValidator(operatorAddress)
+	return m.state.GetValidator(operatorAddress)
 }
 
 func (m *Manager) GetTimeTillJail(validator *types.Validator) (time.Duration, bool) {
-	return m.State.GetTimeTillJail(validator, m.Config)
+	return m.state.GetTimeTillJail(validator, m.config)
 }
 
 func (m *Manager) GetValidatorMissedBlocks(validator *types.Validator) types.SignatureInto {
-	return m.State.GetValidatorMissedBlocks(validator, m.Config.ChainConfig.BlocksWindow)
+	return m.state.GetValidatorMissedBlocks(validator, m.config.ChainConfig.BlocksWindow)
+}
+
+func (m *Manager) SetValidators(validators types.ValidatorsMap) {
+	m.state.SetValidators(validators)
 }
