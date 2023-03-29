@@ -22,3 +22,15 @@ func (validators Validators) ToMap() ValidatorsMap {
 
 	return validatorsMap
 }
+
+func (validatorsMap ValidatorsMap) ToSlice() Validators {
+	validators := make(Validators, len(validatorsMap))
+	index := 0
+
+	for _, validator := range validatorsMap {
+		validators[index] = validator
+		index++
+	}
+
+	return validators
+}

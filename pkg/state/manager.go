@@ -116,6 +116,10 @@ func (m *Manager) GetValidator(operatorAddress string) (*types.Validator, bool) 
 	return m.state.GetValidator(operatorAddress)
 }
 
+func (m *Manager) GetValidators() types.ValidatorsMap {
+	return m.state.GetValidators()
+}
+
 func (m *Manager) GetTimeTillJail(validator *types.Validator) (time.Duration, bool) {
 	return m.state.GetTimeTillJail(validator, m.config)
 }

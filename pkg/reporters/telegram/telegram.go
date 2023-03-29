@@ -71,6 +71,7 @@ func (reporter *Reporter) Init() {
 	bot.Handle("/subscribe", reporter.HandleSubscribe)
 	bot.Handle("/unsubscribe", reporter.HandleUnubscribe)
 	bot.Handle("/status", reporter.HandleStatus)
+	bot.Handle("/validators", reporter.HandleListValidators)
 
 	reporter.TelegramBot = bot
 	go reporter.TelegramBot.Start()

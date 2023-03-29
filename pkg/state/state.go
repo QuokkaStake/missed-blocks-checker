@@ -19,6 +19,7 @@ type State struct {
 func NewState() *State {
 	return &State{
 		blocks:          make(types.BlocksMap),
+		validators:      make(types.ValidatorsMap),
 		lastBlockHeight: 0,
 	}
 }
@@ -152,7 +153,7 @@ func (s *State) GetValidatorMissedBlocks(validator *types.Validator, blocksToChe
 func (s *State) GetEarliestBlock() *types.Block {
 	earliestHeight := s.lastBlockHeight
 
-	for height, _ := range s.blocks {
+	for height := range s.blocks {
 		if height < earliestHeight {
 			earliestHeight = height
 		}
