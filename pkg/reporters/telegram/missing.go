@@ -10,19 +10,25 @@ import (
 	tele "gopkg.in/telebot.v3"
 )
 
-func (reporter *Reporter) HandleListValidators(c tele.Context) error {
+func (reporter *Reporter) HandleMissingValidators(c tele.Context) error {
 	reporter.Logger.Info().
 		Str("sender", c.Sender().Username).
 		Str("text", c.Text()).
-		Msg("Got list validators query")
+		Msg("Got missing validators query")
 
 	allValidators := reporter.Manager.GetValidators().ToSlice()
 	activeValidators := utils.Filter(allValidators, func(v *types.Validator) bool {
-		return v.Active()
+		if !v.Active() {
+			return false
+		}
+
+		signatureInfo := reporter.Manager.GetValidatorMissedBlocks(v)
+		group, _ := reporter.Config.MissedBlocksGroups.GetGroup(signatureInfo.GetNotSigned())
+		return group.Start > 0
 	})
 
 	if len(activeValidators) == 0 {
-		return reporter.BotReply(c, "There are no active validators!")
+		return reporter.BotReply(c, "There are no missing validators!")
 	}
 
 	sort.Slice(activeValidators, func(firstIndex, secondIndex int) bool {
