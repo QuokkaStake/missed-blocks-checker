@@ -83,3 +83,15 @@ type AbciResponse struct {
 	Code  int    `json:"code"`
 	Value []byte `json:"value"`
 }
+
+type ValidatorsResponse struct {
+	Result ValidatorsResult `json:"result"`
+}
+
+type ValidatorsResult struct {
+	Validators []ActiveSetValidator `json:"validators"`
+}
+
+type ActiveSetValidator struct {
+	Address string `json:"address"`
+}

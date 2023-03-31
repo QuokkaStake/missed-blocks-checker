@@ -16,13 +16,14 @@ import (
 )
 
 type App struct {
-	Logger           zerolog.Logger
-	Config           *configPkg.Config
-	RPC              *tendermint.RPC
-	StateManager     *statePkg.Manager
-	WebsocketManager *tendermint.WebsocketManager
-	Reporters        []reportersPkg.Reporter
-	IsPopulating     bool
+	Logger                zerolog.Logger
+	Config                *configPkg.Config
+	RPC                   *tendermint.RPC
+	StateManager          *statePkg.Manager
+	WebsocketManager      *tendermint.WebsocketManager
+	Reporters             []reportersPkg.Reporter
+	IsPopulatingBlocks    bool
+	IsPopulatingActiveSet bool
 }
 
 func NewApp(configPath string) *App {
@@ -49,13 +50,14 @@ func NewApp(configPath string) *App {
 	}
 
 	return &App{
-		Logger:           log,
-		Config:           config,
-		RPC:              rpc,
-		StateManager:     stateManager,
-		WebsocketManager: websocketManager,
-		Reporters:        reporters,
-		IsPopulating:     false,
+		Logger:                log,
+		Config:                config,
+		RPC:                   rpc,
+		StateManager:          stateManager,
+		WebsocketManager:      websocketManager,
+		Reporters:             reporters,
+		IsPopulatingBlocks:    false,
+		IsPopulatingActiveSet: false,
 	}
 }
 
@@ -98,6 +100,12 @@ func (a *App) ListenForEvents() {
 					Msg("Error updating validators")
 			}
 
+			if err := a.AddLastActiveSet(block.Height); err != nil {
+				a.Logger.Error().
+					Err(err).
+					Msg("Error updating validators")
+			}
+
 			a.Logger.Debug().Int64("height", block.Height).Msg("Got new block from Tendermint")
 			if err := a.StateManager.AddBlock(block); err != nil {
 				a.Logger.Error().
@@ -112,7 +120,7 @@ func (a *App) ListenForEvents() {
 				Int64("height", block.Height).
 				Msg("Added blocks into state")
 
-			if count < a.Config.ChainConfig.StoreBlocks {
+			if !a.StateManager.IsPopulated() {
 				a.Logger.Debug().
 					Int64("count", count).
 					Int64("expected", a.Config.ChainConfig.BlocksWindow).
@@ -129,6 +137,7 @@ func (a *App) ListenForEvents() {
 					Int64("signed", entry.SignatureInfo.Signed).
 					Int64("not_signed", entry.SignatureInfo.NotSigned).
 					Int64("no_signature", entry.SignatureInfo.NoSignature).
+					Int64("not_active", entry.SignatureInfo.NotActive).
 					Int64("proposed", entry.SignatureInfo.Proposed).
 					Msg("Validator signing info")
 			}
@@ -175,37 +184,52 @@ func (a *App) UpdateValidators() error {
 	return nil
 }
 
-func (a *App) PopulateInBackground() {
-	a.Populate()
+func (a *App) AddLastActiveSet(height int64) error {
+	validators, err := a.RPC.GetActiveSetAtBlock(height)
+	if err != nil {
+		return err
+	}
 
-	ticker := time.NewTicker(60 * time.Second)
+	a.StateManager.AddActiveSet(height, validators)
+	return nil
+}
+
+func (a *App) PopulateInBackground() {
+	a.PopulateBlocks()
+	a.PopulateActiveSet()
+
+	blocksTicker := time.NewTicker(60 * time.Second)
+	activeSetTicker := time.NewTicker(60 * time.Second)
 	quit := make(chan struct{})
 
 	for {
 		select {
-		case <-ticker.C:
-			a.Populate()
+		case <-blocksTicker.C:
+			a.PopulateBlocks()
+		case <-activeSetTicker.C:
+			a.PopulateActiveSet()
 		case <-quit:
-			ticker.Stop()
+			blocksTicker.Stop()
+			activeSetTicker.Stop()
 			return
 		}
 	}
 }
 
-func (a *App) Populate() {
-	if a.IsPopulating {
-		a.Logger.Debug().Msg("App is populating already, not populating again")
+func (a *App) PopulateBlocks() {
+	if a.IsPopulatingBlocks {
+		a.Logger.Debug().Msg("App is populating blocks already, not populating again")
 		return
 	}
 
-	a.Logger.Debug().Msg("Populating current state...")
+	a.Logger.Debug().Msg("Populating blocks...")
 
-	a.IsPopulating = true
+	a.IsPopulatingBlocks = true
 
 	block, err := a.RPC.GetLatestBlock()
 	if err != nil {
 		a.Logger.Error().Err(err).Msg("Error querying for last block")
-		a.IsPopulating = false
+		a.IsPopulatingBlocks = false
 		return
 	}
 
@@ -219,7 +243,7 @@ func (a *App) Populate() {
 		a.Logger.Error().
 			Err(err).
 			Msg("Error inserting last block")
-		a.IsPopulating = false
+		a.IsPopulatingBlocks = false
 		return
 	}
 
@@ -231,7 +255,7 @@ func (a *App) Populate() {
 			a.Logger.Info().
 				Int64("count", count).
 				Msg("Got enough blocks for populating")
-			a.IsPopulating = false
+			a.IsPopulatingBlocks = false
 			break
 		}
 
@@ -247,7 +271,7 @@ func (a *App) Populate() {
 		)
 		if err != nil {
 			a.Logger.Error().Err(err).Msg("Error querying for blocks search")
-			a.IsPopulating = false
+			a.IsPopulatingBlocks = false
 			return
 		}
 
@@ -256,11 +280,81 @@ func (a *App) Populate() {
 				a.Logger.Error().
 					Err(err).
 					Msg("Error inserting older block")
-				a.IsPopulating = false
+				a.IsPopulatingBlocks = false
 				return
 			}
 		}
 
 		startBlockToFetch -= constants.BlockSearchPagination
+	}
+}
+
+func (a *App) PopulateActiveSet() {
+	if a.IsPopulatingActiveSet {
+		a.Logger.Debug().Msg("App is populating active set already, not populating again")
+		return
+	}
+
+	a.Logger.Debug().Msg("Populating active set...")
+
+	a.IsPopulatingActiveSet = true
+
+	block, err := a.RPC.GetLatestBlock()
+	if err != nil {
+		a.Logger.Error().Err(err).Msg("Error querying for last block")
+		a.IsPopulatingActiveSet = false
+		return
+	}
+
+	blockParsed := block.Result.Block.ToBlock()
+
+	a.Logger.Info().
+		Int64("height", blockParsed.Height).
+		Msg("Last chain block")
+
+	blockHeight := blockParsed.Height
+
+	for {
+		count := a.StateManager.GetActiveSetsCountSinceLatest(a.Config.ChainConfig.StoreBlocks)
+		if count >= a.Config.ChainConfig.StoreBlocks {
+			a.Logger.Info().
+				Int64("count", count).
+				Msg("Got enough historical validators for populating")
+			a.IsPopulatingActiveSet = false
+			break
+		}
+
+		if a.StateManager.HasActiveSetAtHeight(blockHeight) {
+			a.Logger.Trace().
+				Int64("height", blockHeight).
+				Msg("Already have active set at this block, skipping")
+			blockHeight -= 1
+			continue
+		}
+
+		a.Logger.Info().
+			Int64("count", count).
+			Int64("required", a.Config.ChainConfig.StoreBlocks).
+			Msg("Not enough historical validators, fetching more...")
+
+		heightActiveSet, err := a.RPC.GetActiveSetAtBlock(blockHeight)
+		if err != nil {
+			a.Logger.Error().
+				Err(err).
+				Int64("height", blockHeight).
+				Msg("Error querying for active set at height")
+			a.IsPopulatingActiveSet = false
+			return
+		}
+
+		if err := a.StateManager.AddActiveSet(blockHeight, heightActiveSet); err != nil {
+			a.Logger.Error().
+				Err(err).
+				Msg("Error inserting active set")
+			a.IsPopulatingActiveSet = false
+			return
+		}
+
+		blockHeight -= 1
 	}
 }

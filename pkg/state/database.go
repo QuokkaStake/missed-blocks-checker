@@ -336,3 +336,91 @@ func (d *Database) RemoveNotifier(operatorAddress, reporter, notifier string) er
 
 	return nil
 }
+
+func (d *Database) GetAllActiveSets() (types.ActiveSet, error) {
+	activeSets := make(types.ActiveSet, 0)
+
+	rows, err := d.client.Query(
+		"SELECT height, validator_address FROM validators WHERE chain = $1",
+		d.config.ChainConfig.Name,
+	)
+	if err != nil {
+		d.logger.Error().Err(err).Msg("Error getting all blocks")
+		return types.ActiveSet{}, err
+	}
+	defer func() {
+		_ = rows.Close()
+		_ = rows.Err() // or modify return value
+	}()
+
+	for rows.Next() {
+		var (
+			height           int64
+			validatorAddress string
+		)
+
+		err = rows.Scan(&height, &validatorAddress)
+		if err != nil {
+			d.logger.Error().Err(err).Msg("Error fetching active set data")
+			return activeSets, err
+		}
+
+		if _, ok := activeSets[height]; !ok {
+			activeSets[height] = make([]string, 0)
+		}
+
+		activeSets[height] = append(activeSets[height], validatorAddress)
+	}
+
+	return activeSets, nil
+}
+
+func (d *Database) InsertActiveSet(height int64, activeSet []string) error {
+	ctx := context.Background()
+	tx, err := d.client.BeginTx(ctx, nil)
+	if err != nil {
+		d.logger.Error().Err(err).Msg("Could not create a transaction for inserting active set")
+		return err
+	}
+
+	for _, validator := range activeSet {
+		_, err = tx.ExecContext(
+			ctx,
+			"INSERT INTO validators (chain, validator_address, height) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
+			d.config.ChainConfig.Name,
+			validator,
+			height,
+		)
+		if err != nil {
+			d.logger.Error().Err(err).Msg("Error adding active set")
+			if err = tx.Rollback(); err != nil {
+				d.logger.Error().Err(err).Msg("Error rolling back transaction")
+				return err
+			}
+
+			return err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		d.logger.Error().Err(err).Msg("Could not commit a transaction")
+		return err
+	}
+
+	return nil
+}
+
+func (d *Database) TrimActiveSetsBefore(height int64) error {
+	_, err := d.client.Exec(
+		"DELETE FROM validators WHERE chain = $4 AND height <= $2",
+		d.config.ChainConfig.Name,
+		height,
+	)
+	if err != nil {
+		d.logger.Error().Err(err).Msg("Could not trim active set")
+		return err
+	}
+
+	return nil
+}

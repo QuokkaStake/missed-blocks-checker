@@ -33,7 +33,7 @@ func (m *Manager) Init() {
 	}
 
 	m.state.SetBlocks(blocks)
-	m.logger.Info().Msg("Loaded older blocks from database")
+	m.logger.Info().Int("len", len(blocks)).Msg("Loaded older blocks from database")
 
 	notifiers, err := m.database.GetAllNotifiers()
 	if err != nil {
@@ -41,7 +41,15 @@ func (m *Manager) Init() {
 	}
 
 	m.state.SetNotifiers(notifiers)
-	m.logger.Info().Msg("Loaded notifiers from database")
+	m.logger.Info().Int("len", len(*notifiers)).Msg("Loaded notifiers from database")
+
+	activeSet, err := m.database.GetAllActiveSets()
+	if err != nil {
+		m.logger.Fatal().Err(err).Msg("Could not get historical validators from the database")
+	}
+
+	m.state.SetActiveSet(activeSet)
+	m.logger.Info().Int("len", len(activeSet)).Msg("Loaded historical validators from database")
 }
 
 func (m *Manager) AddBlock(block *types.Block) error {
@@ -68,8 +76,44 @@ func (m *Manager) AddBlock(block *types.Block) error {
 	return nil
 }
 
+func (m *Manager) AddActiveSet(height int64, activeSet []string) error {
+	m.state.AddActiveSet(height, activeSet)
+
+	if err := m.database.InsertActiveSet(height, activeSet); err != nil {
+		return err
+	}
+
+	// newly added block, need to trim older blocks
+	if m.state.GetLastBlockHeight() == height {
+		trimHeight := height - m.config.ChainConfig.StoreBlocks
+		m.logger.Debug().
+			Int64("height", height).
+			Int64("trim_height", trimHeight).
+			Msg("Need to trim active set")
+
+		m.state.TrimActiveSetsBefore(trimHeight)
+		if err := m.database.TrimActiveSetsBefore(trimHeight); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *Manager) HasActiveSetAtHeight(height int64) bool {
+	return m.state.HasActiveSetAtHeight(height)
+}
+
 func (m *Manager) GetBlocksCountSinceLatest(expected int64) int64 {
 	return m.state.GetBlocksCountSinceLatest(expected)
+}
+
+func (m *Manager) GetActiveSetsCountSinceLatest(expected int64) int64 {
+	return m.state.GetActiveSetsCountSinceLatest(expected)
+}
+
+func (m *Manager) IsPopulated() bool {
+	return m.state.IsPopulated(m.config)
 }
 
 func (m *Manager) GetSnapshot() *Snapshot {

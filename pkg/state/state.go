@@ -4,23 +4,28 @@ import (
 	"main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/types"
+	"main/pkg/utils"
 	"sync"
 	"time"
 )
 
 type State struct {
-	blocks          types.BlocksMap
-	validators      types.ValidatorsMap
-	notifiers       *types.Notifiers
-	lastBlockHeight int64
-	mutex           sync.Mutex
+	blocks              types.BlocksMap
+	validators          types.ValidatorsMap
+	activeSet           types.ActiveSet
+	notifiers           *types.Notifiers
+	lastBlockHeight     int64
+	lastActiveSetHeight int64
+	mutex               sync.Mutex
 }
 
 func NewState() *State {
 	return &State{
-		blocks:          make(types.BlocksMap),
-		validators:      make(types.ValidatorsMap),
-		lastBlockHeight: 0,
+		blocks:              make(types.BlocksMap),
+		validators:          make(types.ValidatorsMap),
+		activeSet:           make(types.ActiveSet),
+		lastBlockHeight:     0,
+		lastActiveSetHeight: 0,
 	}
 }
 
@@ -32,6 +37,17 @@ func (s *State) AddBlock(block *types.Block) {
 
 	if block.Height > s.lastBlockHeight {
 		s.lastBlockHeight = block.Height
+	}
+}
+
+func (s *State) AddActiveSet(height int64, activeSet []string) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	s.activeSet[height] = activeSet
+
+	if height > s.lastActiveSetHeight {
+		s.lastActiveSetHeight = height
 	}
 }
 
@@ -50,6 +66,32 @@ func (s *State) GetBlocksCountSinceLatest(expected int64) int64 {
 	return expectedCount
 }
 
+func (s *State) GetActiveSetsCountSinceLatest(expected int64) int64 {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	var expectedCount int64 = 0
+
+	for height := s.lastActiveSetHeight; height > s.lastActiveSetHeight-expected; height-- {
+		if _, ok := s.activeSet[height]; ok {
+			expectedCount++
+		}
+	}
+
+	return expectedCount
+}
+
+func (s *State) HasActiveSetAtHeight(height int64) bool {
+	_, ok := s.activeSet[height]
+	return ok
+}
+
+func (s *State) IsPopulated(appConfig *config.Config) bool {
+	expected := appConfig.ChainConfig.BlocksWindow
+	return s.GetActiveSetsCountSinceLatest(expected) >= expected &&
+		s.GetBlocksCountSinceLatest(expected) >= expected
+}
+
 func (s *State) TrimBlocksBefore(trimHeight int64) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -57,6 +99,17 @@ func (s *State) TrimBlocksBefore(trimHeight int64) {
 	for height := range s.blocks {
 		if height <= trimHeight {
 			delete(s.blocks, height)
+		}
+	}
+}
+
+func (s *State) TrimActiveSetsBefore(trimHeight int64) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	for height := range s.activeSet {
+		if height <= trimHeight {
+			delete(s.activeSet, height)
 		}
 	}
 }
@@ -80,6 +133,13 @@ func (s *State) SetBlocks(blocks map[int64]*types.Block) {
 	defer s.mutex.Unlock()
 
 	s.blocks = blocks
+}
+
+func (s *State) SetActiveSet(activeSet types.ActiveSet) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	s.activeSet = activeSet
 }
 
 func (s *State) AddNotifier(operatorAddress, reporter, notifier string) bool {
@@ -112,8 +172,20 @@ func (s *State) GetLastBlockHeight() int64 {
 	return s.lastBlockHeight
 }
 
+func (s *State) GetLastActiveSetHeight() int64 {
+	return s.lastActiveSetHeight
+}
+
 func (s *State) GetValidators() types.ValidatorsMap {
 	return s.validators
+}
+
+func (s *State) IsValidatorActiveAtBlock(validator *types.Validator, height int64) bool {
+	if _, ok := s.activeSet[height]; !ok {
+		return false
+	}
+
+	return utils.Contains(s.activeSet[height], validator.ConsensusAddress)
 }
 
 func (s *State) GetValidator(operatorAddress string) (*types.Validator, bool) {
@@ -129,6 +201,11 @@ func (s *State) GetValidatorMissedBlocks(validator *types.Validator, blocksToChe
 
 	for height := s.lastBlockHeight; height > s.lastBlockHeight-blocksToCheck; height-- {
 		if _, ok := s.blocks[height]; !ok {
+			continue
+		}
+
+		if !s.IsValidatorActiveAtBlock(validator, height) {
+			signatureInfo.NotActive++
 			continue
 		}
 
