@@ -36,9 +36,8 @@ func (snapshot *Snapshot) GetReport(olderSnapshot *Snapshot, appConfig *config.C
 		afterGroup, _ := appConfig.MissedBlocksGroups.GetGroup(missedBlocksAfter)
 
 		missedBlocksGroupsEqual := beforeGroup.Start == afterGroup.Start
-		jailedEqual := olderEntry.Validator.Jailed == entry.Validator.Jailed
 
-		if !missedBlocksGroupsEqual && jailedEqual {
+		if !missedBlocksGroupsEqual && !entry.Validator.Jailed {
 			entries = append(entries, events.ValidatorGroupChanged{
 				Validator:               entry.Validator,
 				MissedBlocksBefore:      missedBlocksBefore,
