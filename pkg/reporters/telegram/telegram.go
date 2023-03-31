@@ -109,22 +109,22 @@ func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.ReportEntry) string 
 		)
 	case events.ValidatorJailed:
 		return fmt.Sprintf(
-			"❌ %s was jailed",
+			"<strong>❌ %s was jailed</strong>",
 			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 		)
 	case events.ValidatorUnjailed:
 		return fmt.Sprintf(
-			"👌 %s was unjailed",
-			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
-		)
-	case events.ValidatorActive:
-		return fmt.Sprintf(
-			"😔 %s is now not in the active set",
+			"<strong>👌 %s was unjailed</strong>",
 			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 		)
 	case events.ValidatorInactive:
 		return fmt.Sprintf(
-			"✅ %s is now in the active set",
+			"😔 <strong>%s is now not in the active set</strong>",
+			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+		)
+	case events.ValidatorActive:
+		return fmt.Sprintf(
+			"✅ <strong>%s is now in the active set</strong>",
 			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 		)
 	default:
