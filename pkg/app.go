@@ -16,7 +16,7 @@ import (
 )
 
 type App struct {
-	Logger           *zerolog.Logger
+	Logger           zerolog.Logger
 	Config           *configPkg.Config
 	RPC              *tendermint.RPC
 	StateManager     *statePkg.Manager
@@ -36,7 +36,10 @@ func NewApp(configPath string) *App {
 		logger.GetDefaultLogger().Fatal().Err(err).Msg("Provided config is invalid!")
 	}
 
-	log := logger.GetLogger(config.LogConfig)
+	log := logger.GetLogger(config.LogConfig).
+		With().
+		Str("chain", config.ChainConfig.Name).
+		Logger()
 	rpc := tendermint.NewRPC(config.ChainConfig.RPCEndpoints, log)
 	stateManager := statePkg.NewManager(log, config)
 	websocketManager := tendermint.NewWebsocketManager(log, config)

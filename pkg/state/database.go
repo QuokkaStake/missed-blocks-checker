@@ -18,7 +18,7 @@ type Database struct {
 	client *sql.DB
 }
 
-func NewDatabase(logger *zerolog.Logger, config *configPkg.Config) *Database {
+func NewDatabase(logger zerolog.Logger, config *configPkg.Config) *Database {
 	return &Database{
 		logger: logger.With().Str("component", "state_manager").Logger(),
 		config: config,
@@ -91,7 +91,8 @@ func (d *Database) InsertBlock(block *types.Block) error {
 
 	_, err = tx.ExecContext(
 		ctx,
-		"INSERT INTO blocks (height, time, proposer) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
+		"INSERT INTO blocks (chain, height, time, proposer) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING",
+		d.config.ChainConfig.Name,
 		block.Height,
 		block.Time.Unix(),
 		block.Proposer,
@@ -109,7 +110,8 @@ func (d *Database) InsertBlock(block *types.Block) error {
 	for key, signature := range block.Signatures {
 		_, err = tx.ExecContext(
 			ctx,
-			"INSERT INTO signatures (height, validator_address, signature) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
+			"INSERT INTO signatures (chain, height, validator_address, signature) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING",
+			d.config.ChainConfig.Name,
 			block.Height,
 			key,
 			signature,
@@ -138,7 +140,10 @@ func (d *Database) GetAllBlocks() (map[int64]*types.Block, error) {
 	blocks := map[int64]*types.Block{}
 
 	// Getting blocks
-	blocksRows, err := d.client.Query("SELECT height, time, proposer FROM blocks")
+	blocksRows, err := d.client.Query(
+		"SELECT height, time, proposer FROM blocks WHERE chain = $1",
+		d.config.ChainConfig.Name,
+	)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Error getting all blocks")
 		return blocks, err
@@ -171,7 +176,10 @@ func (d *Database) GetAllBlocks() (map[int64]*types.Block, error) {
 	}
 
 	// Fetching signatures
-	signaturesRows, err := d.client.Query("SELECT height, validator_address, signature FROM signatures")
+	signaturesRows, err := d.client.Query(
+		"SELECT height, validator_address, signature FROM signatures WHERE chain = $1",
+		d.config.ChainConfig.Name,
+	)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Error getting all blocks")
 		return blocks, err
@@ -215,7 +223,12 @@ func (d *Database) TrimBlocksBefore(height int64) error {
 		return err
 	}
 
-	_, err = tx.ExecContext(ctx, "DELETE FROM blocks WHERE height <= $1", height)
+	_, err = tx.ExecContext(
+		ctx,
+		"DELETE FROM blocks WHERE height <= $1 AND chain = $2",
+		height,
+		d.config.ChainConfig.Name,
+	)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Error trimming blocks")
 		if err = tx.Rollback(); err != nil {
@@ -226,7 +239,12 @@ func (d *Database) TrimBlocksBefore(height int64) error {
 		return err
 	}
 
-	_, err = tx.ExecContext(ctx, "DELETE FROM signatures WHERE height <= $1", height)
+	_, err = tx.ExecContext(
+		ctx,
+		"DELETE FROM signatures WHERE height <= $1 AND chain = $2",
+		height,
+		d.config.ChainConfig.Name,
+	)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Error trimming signatures")
 		if err = tx.Rollback(); err != nil {
@@ -249,7 +267,10 @@ func (d *Database) TrimBlocksBefore(height int64) error {
 func (d *Database) GetAllNotifiers() (*types.Notifiers, error) {
 	notifiers := make(types.Notifiers, 0)
 
-	rows, err := d.client.Query("SELECT operator_address, reporter, notifier FROM notifiers")
+	rows, err := d.client.Query(
+		"SELECT operator_address, reporter, notifier FROM notifiers WHERE chain = $1",
+		d.config.ChainConfig.Name,
+	)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Error getting all blocks")
 		return &notifiers, err
@@ -286,7 +307,8 @@ func (d *Database) GetAllNotifiers() (*types.Notifiers, error) {
 
 func (d *Database) InsertNotifier(operatorAddress, reporter, notifier string) error {
 	_, err := d.client.Exec(
-		"INSERT INTO notifiers (operator_address, reporter, notifier) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
+		"INSERT INTO notifiers (chain, operator_address, reporter, notifier) VALUES ($1, $2, $3, $2) ON CONFLICT DO NOTHING",
+		d.config.ChainConfig.Name,
 		operatorAddress,
 		reporter,
 		notifier,
@@ -301,10 +323,11 @@ func (d *Database) InsertNotifier(operatorAddress, reporter, notifier string) er
 
 func (d *Database) RemoveNotifier(operatorAddress, reporter, notifier string) error {
 	_, err := d.client.Exec(
-		"DELETE FROM notifiers WHERE operator_address = $1 AND reporter = $2 AND notifier = $3",
+		"DELETE FROM notifiers WHERE operator_address = $1 AND reporter = $2 AND notifier = $3 AND chain = $4",
 		operatorAddress,
 		reporter,
 		notifier,
+		d.config.ChainConfig.Name,
 	)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Could not delete notifier")

@@ -23,7 +23,7 @@ type RPC struct {
 	logger zerolog.Logger
 }
 
-func NewRPC(urls []string, logger *zerolog.Logger) *RPC {
+func NewRPC(urls []string, logger zerolog.Logger) *RPC {
 	return &RPC{
 		urls:   urls,
 		logger: logger.With().Str("component", "rpc").Logger(),

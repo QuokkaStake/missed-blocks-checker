@@ -49,7 +49,7 @@ type WebsocketManager struct {
 	Channel chan types.WebsocketEmittable
 }
 
-func NewWebsocketManager(logger *zerolog.Logger, appConfig *config.Config) *WebsocketManager {
+func NewWebsocketManager(logger zerolog.Logger, appConfig *config.Config) *WebsocketManager {
 	nodes := make([]*WebsocketClient, len(appConfig.ChainConfig.RPCEndpoints))
 
 	for index, url := range appConfig.ChainConfig.RPCEndpoints {

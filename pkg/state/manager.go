@@ -15,7 +15,7 @@ type Manager struct {
 	database *Database
 }
 
-func NewManager(logger *zerolog.Logger, config *configPkg.Config) *Manager {
+func NewManager(logger zerolog.Logger, config *configPkg.Config) *Manager {
 	return &Manager{
 		logger:   logger.With().Str("component", "state_manager").Logger(),
 		config:   config,

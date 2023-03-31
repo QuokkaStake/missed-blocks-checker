@@ -35,7 +35,7 @@ const (
 
 func NewReporter(
 	appConfig *config.Config,
-	logger *zerolog.Logger,
+	logger zerolog.Logger,
 	manager *statePkg.Manager,
 ) *Reporter {
 	return &Reporter{

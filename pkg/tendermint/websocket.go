@@ -29,7 +29,7 @@ type WebsocketClient struct {
 }
 
 func NewWebsocketClient(
-	logger *zerolog.Logger,
+	logger zerolog.Logger,
 	url string,
 	config *config.Config,
 ) *WebsocketClient {
