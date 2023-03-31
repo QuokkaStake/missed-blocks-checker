@@ -90,7 +90,7 @@ func (rpc *RPC) GetValidators() (types.Validators, error) {
 	return utils.Map(validatorsResponse.Validators, types.ValidatorFromCosmosValidator), nil
 }
 
-func (rpc *RPC) GetActiveSetAtBlock(height int64) ([]string, error) {
+func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 	queryURL := fmt.Sprintf("/validators?height=%d&per_page=%d", height, constants.ActiveSetPagination)
 
 	var response types.ValidatorsResponse
@@ -102,9 +102,12 @@ func (rpc *RPC) GetActiveSetAtBlock(height int64) ([]string, error) {
 		return nil, fmt.Errorf("malformed result of validators active set: got 0 validators")
 	}
 
-	return utils.Map(response.Result.Validators, func(v types.ActiveSetValidator) string {
-		return v.Address
-	}), nil
+	activeSetMap := make(map[string]bool, len(response.Result.Validators))
+	for _, validator := range response.Result.Validators {
+		activeSetMap[validator.Address] = true
+	}
+
+	return activeSetMap, nil
 }
 
 func (rpc *RPC) Get(url string, target interface{}) error {

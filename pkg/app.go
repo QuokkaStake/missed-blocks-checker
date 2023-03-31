@@ -190,8 +190,7 @@ func (a *App) AddLastActiveSet(height int64) error {
 		return err
 	}
 
-	a.StateManager.AddActiveSet(height, validators)
-	return nil
+	return a.StateManager.AddActiveSet(height, validators)
 }
 
 func (a *App) PopulateInBackground() {

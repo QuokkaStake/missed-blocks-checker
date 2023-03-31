@@ -76,7 +76,7 @@ func (m *Manager) AddBlock(block *types.Block) error {
 	return nil
 }
 
-func (m *Manager) AddActiveSet(height int64, activeSet []string) error {
+func (m *Manager) AddActiveSet(height int64, activeSet map[string]bool) error {
 	m.state.AddActiveSet(height, activeSet)
 
 	if err := m.database.InsertActiveSet(height, activeSet); err != nil {

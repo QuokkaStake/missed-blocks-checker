@@ -2,11 +2,12 @@ package types
 
 import (
 	"fmt"
+	"main/pkg/constants"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"main/pkg/constants"
 )
 
 type Validator struct {

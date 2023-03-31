@@ -366,16 +366,16 @@ func (d *Database) GetAllActiveSets() (types.ActiveSet, error) {
 		}
 
 		if _, ok := activeSets[height]; !ok {
-			activeSets[height] = make([]string, 0)
+			activeSets[height] = make(map[string]bool, 0)
 		}
 
-		activeSets[height] = append(activeSets[height], validatorAddress)
+		activeSets[height][validatorAddress] = true
 	}
 
 	return activeSets, nil
 }
 
-func (d *Database) InsertActiveSet(height int64, activeSet []string) error {
+func (d *Database) InsertActiveSet(height int64, activeSet map[string]bool) error {
 	ctx := context.Background()
 	tx, err := d.client.BeginTx(ctx, nil)
 	if err != nil {

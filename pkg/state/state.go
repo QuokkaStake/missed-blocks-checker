@@ -4,7 +4,6 @@ import (
 	"main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/types"
-	"main/pkg/utils"
 	"sync"
 	"time"
 )
@@ -40,7 +39,7 @@ func (s *State) AddBlock(block *types.Block) {
 	}
 }
 
-func (s *State) AddActiveSet(height int64, activeSet []string) {
+func (s *State) AddActiveSet(height int64, activeSet map[string]bool) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -185,7 +184,8 @@ func (s *State) IsValidatorActiveAtBlock(validator *types.Validator, height int6
 		return false
 	}
 
-	return utils.Contains(s.activeSet[height], validator.ConsensusAddress)
+	_, ok := s.activeSet[height][validator.ConsensusAddress]
+	return ok
 }
 
 func (s *State) GetValidator(operatorAddress string) (*types.Validator, bool) {
