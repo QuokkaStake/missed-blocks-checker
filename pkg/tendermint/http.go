@@ -3,6 +3,7 @@ package tendermint
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"main/pkg/constants"
 	"main/pkg/utils"
 	"net/http"
@@ -59,18 +60,17 @@ func (rpc *RPC) GetBlocksFromTo(from, to, limit int64) (*types.BlockSearchRespon
 	return &response, nil
 }
 
-func (rpc *RPC) GetValidators() (types.Validators, error) {
-	data := stakingTypes.QueryValidatorsRequest{
-		Pagination: &queryTypes.PageRequest{
-			Limit: constants.ValidatorsQueryPagination,
-		},
-	}
-	dataBytes, err := data.Marshal()
+func (rpc *RPC) AbciQuery(
+	method string,
+	message codec.ProtoMarshaler,
+	output codec.ProtoMarshaler,
+) error {
+	dataBytes, err := message.Marshal()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	methodName := "\"/cosmos.staking.v1beta1.Query/Validators\""
+	methodName := fmt.Sprintf("\"%s\"", method)
 	queryURL := fmt.Sprintf(
 		"/abci_query?path=%s&data=0x%x",
 		url.QueryEscape(methodName),
@@ -79,11 +79,21 @@ func (rpc *RPC) GetValidators() (types.Validators, error) {
 
 	var response types.AbciQueryResponse
 	if err := rpc.Get(queryURL, &response); err != nil {
-		return nil, err
+		return err
+	}
+
+	return output.Unmarshal(response.Result.Response.Value)
+}
+
+func (rpc *RPC) GetValidators() (types.Validators, error) {
+	query := stakingTypes.QueryValidatorsRequest{
+		Pagination: &queryTypes.PageRequest{
+			Limit: constants.ValidatorsQueryPagination,
+		},
 	}
 
 	var validatorsResponse stakingTypes.QueryValidatorsResponse
-	if err := validatorsResponse.Unmarshal(response.Result.Response.Value); err != nil {
+	if err := rpc.AbciQuery("/cosmos.staking.v1beta1.Query/Validators", &query, &validatorsResponse); err != nil {
 		return nil, err
 	}
 
