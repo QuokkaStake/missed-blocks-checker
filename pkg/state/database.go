@@ -383,7 +383,7 @@ func (d *Database) InsertActiveSet(height int64, activeSet map[string]bool) erro
 		return err
 	}
 
-	for _, validator := range activeSet {
+	for validator, _ := range activeSet {
 		_, err = tx.ExecContext(
 			ctx,
 			"INSERT INTO validators (chain, validator_address, height) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
