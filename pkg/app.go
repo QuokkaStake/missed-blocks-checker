@@ -194,8 +194,8 @@ func (a *App) AddLastActiveSet(height int64) error {
 }
 
 func (a *App) PopulateInBackground() {
-	a.PopulateBlocks()
-	a.PopulateActiveSet()
+	go a.PopulateBlocks()
+	go a.PopulateActiveSet()
 
 	blocksTicker := time.NewTicker(60 * time.Second)
 	activeSetTicker := time.NewTicker(60 * time.Second)

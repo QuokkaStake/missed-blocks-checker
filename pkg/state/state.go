@@ -8,23 +8,33 @@ import (
 	"time"
 )
 
+type LastBlockHeight struct {
+	signingInfos int64
+	block        int64
+	activeSet    int64
+	validators   int64
+}
+
 type State struct {
-	blocks              types.BlocksMap
-	validators          types.ValidatorsMap
-	activeSet           types.ActiveSet
-	notifiers           *types.Notifiers
-	lastBlockHeight     int64
-	lastActiveSetHeight int64
-	mutex               sync.Mutex
+	blocks          types.BlocksMap
+	validators      types.ValidatorsMap
+	activeSet       types.ActiveSet
+	notifiers       *types.Notifiers
+	lastBlockHeight *LastBlockHeight
+	mutex           sync.Mutex
 }
 
 func NewState() *State {
 	return &State{
-		blocks:              make(types.BlocksMap),
-		validators:          make(types.ValidatorsMap),
-		activeSet:           make(types.ActiveSet),
-		lastBlockHeight:     0,
-		lastActiveSetHeight: 0,
+		blocks:     make(types.BlocksMap),
+		validators: make(types.ValidatorsMap),
+		activeSet:  make(types.ActiveSet),
+		lastBlockHeight: &LastBlockHeight{
+			signingInfos: 0,
+			block:        0,
+			activeSet:    0,
+			validators:   0,
+		},
 	}
 }
 
@@ -34,8 +44,8 @@ func (s *State) AddBlock(block *types.Block) {
 
 	s.blocks[block.Height] = block
 
-	if block.Height > s.lastBlockHeight {
-		s.lastBlockHeight = block.Height
+	if block.Height > s.lastBlockHeight.block {
+		s.lastBlockHeight.block = block.Height
 	}
 }
 
@@ -45,8 +55,8 @@ func (s *State) AddActiveSet(height int64, activeSet map[string]bool) {
 
 	s.activeSet[height] = activeSet
 
-	if height > s.lastActiveSetHeight {
-		s.lastActiveSetHeight = height
+	if height > s.lastBlockHeight.activeSet {
+		s.lastBlockHeight.activeSet = height
 	}
 }
 
@@ -56,7 +66,7 @@ func (s *State) GetBlocksCountSinceLatest(expected int64) int64 {
 
 	var expectedCount int64 = 0
 
-	for height := s.lastBlockHeight; height > s.lastBlockHeight-expected; height-- {
+	for height := s.lastBlockHeight.block; height > s.lastBlockHeight.block-expected; height-- {
 		if _, ok := s.blocks[height]; ok {
 			expectedCount++
 		}
@@ -71,7 +81,7 @@ func (s *State) GetActiveSetsCountSinceLatest(expected int64) int64 {
 
 	var expectedCount int64 = 0
 
-	for height := s.lastActiveSetHeight; height > s.lastActiveSetHeight-expected; height-- {
+	for height := s.lastBlockHeight.activeSet; height > s.lastBlockHeight.activeSet-expected; height-- {
 		if _, ok := s.activeSet[height]; ok {
 			expectedCount++
 		}
@@ -168,11 +178,11 @@ func (s *State) GetValidatorsForNotifier(reporter, notifier string) []string {
 }
 
 func (s *State) GetLastBlockHeight() int64 {
-	return s.lastBlockHeight
+	return s.lastBlockHeight.block
 }
 
 func (s *State) GetLastActiveSetHeight() int64 {
-	return s.lastActiveSetHeight
+	return s.lastBlockHeight.activeSet
 }
 
 func (s *State) GetValidators() types.ValidatorsMap {
@@ -199,7 +209,7 @@ func (s *State) GetValidatorMissedBlocks(validator *types.Validator, blocksToChe
 
 	signatureInfo := types.SignatureInto{}
 
-	for height := s.lastBlockHeight; height > s.lastBlockHeight-blocksToCheck; height-- {
+	for height := s.lastBlockHeight.block; height > s.lastBlockHeight.block-blocksToCheck; height-- {
 		if _, ok := s.blocks[height]; !ok {
 			continue
 		}
@@ -228,7 +238,7 @@ func (s *State) GetValidatorMissedBlocks(validator *types.Validator, blocksToChe
 }
 
 func (s *State) GetEarliestBlock() *types.Block {
-	earliestHeight := s.lastBlockHeight
+	earliestHeight := s.lastBlockHeight.block
 
 	for height := range s.blocks {
 		if height < earliestHeight {
@@ -240,7 +250,7 @@ func (s *State) GetEarliestBlock() *types.Block {
 }
 
 func (s *State) GetBlockTime() time.Duration {
-	latestHeight := s.lastBlockHeight
+	latestHeight := s.lastBlockHeight.block
 	latestBlock := s.blocks[latestHeight]
 
 	earliestBlock := s.GetEarliestBlock()
