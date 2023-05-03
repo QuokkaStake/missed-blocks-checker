@@ -21,7 +21,7 @@ type State struct {
 	activeSet       types.ActiveSet
 	notifiers       *types.Notifiers
 	lastBlockHeight *LastBlockHeight
-	mutex           sync.Mutex
+	mutex           sync.RWMutex
 }
 
 func NewState() *State {
@@ -36,6 +36,10 @@ func NewState() *State {
 			validators:   0,
 		},
 	}
+}
+
+func (s *State) GetLatestBlock() int64 {
+	return s.lastBlockHeight.block
 }
 
 func (s *State) AddBlock(block *types.Block) {
@@ -61,8 +65,8 @@ func (s *State) AddActiveSet(height int64, activeSet map[string]bool) {
 }
 
 func (s *State) GetBlocksCountSinceLatest(expected int64) int64 {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 
 	var expectedCount int64 = 0
 
@@ -76,8 +80,8 @@ func (s *State) GetBlocksCountSinceLatest(expected int64) int64 {
 }
 
 func (s *State) GetActiveSetsCountSinceLatest(expected int64) int64 {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 
 	var expectedCount int64 = 0
 
@@ -90,7 +94,18 @@ func (s *State) GetActiveSetsCountSinceLatest(expected int64) int64 {
 	return expectedCount
 }
 
+func (s *State) HasBlockAtHeight(height int64) bool {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+
+	_, ok := s.blocks[height]
+	return ok
+}
+
 func (s *State) HasActiveSetAtHeight(height int64) bool {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+
 	_, ok := s.activeSet[height]
 	return ok
 }
@@ -152,6 +167,9 @@ func (s *State) SetActiveSet(activeSet types.ActiveSet) {
 }
 
 func (s *State) AddNotifier(operatorAddress, reporter, notifier string) bool {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
 	notifiers, added := s.notifiers.AddNotifier(operatorAddress, reporter, notifier)
 	if added {
 		s.SetNotifiers(notifiers)
@@ -161,6 +179,9 @@ func (s *State) AddNotifier(operatorAddress, reporter, notifier string) bool {
 }
 
 func (s *State) RemoveNotifier(operatorAddress, reporter, notifier string) bool {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
 	notifiers, removed := s.notifiers.RemoveNotifier(operatorAddress, reporter, notifier)
 	if removed {
 		s.SetNotifiers(notifiers)
@@ -199,13 +220,16 @@ func (s *State) IsValidatorActiveAtBlock(validator *types.Validator, height int6
 }
 
 func (s *State) GetValidator(operatorAddress string) (*types.Validator, bool) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+
 	validator, found := s.validators[operatorAddress]
 	return validator, found
 }
 
 func (s *State) GetValidatorMissedBlocks(validator *types.Validator, blocksToCheck int64) types.SignatureInto {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 
 	signatureInfo := types.SignatureInto{}
 

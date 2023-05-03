@@ -52,6 +52,10 @@ func (m *Manager) Init() {
 	m.logger.Info().Int("len", len(activeSet)).Msg("Loaded historical validators from database")
 }
 
+func (m *Manager) GetLatestBlock() int64 {
+	return m.state.GetLatestBlock()
+}
+
 func (m *Manager) AddBlock(block *types.Block) error {
 	m.state.AddBlock(block)
 
@@ -98,6 +102,10 @@ func (m *Manager) AddActiveSet(height int64, activeSet map[string]bool) error {
 	}
 
 	return nil
+}
+
+func (m *Manager) HasBlockAtHeight(height int64) bool {
+	return m.state.HasBlockAtHeight(height)
 }
 
 func (m *Manager) HasActiveSetAtHeight(height int64) bool {
@@ -174,4 +182,8 @@ func (m *Manager) GetValidatorMissedBlocks(validator *types.Validator) types.Sig
 
 func (m *Manager) SetValidators(validators types.ValidatorsMap) {
 	m.state.SetValidators(validators)
+}
+
+func (m *Manager) GetEarliestBlock() *types.Block {
+	return m.state.GetEarliestBlock()
 }

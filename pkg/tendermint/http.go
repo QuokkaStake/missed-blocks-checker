@@ -15,6 +15,7 @@ import (
 
 	"main/pkg/types"
 
+	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/rs/zerolog"
 )
@@ -100,6 +101,21 @@ func (rpc *RPC) GetValidators() (types.Validators, error) {
 	return utils.Map(validatorsResponse.Validators, types.ValidatorFromCosmosValidator), nil
 }
 
+func (rpc *RPC) GetSigningInfo() error {
+	query := slashingTypes.QuerySigningInfosRequest{
+		Pagination: &queryTypes.PageRequest{
+			Limit: constants.ValidatorsQueryPagination,
+		},
+	}
+
+	var response slashingTypes.QuerySigningInfosResponse
+	if err := rpc.AbciQuery("/cosmos.slashing.v1beta1.Query/SigningInfos", &query, &response); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 	queryURL := fmt.Sprintf("/validators?height=%d&per_page=%d", height, constants.ActiveSetPagination)
 
@@ -163,7 +179,7 @@ func (rpc *RPC) GetFull(url string, target interface{}) error {
 
 	req.Header.Set("User-Agent", "missed-blocks-checker")
 
-	rpc.logger.Debug().Str("url", url).Msg("Doing a query...")
+	rpc.logger.Trace().Str("url", url).Msg("Doing a query...")
 
 	res, err := client.Do(req)
 	if err != nil {
