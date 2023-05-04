@@ -89,9 +89,9 @@ type ValidatorsResponse struct {
 }
 
 type ValidatorsResult struct {
-	Validators []ActiveSetValidator `json:"validators"`
+	Validators []HistoricalValidator `json:"validators"`
 }
 
-type ActiveSetValidator struct {
+type HistoricalValidator struct {
 	Address string `json:"address"`
 }

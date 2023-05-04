@@ -337,8 +337,8 @@ func (d *Database) RemoveNotifier(operatorAddress, reporter, notifier string) er
 	return nil
 }
 
-func (d *Database) GetAllActiveSets() (types.ActiveSet, error) {
-	activeSets := make(types.ActiveSet, 0)
+func (d *Database) GetAllActiveSets() (types.HistoricalValidatorsMap, error) {
+	activeSets := make(types.HistoricalValidatorsMap, 0)
 
 	rows, err := d.client.Query(
 		"SELECT height, validator_address FROM validators WHERE chain = $1",
@@ -346,7 +346,7 @@ func (d *Database) GetAllActiveSets() (types.ActiveSet, error) {
 	)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Error getting all blocks")
-		return types.ActiveSet{}, err
+		return types.HistoricalValidatorsMap{}, err
 	}
 	defer func() {
 		_ = rows.Close()

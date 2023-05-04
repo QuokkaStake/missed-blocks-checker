@@ -1,0 +1,62 @@
+package state
+
+import (
+	"main/pkg/types"
+	"sync"
+)
+
+type HistoricalValidators struct {
+	mutex      sync.RWMutex
+	validators types.HistoricalValidatorsMap
+	lastHeight int64
+}
+
+func NewHistoricalValidators() *HistoricalValidators {
+	return &HistoricalValidators{
+		validators: make(types.HistoricalValidatorsMap),
+		lastHeight: 0,
+	}
+}
+
+func (h *HistoricalValidators) SetAllValidators(validators types.HistoricalValidatorsMap) {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+
+	h.validators = validators
+}
+
+func (h *HistoricalValidators) SetValidators(height int64, validators types.HistoricalValidators) {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+
+	h.validators[height] = validators
+
+	if height > h.lastHeight {
+		h.lastHeight = height
+	}
+}
+
+func (h *HistoricalValidators) HasSetAtBlock(height int64) bool {
+	_, ok := h.validators[height]
+	return ok
+}
+
+func (h *HistoricalValidators) TrimBefore(trimHeight int64) {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+
+	for height := range h.validators {
+		if height <= trimHeight {
+			delete(h.validators, height)
+		}
+	}
+}
+
+func (h *HistoricalValidators) IsValidatorActiveAtBlock(validator *types.Validator, height int64) bool {
+	if _, ok := h.validators[height]; !ok {
+		return false
+	}
+
+	_, ok := h.validators[height][validator.ConsensusAddress]
+	return ok
+}
