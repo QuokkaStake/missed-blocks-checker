@@ -1,4 +1,4 @@
-package state
+package snapshot
 
 import (
 	"main/pkg/config"
@@ -7,16 +7,16 @@ import (
 	"main/pkg/types"
 )
 
-type SnapshotEntry struct {
+type Entry struct {
 	Validator     *types.Validator
 	SignatureInfo types.SignatureInto
 }
 
 type Snapshot struct {
-	Entries map[string]SnapshotEntry
+	Entries map[string]Entry
 }
 
-func NewSnapshot(entries map[string]SnapshotEntry) *Snapshot {
+func NewSnapshot(entries map[string]Entry) *Snapshot {
 	return &Snapshot{Entries: entries}
 }
 

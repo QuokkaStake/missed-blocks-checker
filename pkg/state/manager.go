@@ -2,6 +2,7 @@ package state
 
 import (
 	configPkg "main/pkg/config"
+	"main/pkg/snapshot"
 	"main/pkg/types"
 	"time"
 
@@ -124,18 +125,18 @@ func (m *Manager) IsPopulated() bool {
 	return m.state.IsPopulated(m.config)
 }
 
-func (m *Manager) GetSnapshot() *Snapshot {
+func (m *Manager) GetSnapshot() *snapshot.Snapshot {
 	validators := m.state.GetValidators()
-	entries := make(map[string]SnapshotEntry, len(validators))
+	entries := make(map[string]snapshot.Entry, len(validators))
 
 	for _, validator := range validators {
-		entries[validator.OperatorAddress] = SnapshotEntry{
+		entries[validator.OperatorAddress] = snapshot.Entry{
 			Validator:     validator,
 			SignatureInfo: m.state.GetValidatorMissedBlocks(validator, m.config.ChainConfig.BlocksWindow),
 		}
 	}
 
-	return NewSnapshot(entries)
+	return snapshot.NewSnapshot(entries)
 }
 
 func (m *Manager) AddNotifier(operatorAddress, reporter, notifier string) bool {

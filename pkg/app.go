@@ -4,9 +4,10 @@ import (
 	"fmt"
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
-	"main/pkg/logger"
+	loggerPkg "main/pkg/logger"
 	reportersPkg "main/pkg/reporters"
 	"main/pkg/reporters/telegram"
+	snapshotPkg "main/pkg/snapshot"
 	statePkg "main/pkg/state"
 	"main/pkg/tendermint"
 	"main/pkg/types"
@@ -20,6 +21,7 @@ type App struct {
 	Config                *configPkg.Config
 	RPCManager            *tendermint.RPCManager
 	StateManager          *statePkg.Manager
+	SnapshotManager       *snapshotPkg.Manager
 	WebsocketManager      *tendermint.WebsocketManager
 	Reporters             []reportersPkg.Reporter
 	IsPopulatingBlocks    bool
@@ -29,31 +31,33 @@ type App struct {
 func NewApp(configPath string) *App {
 	config, err := configPkg.GetConfig(configPath)
 	if err != nil {
-		logger.GetDefaultLogger().Fatal().Err(err).Msg("Could not load config")
+		loggerPkg.GetDefaultLogger().Fatal().Err(err).Msg("Could not load config")
 	}
 	config.SetDefaultMissedBlocksGroups()
 
 	if err = config.Validate(); err != nil {
-		logger.GetDefaultLogger().Fatal().Err(err).Msg("Provided config is invalid!")
+		loggerPkg.GetDefaultLogger().Fatal().Err(err).Msg("Provided config is invalid!")
 	}
 
-	log := logger.GetLogger(config.LogConfig).
+	logger := loggerPkg.GetLogger(config.LogConfig).
 		With().
 		Str("chain", config.ChainConfig.Name).
 		Logger()
-	rpcManager := tendermint.NewRPCManager(config.ChainConfig.RPCEndpoints, log)
-	stateManager := statePkg.NewManager(log, config)
-	websocketManager := tendermint.NewWebsocketManager(log, config)
+	rpcManager := tendermint.NewRPCManager(config.ChainConfig.RPCEndpoints, logger)
+	stateManager := statePkg.NewManager(logger, config)
+	websocketManager := tendermint.NewWebsocketManager(logger, config)
+	snapshotManager := snapshotPkg.NewManager(logger, config)
 
 	reporters := []reportersPkg.Reporter{
-		telegram.NewReporter(config, log, stateManager),
+		telegram.NewReporter(config, logger, stateManager),
 	}
 
 	return &App{
-		Logger:                log,
+		Logger:                logger,
 		Config:                config,
 		RPCManager:            rpcManager,
 		StateManager:          stateManager,
+		SnapshotManager:       snapshotManager,
 		WebsocketManager:      websocketManager,
 		Reporters:             reporters,
 		IsPopulatingBlocks:    false,
@@ -83,14 +87,19 @@ func (a *App) Start() {
 func (a *App) ListenForEvents() {
 	a.WebsocketManager.Listen()
 
-	var olderSnapshot *statePkg.Snapshot
-
 	for {
 		select {
 		case result := <-a.WebsocketManager.Channel:
 			block, ok := result.(*types.Block)
 			if !ok {
 				a.Logger.Warn().Msg("Event is not a block!")
+				continue
+			}
+
+			if a.StateManager.HasBlockAtHeight(block.Height) {
+				a.Logger.Info().
+					Int64("height", block.Height).
+					Msg("Already have block at this height, not generating report.")
 				continue
 			}
 
@@ -141,14 +150,21 @@ func (a *App) ListenForEvents() {
 					Msg("Validator signing info")
 			}
 
-			if olderSnapshot == nil {
+			if !a.SnapshotManager.HasOlderSnapshot() {
 				a.Logger.Info().Msg("No older snapshot present, cannot generate report")
-				olderSnapshot = snapshot
+				a.SnapshotManager.CommitNewSnapshot(block.Height, snapshot)
 				continue
 			}
 
-			report := snapshot.GetReport(olderSnapshot, a.Config)
-			olderSnapshot = snapshot
+			a.SnapshotManager.CommitNewSnapshot(block.Height, snapshot)
+
+			olderHeight := a.SnapshotManager.GetOlderHeight()
+			a.Logger.Info().
+				Int64("older_height", olderHeight).
+				Int64("height", block.Height).
+				Msg("Generating snapshot report")
+
+			report := a.SnapshotManager.GetReport()
 
 			if report.Empty() {
 				a.Logger.Info().Msg("Report is empty, no events to send.")
