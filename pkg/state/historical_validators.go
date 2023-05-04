@@ -60,3 +60,18 @@ func (h *HistoricalValidators) IsValidatorActiveAtBlock(validator *types.Validat
 	_, ok := h.validators[height][validator.ConsensusAddress]
 	return ok
 }
+
+func (h *HistoricalValidators) GetCountSinceLatest(expected int64) int64 {
+	h.mutex.RLock()
+	defer h.mutex.RUnlock()
+
+	var expectedCount int64 = 0
+
+	for height := h.lastHeight; height > h.lastHeight-expected; height-- {
+		if h.HasSetAtBlock(height) {
+			expectedCount++
+		}
+	}
+
+	return expectedCount
+}
