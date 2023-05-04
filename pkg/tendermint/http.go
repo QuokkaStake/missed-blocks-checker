@@ -3,13 +3,14 @@ package tendermint
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"main/pkg/constants"
 	"main/pkg/utils"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	queryTypes "github.com/cosmos/cosmos-sdk/types/query"
 

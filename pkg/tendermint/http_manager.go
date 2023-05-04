@@ -1,9 +1,10 @@
 package tendermint
 
 import (
-	"github.com/rs/zerolog"
 	"main/pkg/types"
 	"sync"
+
+	"github.com/rs/zerolog"
 )
 
 type RPCManager struct {
