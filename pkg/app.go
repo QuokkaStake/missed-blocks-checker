@@ -233,13 +233,19 @@ func (a *App) PopulateInBackground() {
 }
 
 func (a *App) PopulateLatestBlock() {
-	block, err := a.RPCManager.GetLatestBlock()
+	blockRaw, err := a.RPCManager.GetLatestBlock()
 	if err != nil {
 		a.Logger.Error().Err(err).Msg("Error querying for last block")
 		return
 	}
 
-	if err := a.StateManager.AddBlock(block.Result.Block.ToBlock()); err != nil {
+	blockParsed := blockRaw.Result.Block.ToBlock()
+
+	a.Logger.Info().
+		Int64("height", blockParsed.Height).
+		Msg("Last block height")
+
+	if err := a.StateManager.AddBlock(blockParsed); err != nil {
 		a.Logger.Error().
 			Err(err).
 			Msg("Error inserting last block")
@@ -288,6 +294,10 @@ func (a *App) PopulateBlocks() {
 		a.Logger.Info().
 			Int64("count", count).
 			Int64("required", a.Config.ChainConfig.StoreBlocks).
+			Int64("height", blockHeight).
+			Int64("latest_height", latestBlockHeight).
+			Int64("presented_blocks", presentedBlocks).
+			Int64("needed_blocks", constants.ActiveSetsBulkQueryCount).
 			Msg("Not enough blocks, fetching more blocks...")
 
 		blocks, err := a.RPCManager.GetBlocksFromTo(

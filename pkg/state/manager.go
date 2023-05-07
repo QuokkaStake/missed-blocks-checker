@@ -28,13 +28,20 @@ func NewManager(logger zerolog.Logger, config *configPkg.Config) *Manager {
 func (m *Manager) Init() {
 	m.database.Init()
 
+	blocksStart := time.Now()
+
 	blocks, err := m.database.GetAllBlocks()
 	if err != nil {
 		m.logger.Fatal().Err(err).Msg("Could not get blocks from the database")
 	}
 
 	m.state.SetBlocks(blocks)
-	m.logger.Info().Int("len", len(blocks)).Msg("Loaded older blocks from database")
+	m.logger.Info().
+		Int("len", len(blocks)).
+		Float64("duration", time.Since(blocksStart).Seconds()).
+		Msg("Loaded older blocks from database")
+
+	notifiersStart := time.Now()
 
 	notifiers, err := m.database.GetAllNotifiers()
 	if err != nil {
@@ -42,7 +49,12 @@ func (m *Manager) Init() {
 	}
 
 	m.state.SetNotifiers(notifiers)
-	m.logger.Info().Int("len", len(*notifiers)).Msg("Loaded notifiers from database")
+	m.logger.Info().
+		Int("len", len(*notifiers)).
+		Float64("duration", time.Since(notifiersStart).Seconds()).
+		Msg("Loaded notifiers from database")
+
+	activeSetStart := time.Now()
 
 	activeSet, err := m.database.GetAllActiveSets()
 	if err != nil {
@@ -50,7 +62,10 @@ func (m *Manager) Init() {
 	}
 
 	m.state.SetActiveSet(activeSet)
-	m.logger.Info().Int("len", len(activeSet)).Msg("Loaded historical validators from database")
+	m.logger.Info().
+		Int("len", len(activeSet)).
+		Float64("duration", time.Since(activeSetStart).Seconds()).
+		Msg("Loaded historical validators from database")
 }
 
 func (m *Manager) GetLatestBlock() int64 {
