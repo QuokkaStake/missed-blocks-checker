@@ -1,9 +1,10 @@
 package snapshot
 
 import (
-	"github.com/rs/zerolog"
 	configPkg "main/pkg/config"
 	reportPkg "main/pkg/report"
+
+	"github.com/rs/zerolog"
 )
 
 type Manager struct {
