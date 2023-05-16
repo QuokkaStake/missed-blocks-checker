@@ -23,6 +23,12 @@ func (h *HistoricalValidators) SetAllValidators(validators types.HistoricalValid
 	defer h.mutex.Unlock()
 
 	h.validators = validators
+
+	for height := range h.validators {
+		if height > h.lastHeight {
+			h.lastHeight = height
+		}
+	}
 }
 
 func (h *HistoricalValidators) SetValidators(height int64, validators types.HistoricalValidators) {
@@ -37,6 +43,9 @@ func (h *HistoricalValidators) SetValidators(height int64, validators types.Hist
 }
 
 func (h *HistoricalValidators) HasSetAtBlock(height int64) bool {
+	h.mutex.RLock()
+	defer h.mutex.RUnlock()
+
 	_, ok := h.validators[height]
 	return ok
 }
@@ -53,6 +62,9 @@ func (h *HistoricalValidators) TrimBefore(trimHeight int64) {
 }
 
 func (h *HistoricalValidators) IsValidatorActiveAtBlock(validator *types.Validator, height int64) bool {
+	h.mutex.RLock()
+	defer h.mutex.RUnlock()
+
 	if _, ok := h.validators[height]; !ok {
 		return false
 	}
@@ -61,13 +73,10 @@ func (h *HistoricalValidators) IsValidatorActiveAtBlock(validator *types.Validat
 	return ok
 }
 
-func (h *HistoricalValidators) GetCountSinceLatest(expected int64) int64 {
-	h.mutex.RLock()
-	defer h.mutex.RUnlock()
-
+func (h *HistoricalValidators) GetCountSinceLatest(expected int64, lastHeight int64) int64 {
 	var expectedCount int64 = 0
 
-	for height := h.lastHeight; height > h.lastHeight-expected; height-- {
+	for height := lastHeight; height > h.lastHeight-expected; height-- {
 		if h.HasSetAtBlock(height) {
 			expectedCount++
 		}

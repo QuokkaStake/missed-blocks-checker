@@ -117,6 +117,11 @@ func (t *WebsocketClient) ProcessEvent(event rpcTypes.RPCResponse) {
 		return
 	}
 
+	if len(event.Result) == 0 {
+		t.logger.Debug().Msg("Event result is empty, skipping.")
+		return
+	}
+
 	var resultEvent types.EventResult
 	if err := json.Unmarshal(event.Result, &resultEvent); err != nil {
 		t.logger.Error().Err(err).Msg("Failed to parse event")

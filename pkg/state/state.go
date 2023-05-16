@@ -53,7 +53,7 @@ func (s *State) GetBlocksCountSinceLatest(expected int64) int64 {
 }
 
 func (s *State) GetActiveSetsCountSinceLatest(expected int64) int64 {
-	return s.historicalValidators.GetCountSinceLatest(expected)
+	return s.historicalValidators.GetCountSinceLatest(expected, s.blocks.lastHeight)
 }
 
 func (s *State) HasBlockAtHeight(height int64) bool {
@@ -66,7 +66,7 @@ func (s *State) HasActiveSetAtHeight(height int64) bool {
 
 func (s *State) IsPopulated(appConfig *config.Config) bool {
 	expected := appConfig.ChainConfig.BlocksWindow
-	return s.historicalValidators.GetCountSinceLatest(expected) >= expected &&
+	return s.historicalValidators.GetCountSinceLatest(expected, s.blocks.lastHeight) >= expected &&
 		s.blocks.GetCountSinceLatest(expected) >= expected
 }
 

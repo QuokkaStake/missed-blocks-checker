@@ -33,14 +33,6 @@ type BlockSignature struct {
 	ValidatorAddress string `json:"validator_address"`
 }
 
-type BlockSearchResponse struct {
-	Result BlockSearchResult `json:"result"`
-}
-
-type BlockSearchResult struct {
-	Blocks []SingleBlockResult `json:"blocks"`
-}
-
 func (b *TendermintBlock) ToBlock() *Block {
 	height, err := strconv.ParseInt(b.Header.Height, 10, 64)
 	if err != nil {

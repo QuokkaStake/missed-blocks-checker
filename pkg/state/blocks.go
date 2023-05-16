@@ -30,6 +30,9 @@ func (b *Blocks) AddBlock(block *types.Block) {
 }
 
 func (b *Blocks) HasBlockAtHeight(height int64) bool {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+
 	_, ok := b.blocks[height]
 	return ok
 }
@@ -53,15 +56,24 @@ func (b *Blocks) SetBlocks(blocks map[int64]*types.Block) {
 }
 
 func (b *Blocks) GetBlock(height int64) (*types.Block, bool) {
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
+
 	block, ok := b.blocks[height]
 	return block, ok
 }
 
 func (b *Blocks) GetLatestBlock() *types.Block {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+
 	return b.blocks[b.lastHeight]
 }
 
 func (b *Blocks) GetEarliestBlock() *types.Block {
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
+
 	earliestHeight := b.lastHeight
 
 	for height := range b.blocks {
@@ -74,9 +86,6 @@ func (b *Blocks) GetEarliestBlock() *types.Block {
 }
 
 func (b *Blocks) GetCountSinceLatest(expected int64) int64 {
-	b.mutex.RLock()
-	defer b.mutex.RUnlock()
-
 	var expectedCount int64 = 0
 
 	for height := b.lastHeight; height > b.lastHeight-expected; height-- {

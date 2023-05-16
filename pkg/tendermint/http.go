@@ -33,28 +33,13 @@ func NewRPC(urls []string, logger zerolog.Logger) *RPC {
 	}
 }
 
-func (rpc *RPC) GetLatestBlock() (*types.SingleBlockResponse, error) {
-	var response types.SingleBlockResponse
-	if err := rpc.Get("/block", &response); err != nil {
-		return nil, err
+func (rpc *RPC) GetBlock(height int64) (*types.SingleBlockResponse, error) {
+	queryURL := "/block"
+	if height != 0 {
+		queryURL = fmt.Sprintf("/block?height=%d", height)
 	}
 
-	return &response, nil
-}
-
-func (rpc *RPC) GetBlocksFromTo(from, to, limit int64) (*types.BlockSearchResponse, error) {
-	query := fmt.Sprintf(
-		"\"block.height >= %d AND block.height < %d\"",
-		from,
-		to,
-	)
-	queryURL := fmt.Sprintf(
-		"/block_search?query=%s&per_page=%d",
-		url.QueryEscape(query),
-		limit,
-	)
-
-	var response types.BlockSearchResponse
+	var response types.SingleBlockResponse
 	if err := rpc.Get(queryURL, &response); err != nil {
 		return nil, err
 	}

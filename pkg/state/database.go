@@ -6,6 +6,7 @@ import (
 	configPkg "main/pkg/config"
 	"main/pkg/types"
 	migrations "main/sql"
+	"sync"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -16,6 +17,7 @@ type Database struct {
 	logger zerolog.Logger
 	config *configPkg.Config
 	client *sql.DB
+	mutex  sync.Mutex
 }
 
 func NewDatabase(logger zerolog.Logger, config *configPkg.Config) *Database {
@@ -82,6 +84,9 @@ func (d *Database) Init() {
 }
 
 func (d *Database) InsertBlock(block *types.Block) error {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+
 	ctx := context.Background()
 	tx, err := d.client.BeginTx(ctx, nil)
 	if err != nil {
@@ -137,6 +142,9 @@ func (d *Database) InsertBlock(block *types.Block) error {
 }
 
 func (d *Database) GetAllBlocks() (map[int64]*types.Block, error) {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+
 	blocks := map[int64]*types.Block{}
 
 	// Getting blocks
@@ -216,6 +224,9 @@ func (d *Database) GetAllBlocks() (map[int64]*types.Block, error) {
 }
 
 func (d *Database) TrimBlocksBefore(height int64) error {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+
 	ctx := context.Background()
 	tx, err := d.client.BeginTx(ctx, nil)
 	if err != nil {
@@ -265,6 +276,9 @@ func (d *Database) TrimBlocksBefore(height int64) error {
 }
 
 func (d *Database) GetAllNotifiers() (*types.Notifiers, error) {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+
 	notifiers := make(types.Notifiers, 0)
 
 	rows, err := d.client.Query(
@@ -306,6 +320,9 @@ func (d *Database) GetAllNotifiers() (*types.Notifiers, error) {
 }
 
 func (d *Database) InsertNotifier(operatorAddress, reporter, notifier string) error {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+
 	_, err := d.client.Exec(
 		"INSERT INTO notifiers (chain, operator_address, reporter, notifier) VALUES ($1, $2, $3, $2) ON CONFLICT DO NOTHING",
 		d.config.ChainConfig.Name,
@@ -322,6 +339,9 @@ func (d *Database) InsertNotifier(operatorAddress, reporter, notifier string) er
 }
 
 func (d *Database) RemoveNotifier(operatorAddress, reporter, notifier string) error {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+
 	_, err := d.client.Exec(
 		"DELETE FROM notifiers WHERE operator_address = $1 AND reporter = $2 AND notifier = $3 AND chain = $4",
 		operatorAddress,
@@ -338,6 +358,9 @@ func (d *Database) RemoveNotifier(operatorAddress, reporter, notifier string) er
 }
 
 func (d *Database) GetAllActiveSets() (types.HistoricalValidatorsMap, error) {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+
 	activeSets := make(types.HistoricalValidatorsMap, 0)
 
 	rows, err := d.client.Query(
@@ -376,6 +399,9 @@ func (d *Database) GetAllActiveSets() (types.HistoricalValidatorsMap, error) {
 }
 
 func (d *Database) InsertActiveSet(height int64, activeSet map[string]bool) error {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+
 	ctx := context.Background()
 	tx, err := d.client.BeginTx(ctx, nil)
 	if err != nil {

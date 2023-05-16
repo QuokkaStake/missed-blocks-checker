@@ -4,6 +4,7 @@ import (
 	configPkg "main/pkg/config"
 	"main/pkg/snapshot"
 	"main/pkg/types"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -14,6 +15,7 @@ type Manager struct {
 	config   *configPkg.Config
 	state    *State
 	database *Database
+	mutex    sync.Mutex
 }
 
 func NewManager(logger zerolog.Logger, config *configPkg.Config) *Manager {
@@ -73,6 +75,9 @@ func (m *Manager) GetLatestBlock() int64 {
 }
 
 func (m *Manager) AddBlock(block *types.Block) error {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
 	m.state.AddBlock(block)
 
 	if err := m.database.InsertBlock(block); err != nil {
@@ -97,6 +102,9 @@ func (m *Manager) AddBlock(block *types.Block) error {
 }
 
 func (m *Manager) AddActiveSet(height int64, activeSet map[string]bool) error {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
 	m.state.AddActiveSet(height, activeSet)
 
 	if err := m.database.InsertActiveSet(height, activeSet); err != nil {

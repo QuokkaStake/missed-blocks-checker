@@ -122,15 +122,18 @@ func (a *App) ListenForEvents() {
 					Msg("Error inserting new block")
 			}
 
-			count := a.StateManager.GetBlocksCountSinceLatest(a.Config.ChainConfig.StoreBlocks)
+			blocksCount := a.StateManager.GetBlocksCountSinceLatest(a.Config.ChainConfig.StoreBlocks)
 			a.Logger.Info().
-				Int64("count", count).
+				Int64("count", blocksCount).
 				Int64("height", block.Height).
 				Msg("Added new Tendermint block into state")
 
+			historicalValidatorsCount := a.StateManager.GetActiveSetsCountSinceLatest(a.Config.ChainConfig.StoreBlocks)
+
 			if !a.StateManager.IsPopulated() {
 				a.Logger.Debug().
-					Int64("count", count).
+					Int64("blocks_count", blocksCount).
+					Int64("historical_validators_count", historicalValidatorsCount).
 					Int64("expected", a.Config.ChainConfig.BlocksWindow).
 					Msg("Not enough blocks for producing a snapshot, skipping.")
 				continue
@@ -233,7 +236,7 @@ func (a *App) PopulateInBackground() {
 }
 
 func (a *App) PopulateLatestBlock() {
-	blockRaw, err := a.RPCManager.GetLatestBlock()
+	blockRaw, err := a.RPCManager.GetBlock(0)
 	if err != nil {
 		a.Logger.Error().Err(err).Msg("Error querying for last block")
 		return
@@ -276,14 +279,26 @@ func (a *App) PopulateBlocks() {
 			break
 		}
 
-		var presentedBlocks int64 = 0
-		for height := blockHeight; height > blockHeight-constants.ActiveSetsBulkQueryCount; height-- {
-			if a.StateManager.HasBlockAtHeight(height) {
-				presentedBlocks += 1
+		earliestBlock := a.StateManager.GetEarliestBlock()
+		if earliestBlock != nil && earliestBlock.Height <= latestBlockHeight-a.Config.ChainConfig.StoreBlocks {
+			a.Logger.Info().
+				Int64("count", count).
+				Int64("earliest_height", earliestBlock.Height).
+				Int64("latest_height", latestBlockHeight).
+				Msg("Getting out of bounds when querying for blocks, terminating.")
+			a.IsPopulatingActiveSet = false
+			break
+		}
+
+		blocksToFetch := make([]int64, 0)
+
+		for height := blockHeight; height > blockHeight-constants.BlockSearchPagination; height-- {
+			if !a.StateManager.HasBlockAtHeight(height) {
+				blocksToFetch = append(blocksToFetch, height)
 			}
 		}
 
-		if presentedBlocks >= constants.ActiveSetsBulkQueryCount {
+		if len(blocksToFetch) == 0 {
 			a.Logger.Info().
 				Int64("start_height", blockHeight).
 				Msg("No need to fetch blocks in this batch, skipping")
@@ -295,25 +310,21 @@ func (a *App) PopulateBlocks() {
 			Int64("count", count).
 			Int64("required", a.Config.ChainConfig.StoreBlocks).
 			Int64("height", blockHeight).
-			Int64("latest_height", latestBlockHeight).
-			Int64("presented_blocks", presentedBlocks).
-			Int64("needed_blocks", constants.ActiveSetsBulkQueryCount).
+			Int64("needed_blocks", constants.BlockSearchPagination).
+			Ints64("missing_blocks", blocksToFetch).
 			Msg("Not enough blocks, fetching more blocks...")
 
-		blocks, err := a.RPCManager.GetBlocksFromTo(
-			blockHeight-constants.BlockSearchPagination,
-			blockHeight,
-			constants.BlockSearchPagination,
-		)
+		blocks, errs := a.RPCManager.GetBlocksAtHeights(blocksToFetch)
 
-		if err != nil {
-			a.Logger.Error().Err(err).Msg("Error querying for blocks search")
+		if len(errs) > 0 {
+			a.Logger.Error().Errs("errors", errs).Msg("Error querying for blocks")
 			a.IsPopulatingBlocks = false
 			return
 		}
 
-		for _, block := range blocks.Result.Blocks {
-			if err := a.StateManager.AddBlock(block.Block.ToBlock()); err != nil {
+		for _, blockRaw := range blocks {
+			block := blockRaw.Result.Block.ToBlock()
+			if err := a.StateManager.AddBlock(block); err != nil {
 				a.Logger.Error().
 					Err(err).
 					Msg("Error inserting older block")
@@ -352,7 +363,7 @@ func (a *App) PopulateActiveSet() {
 		}
 
 		earliestBlock := a.StateManager.GetEarliestBlock()
-		if earliestBlock != nil && earliestBlock.Height < blockHeight-a.Config.ChainConfig.StoreBlocks {
+		if earliestBlock != nil && earliestBlock.Height < latestBlockHeight-a.Config.ChainConfig.StoreBlocks {
 			a.Logger.Info().
 				Int64("count", count).
 				Int64("earliest_height", earliestBlock.Height).
@@ -363,12 +374,14 @@ func (a *App) PopulateActiveSet() {
 		}
 
 		blocksToFetch := make([]int64, 0)
+		presentedCount := 0
 
-		for height := blockHeight; height >= blockHeight-constants.ActiveSetsBulkQueryCount; height-- {
+		for height := blockHeight; height > blockHeight-constants.ActiveSetsBulkQueryCount; height-- {
 			if a.StateManager.HasActiveSetAtHeight(height) {
 				a.Logger.Trace().
 					Int64("height", height).
 					Msg("Already have active set at this block, skipping")
+				presentedCount += 1
 			} else {
 				blocksToFetch = append(blocksToFetch, height)
 			}
@@ -384,6 +397,7 @@ func (a *App) PopulateActiveSet() {
 			Int64("count", count).
 			Ints64("blocks_to_fetch", blocksToFetch).
 			Int64("required", a.Config.ChainConfig.StoreBlocks).
+			Int("present", presentedCount).
 			Msg("Not enough historical validators, fetching more...")
 
 		heightActiveSets, errs := a.RPCManager.GetActiveSetAtBlocks(blocksToFetch)
