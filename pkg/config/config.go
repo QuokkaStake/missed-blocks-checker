@@ -179,24 +179,25 @@ func (config *Config) SetDefaultMissedBlocksGroups() {
 
 	totalRange := float64(config.ChainConfig.BlocksWindow) + 1 // from 0 till max blocks allowed, including
 
-	groups := []MissedBlocksGroup{}
-
 	percents := []float64{0, 0.5, 1, 5, 10, 25, 50, 75, 90, 100}
 	emojiStart := []string{"🟡", "🟡", "🟡", "🟠", "🟠", "🟠", "🔴", "🔴", "🔴"}
 	emojiEnd := []string{"🟢", "🟡", "🟡", "🟡", "🟡", "🟠", "🟠", "🟠", "🟠"}
 
-	for i := 0; i < len(percents)-1; i++ {
+	groupsCount := len(percents) - 1
+	groups := make([]MissedBlocksGroup, groupsCount)
+
+	for i := 0; i < groupsCount; i++ {
 		start := totalRange * percents[i] / 100
 		end := totalRange*percents[i+1]/100 - 1
 
-		groups = append(groups, MissedBlocksGroup{
+		groups[i] = MissedBlocksGroup{
 			Start:      int64(start),
 			End:        int64(end),
 			EmojiStart: emojiStart[i],
 			EmojiEnd:   emojiEnd[i],
 			DescStart:  fmt.Sprintf("is skipping blocks (> %.1f%%)", percents[i]),
 			DescEnd:    fmt.Sprintf("is recovering (< %.1f%%)", percents[i+1]),
-		})
+		}
 	}
 
 	groups[0].DescEnd = fmt.Sprintf("is recovered (< %.1f%%)", percents[1])
