@@ -88,15 +88,39 @@ func NewManager(logger zerolog.Logger, config *configPkg.Config) *Manager {
 	}
 }
 
+func (m *Manager) SetDefaultMetrics() {
+	m.reportsCounter.
+		With(prometheus.Labels{"chain": m.config.ChainConfig.Name}).
+		Add(0)
+
+	m.reportEntriesCounter.
+		With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "type": constants.EventValidatorActive}).
+		Add(0)
+
+	m.reportEntriesCounter.
+		With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "type": constants.EventValidatorInactive}).
+		Add(0)
+
+	m.reportEntriesCounter.
+		With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "type": constants.EventValidatorJailed}).
+		Add(0)
+
+	m.reportEntriesCounter.
+		With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "type": constants.EventValidatorUnjailed}).
+		Add(0)
+
+	m.reportEntriesCounter.
+		With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "type": constants.EventValidatorGroupChanged}).
+		Add(0)
+}
+
 func (m *Manager) Start() {
 	if !m.config.MetricsConfig.Enabled.Bool {
 		m.logger.Info().Msg("Metrics not enabled")
 		return
 	}
 
-	m.reportsCounter.
-		With(prometheus.Labels{"chain": m.config.ChainConfig.Name}).
-		Add(0)
+	m.SetDefaultMetrics()
 
 	m.logger.Info().
 		Str("addr", m.config.MetricsConfig.ListenAddr).

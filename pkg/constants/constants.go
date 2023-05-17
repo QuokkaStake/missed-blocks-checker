@@ -15,4 +15,10 @@ const (
 	ValidatorNilSignature = 3
 
 	PrometheusMetricsPrefix = "missed_blocks_checker_"
+
+	EventValidatorActive       = "ValidatorActive"
+	EventValidatorGroupChanged = "ValidatorGroupChanged"
+	EventValidatorInactive     = "ValidatorInactive"
+	EventValidatorJailed       = "ValidatorJailed"
+	EventValidatorUnjailed     = "ValidatorUnjailed"
 )

@@ -1,11 +1,14 @@
 package events
 
-import "main/pkg/types"
+import (
+	"main/pkg/constants"
+	"main/pkg/types"
+)
 
 type ValidatorUnjailed struct {
 	Validator *types.Validator
 }
 
 func (e ValidatorUnjailed) Type() string {
-	return "ValidatorUnjailed"
+	return constants.EventValidatorUnjailed
 }

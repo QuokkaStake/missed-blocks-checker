@@ -2,6 +2,7 @@ package events
 
 import (
 	configPkg "main/pkg/config"
+	"main/pkg/constants"
 	"main/pkg/types"
 )
 
@@ -14,7 +15,7 @@ type ValidatorGroupChanged struct {
 }
 
 func (e ValidatorGroupChanged) Type() string {
-	return "ValidatorGroupChanged"
+	return constants.EventValidatorGroupChanged
 }
 
 func (e *ValidatorGroupChanged) GetDescription() string {
