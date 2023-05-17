@@ -149,7 +149,12 @@ func (t *WebsocketClient) ProcessEvent(event rpcTypes.RPCResponse) {
 		t.logger.Error().Err(err).Msg("Failed to unmarshall event")
 	}
 
-	block := blockData.Block.ToBlock()
+	block, err := blockData.Block.ToBlock()
+	if err != nil {
+		t.logger.Err(err).Err(err).Msg("Error unmarshalling block")
+		return
+	}
+
 	t.Channel <- block
 }
 

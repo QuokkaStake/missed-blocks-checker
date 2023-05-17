@@ -242,7 +242,11 @@ func (a *App) PopulateLatestBlock() {
 		return
 	}
 
-	blockParsed := blockRaw.Result.Block.ToBlock()
+	blockParsed, err := blockRaw.Result.Block.ToBlock()
+	if err != nil {
+		a.Logger.Error().Err(err).Msg("Error fetching last block")
+		return
+	}
 
 	a.Logger.Info().
 		Int64("height", blockParsed.Height).
@@ -323,7 +327,15 @@ func (a *App) PopulateBlocks() {
 		}
 
 		for _, blockRaw := range blocks {
-			block := blockRaw.Result.Block.ToBlock()
+			block, err := blockRaw.Result.Block.ToBlock()
+			if err != nil {
+				a.Logger.Error().
+					Err(err).
+					Msg("Error getting older block")
+				a.IsPopulatingBlocks = false
+				return
+			}
+
 			if err := a.StateManager.AddBlock(block); err != nil {
 				a.Logger.Error().
 					Err(err).

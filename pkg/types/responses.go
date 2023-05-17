@@ -33,10 +33,10 @@ type BlockSignature struct {
 	ValidatorAddress string `json:"validator_address"`
 }
 
-func (b *TendermintBlock) ToBlock() *Block {
+func (b *TendermintBlock) ToBlock() (*Block, error) {
 	height, err := strconv.ParseInt(b.Header.Height, 10, 64)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	signatures := make(map[string]int32, len(b.LastCommit.Signatures))
@@ -50,7 +50,7 @@ func (b *TendermintBlock) ToBlock() *Block {
 		Time:       b.Header.Time,
 		Proposer:   b.Header.Proposer,
 		Signatures: signatures,
-	}
+	}, nil
 }
 
 type EventResult struct {
