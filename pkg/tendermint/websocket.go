@@ -118,6 +118,8 @@ func (t *WebsocketClient) Stop() {
 }
 
 func (t *WebsocketClient) ProcessEvent(event rpcTypes.RPCResponse) {
+	t.metricsManager.LogWSEvent(t.url)
+
 	if event.Error != nil && event.Error.Message != "" {
 		t.logger.Error().Str("msg", event.Error.Error()).Msg("Got error in RPC response")
 		t.Channel <- &types.WSError{Error: event.Error}

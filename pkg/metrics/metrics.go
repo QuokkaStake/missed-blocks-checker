@@ -25,6 +25,7 @@ type Manager struct {
 	nodeConnectedCollector     *prometheus.GaugeVec
 	successfulQueriesCollector *prometheus.CounterVec
 	failedQueriesCollector     *prometheus.CounterVec
+	eventsCounter              *prometheus.CounterVec
 
 	reportsCounter       *prometheus.CounterVec
 	reportEntriesCounter *prometheus.CounterVec
@@ -85,6 +86,10 @@ func NewManager(logger zerolog.Logger, config *configPkg.Config) *Manager {
 			Name: constants.PrometheusMetricsPrefix + "version",
 			Help: "App version",
 		}, []string{"version"}),
+		eventsCounter: promauto.NewCounterVec(prometheus.CounterOpts{
+			Name: constants.PrometheusMetricsPrefix + "events_total",
+			Help: "WebSocket events received by node",
+		}, []string{"chain", "node"}),
 	}
 }
 
@@ -112,6 +117,12 @@ func (m *Manager) SetDefaultMetrics() {
 	m.reportEntriesCounter.
 		With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "type": constants.EventValidatorGroupChanged}).
 		Add(0)
+
+	for _, node := range m.config.ChainConfig.RPCEndpoints {
+		m.eventsCounter.
+			With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "node": node}).
+			Add(0)
+	}
 }
 
 func (m *Manager) Start() {
@@ -206,4 +217,10 @@ func (m *Manager) LogAppVersion(version string) {
 	m.appVersionGauge.
 		With(prometheus.Labels{"version": version}).
 		Set(1)
+}
+
+func (m *Manager) LogWSEvent(node string) {
+	m.appVersionGauge.
+		With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "node": node}).
+		Inc()
 }
