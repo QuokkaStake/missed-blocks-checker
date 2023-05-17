@@ -76,7 +76,7 @@ func (h *HistoricalValidators) IsValidatorActiveAtBlock(validator *types.Validat
 func (h *HistoricalValidators) GetCountSinceLatest(expected int64, lastHeight int64) int64 {
 	var expectedCount int64 = 0
 
-	for height := lastHeight; height > h.lastHeight-expected; height-- {
+	for height := lastHeight; height > lastHeight-expected; height-- {
 		if h.HasSetAtBlock(height) {
 			expectedCount++
 		}
@@ -88,7 +88,7 @@ func (h *HistoricalValidators) GetCountSinceLatest(expected int64, lastHeight in
 func (h *HistoricalValidators) GetMissingSinceLatest(expected int64, lastHeight int64) []int64 {
 	var missing []int64
 
-	for height := lastHeight; height > h.lastHeight-expected; height-- {
+	for height := lastHeight; height > lastHeight-expected; height-- {
 		if !h.HasSetAtBlock(height) {
 			missing = append(missing, height)
 		}
