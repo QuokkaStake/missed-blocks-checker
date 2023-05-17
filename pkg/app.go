@@ -232,6 +232,7 @@ func (a *App) PopulateInBackground() {
 	blocksTicker := time.NewTicker(60 * time.Second)
 	activeSetTicker := time.NewTicker(60 * time.Second)
 	latestBlockTimer := time.NewTicker(120 * time.Second)
+	trimTimer := time.NewTicker(300 * time.Second)
 	quit := make(chan struct{})
 
 	for {
@@ -242,6 +243,15 @@ func (a *App) PopulateInBackground() {
 			a.PopulateActiveSet()
 		case <-latestBlockTimer.C:
 			a.PopulateLatestBlock()
+		case <-trimTimer.C:
+			{
+				if err := a.StateManager.TrimBlocks(); err != nil {
+					a.Logger.Error().Err(err).Msg("Error trimming blocks")
+				}
+				if err := a.StateManager.TrimHistoricalValidators(); err != nil {
+					a.Logger.Error().Err(err).Msg("Error trimming historical validators")
+				}
+			}
 		case <-quit:
 			blocksTicker.Stop()
 			activeSetTicker.Stop()

@@ -91,20 +91,6 @@ func (m *Manager) AddBlock(block *types.Block) error {
 		return err
 	}
 
-	// newly added block, need to trim older blocks
-	if m.state.GetLastBlockHeight() == block.Height {
-		trimHeight := block.Height - m.config.ChainConfig.StoreBlocks
-		m.logger.Debug().
-			Int64("height", block.Height).
-			Int64("trim_height", trimHeight).
-			Msg("Need to trim blocks")
-
-		m.state.TrimBlocksBefore(trimHeight)
-		if err := m.database.TrimBlocksBefore(trimHeight); err != nil {
-			return err
-		}
-	}
-
 	m.metricsManager.LogTotalBlocksAmount(m.GetBlocksCountSinceLatest(m.config.ChainConfig.StoreBlocks))
 
 	return nil
@@ -119,22 +105,43 @@ func (m *Manager) AddActiveSet(height int64, activeSet map[string]bool) error {
 	if err := m.database.InsertActiveSet(height, activeSet); err != nil {
 		return err
 	}
+	m.metricsManager.LogTotalHistoricalValidatorsAmount(m.GetActiveSetsCountSinceLatest(m.config.ChainConfig.StoreBlocks))
 
-	// newly added block, need to trim older blocks
-	if m.state.GetLastBlockHeight() == height {
-		trimHeight := height - m.config.ChainConfig.StoreBlocks
-		m.logger.Debug().
-			Int64("height", height).
-			Int64("trim_height", trimHeight).
-			Msg("Need to trim active set")
+	return nil
+}
 
-		m.state.TrimActiveSetsBefore(trimHeight)
-		if err := m.database.TrimActiveSetsBefore(trimHeight); err != nil {
-			return err
-		}
+func (m *Manager) TrimBlocks() error {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	trimHeight := m.state.GetLastBlockHeight() - m.config.ChainConfig.StoreBlocks
+	m.logger.Debug().
+		Int64("height", m.state.GetLastBlockHeight()).
+		Int64("trim_height", trimHeight).
+		Msg("Need to trim blocks")
+
+	m.state.TrimBlocksBefore(trimHeight)
+	if err := m.database.TrimBlocksBefore(trimHeight); err != nil {
+		return err
 	}
 
-	m.metricsManager.LogTotalHistoricalValidatorsAmount(m.GetActiveSetsCountSinceLatest(m.config.ChainConfig.StoreBlocks))
+	return nil
+}
+
+func (m *Manager) TrimHistoricalValidators() error {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	trimHeight := m.state.GetLastBlockHeight() - m.config.ChainConfig.StoreBlocks
+	m.logger.Debug().
+		Int64("height", m.state.GetLastBlockHeight()).
+		Int64("trim_height", trimHeight).
+		Msg("Need to trim historical validators")
+
+	m.state.TrimActiveSetsBefore(trimHeight)
+	if err := m.database.TrimActiveSetsBefore(trimHeight); err != nil {
+		return err
+	}
 
 	return nil
 }

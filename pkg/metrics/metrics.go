@@ -80,6 +80,10 @@ func (m *Manager) Start() {
 		return
 	}
 
+	m.reportsCounter.
+		With(prometheus.Labels{"chain": m.config.ChainConfig.Name}).
+		Add(0)
+
 	m.logger.Info().
 		Str("addr", m.config.MetricsConfig.ListenAddr).
 		Msg("Metrics handler listening")
