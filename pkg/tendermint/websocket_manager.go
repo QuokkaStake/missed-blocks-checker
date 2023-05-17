@@ -1,6 +1,7 @@
 package tendermint
 
 import (
+	"main/pkg/metrics"
 	"sync"
 
 	"main/pkg/config"
@@ -41,26 +42,32 @@ func (q *Queue) Has(emittable types.WebsocketEmittable) bool {
 }
 
 type WebsocketManager struct {
-	logger zerolog.Logger
-	nodes  []*WebsocketClient
-	queue  Queue
-	mutex  sync.Mutex
+	logger         zerolog.Logger
+	nodes          []*WebsocketClient
+	metricsManager *metrics.Manager
+	queue          Queue
+	mutex          sync.Mutex
 
 	Channel chan types.WebsocketEmittable
 }
 
-func NewWebsocketManager(logger zerolog.Logger, appConfig *config.Config) *WebsocketManager {
+func NewWebsocketManager(
+	logger zerolog.Logger,
+	appConfig *config.Config,
+	metricsManager *metrics.Manager,
+) *WebsocketManager {
 	nodes := make([]*WebsocketClient, len(appConfig.ChainConfig.RPCEndpoints))
 
 	for index, url := range appConfig.ChainConfig.RPCEndpoints {
-		nodes[index] = NewWebsocketClient(logger, url, appConfig)
+		nodes[index] = NewWebsocketClient(logger, url, appConfig, metricsManager)
 	}
 
 	return &WebsocketManager{
-		logger:  logger.With().Str("component", "websocket_manager").Logger(),
-		nodes:   nodes,
-		queue:   NewQueue(100),
-		Channel: make(chan types.WebsocketEmittable),
+		logger:         logger.With().Str("component", "websocket_manager").Logger(),
+		nodes:          nodes,
+		metricsManager: metricsManager,
+		queue:          NewQueue(100),
+		Channel:        make(chan types.WebsocketEmittable),
 	}
 }
 
@@ -70,8 +77,8 @@ func (m *WebsocketManager) Listen() {
 	}
 
 	for _, node := range m.nodes {
-		go func(c chan types.WebsocketEmittable) {
-			for msg := range c {
+		go func(node *WebsocketClient) {
+			for msg := range node.Channel {
 				m.mutex.Lock()
 
 				if m.queue.Has(msg) {
@@ -87,6 +94,6 @@ func (m *WebsocketManager) Listen() {
 
 				m.mutex.Unlock()
 			}
-		}(node.Channel)
+		}(node)
 	}
 }

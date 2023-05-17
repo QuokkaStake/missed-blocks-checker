@@ -13,6 +13,10 @@ type ValidatorGroupChanged struct {
 	MissedBlocksGroupAfter  *configPkg.MissedBlocksGroup
 }
 
+func (e ValidatorGroupChanged) Type() string {
+	return "ValidatorGroupChanged"
+}
+
 func (e *ValidatorGroupChanged) GetDescription() string {
 	// increasing
 	if e.IsIncreasing() {

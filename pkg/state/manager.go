@@ -2,6 +2,7 @@ package state
 
 import (
 	configPkg "main/pkg/config"
+	"main/pkg/metrics"
 	"main/pkg/snapshot"
 	"main/pkg/types"
 	"sync"
@@ -11,19 +12,21 @@ import (
 )
 
 type Manager struct {
-	logger   zerolog.Logger
-	config   *configPkg.Config
-	state    *State
-	database *Database
-	mutex    sync.Mutex
+	logger         zerolog.Logger
+	config         *configPkg.Config
+	metricsManager *metrics.Manager
+	state          *State
+	database       *Database
+	mutex          sync.Mutex
 }
 
-func NewManager(logger zerolog.Logger, config *configPkg.Config) *Manager {
+func NewManager(logger zerolog.Logger, config *configPkg.Config, metricsManager *metrics.Manager) *Manager {
 	return &Manager{
-		logger:   logger.With().Str("component", "state_manager").Logger(),
-		config:   config,
-		state:    NewState(),
-		database: NewDatabase(logger, config),
+		logger:         logger.With().Str("component", "state_manager").Logger(),
+		config:         config,
+		metricsManager: metricsManager,
+		state:          NewState(),
+		database:       NewDatabase(logger, config),
 	}
 }
 
@@ -79,6 +82,10 @@ func (m *Manager) AddBlock(block *types.Block) error {
 	defer m.mutex.Unlock()
 
 	m.state.AddBlock(block)
+
+	if lastBlock := m.state.GetLatestBlock(); lastBlock == block.Height {
+		m.metricsManager.LogLastHeight(block.Height, block.Time)
+	}
 
 	if err := m.database.InsertBlock(block); err != nil {
 		return err

@@ -60,3 +60,11 @@ func SplitStringIntoChunks(msg string, maxLineLength int) []string {
 	outMessages = append(outMessages, sb.String())
 	return outMessages
 }
+
+func BoolToFloat64(value bool) float64 {
+	if value {
+		return 1
+	}
+
+	return 0
+}

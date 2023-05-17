@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"main/pkg/constants"
+	"main/pkg/metrics"
 	"main/pkg/utils"
 	"net/http"
 	"net/url"
@@ -22,14 +23,16 @@ import (
 )
 
 type RPC struct {
-	urls   []string
-	logger zerolog.Logger
+	urls           []string
+	metricsManager *metrics.Manager
+	logger         zerolog.Logger
 }
 
-func NewRPC(urls []string, logger zerolog.Logger) *RPC {
+func NewRPC(urls []string, logger zerolog.Logger, metricsManager *metrics.Manager) *RPC {
 	return &RPC{
-		urls:   urls,
-		logger: logger.With().Str("component", "rpc").Logger(),
+		urls:           urls,
+		metricsManager: metricsManager,
+		logger:         logger.With().Str("component", "rpc").Logger(),
 	}
 }
 
@@ -40,7 +43,7 @@ func (rpc *RPC) GetBlock(height int64) (*types.SingleBlockResponse, error) {
 	}
 
 	var response types.SingleBlockResponse
-	if err := rpc.Get(queryURL, &response); err != nil {
+	if err := rpc.Get(queryURL, "block", &response); err != nil {
 		return nil, err
 	}
 
@@ -50,6 +53,7 @@ func (rpc *RPC) GetBlock(height int64) (*types.SingleBlockResponse, error) {
 func (rpc *RPC) AbciQuery(
 	method string,
 	message codec.ProtoMarshaler,
+	queryType string,
 	output codec.ProtoMarshaler,
 ) error {
 	dataBytes, err := message.Marshal()
@@ -65,7 +69,7 @@ func (rpc *RPC) AbciQuery(
 	)
 
 	var response types.AbciQueryResponse
-	if err := rpc.Get(queryURL, &response); err != nil {
+	if err := rpc.Get(queryURL, "abci_"+queryType, &response); err != nil {
 		return err
 	}
 
@@ -80,7 +84,7 @@ func (rpc *RPC) GetValidators() (types.Validators, error) {
 	}
 
 	var validatorsResponse stakingTypes.QueryValidatorsResponse
-	if err := rpc.AbciQuery("/cosmos.staking.v1beta1.Query/Validators", &query, &validatorsResponse); err != nil {
+	if err := rpc.AbciQuery("/cosmos.staking.v1beta1.Query/Validators", &query, "validators", &validatorsResponse); err != nil {
 		return nil, err
 	}
 
@@ -95,7 +99,7 @@ func (rpc *RPC) GetSigningInfo() error {
 	}
 
 	var response slashingTypes.QuerySigningInfosResponse
-	if err := rpc.AbciQuery("/cosmos.slashing.v1beta1.Query/SigningInfos", &query, &response); err != nil {
+	if err := rpc.AbciQuery("/cosmos.slashing.v1beta1.Query/SigningInfos", &query, "signing_infos", &response); err != nil {
 		return err
 	}
 
@@ -103,26 +107,42 @@ func (rpc *RPC) GetSigningInfo() error {
 }
 
 func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
-	queryURL := fmt.Sprintf("/validators?height=%d&per_page=%d", height, constants.ActiveSetPagination)
+	page := 1
 
-	var response types.ValidatorsResponse
-	if err := rpc.Get(queryURL, &response); err != nil {
-		return nil, err
-	}
+	activeSetMap := make(map[string]bool)
 
-	if len(response.Result.Validators) == 0 {
-		return nil, fmt.Errorf("malformed result of validators active set: got 0 validators")
-	}
+	for true {
+		queryURL := fmt.Sprintf(
+			"/validators?height=%d&per_page=%d&page=%d",
+			height,
+			constants.ActiveSetPagination,
+			page,
+		)
 
-	activeSetMap := make(map[string]bool, len(response.Result.Validators))
-	for _, validator := range response.Result.Validators {
-		activeSetMap[validator.Address] = true
+		var response types.ValidatorsResponse
+		if err := rpc.Get(queryURL, "historical_validators", &response); err != nil {
+			return nil, err
+		}
+
+		if len(response.Result.Validators) == 0 {
+			return nil, fmt.Errorf("malformed result of validators active set: got 0 validators")
+		}
+
+		for _, validator := range response.Result.Validators {
+			activeSetMap[validator.Address] = true
+		}
+
+		if len(response.Result.Validators) < constants.ActiveSetPagination {
+			break
+		}
+
+		page += 1
 	}
 
 	return activeSetMap, nil
 }
 
-func (rpc *RPC) Get(url string, target interface{}) error {
+func (rpc *RPC) Get(url string, queryType string, target interface{}) error {
 	errors := make([]error, len(rpc.urls))
 
 	for index, lcd := range rpc.urls {
@@ -130,7 +150,9 @@ func (rpc *RPC) Get(url string, target interface{}) error {
 		rpc.logger.Trace().Str("url", fullURL).Msg("Trying making request to LCD")
 
 		err := rpc.GetFull(
-			fullURL,
+			lcd,
+			url,
+			queryType,
 			target,
 		)
 
@@ -154,27 +176,41 @@ func (rpc *RPC) Get(url string, target interface{}) error {
 	return fmt.Errorf(sb.String())
 }
 
-func (rpc *RPC) GetFull(url string, target interface{}) error {
+func (rpc *RPC) GetFull(host, url string, queryType string, target interface{}) error {
 	client := &http.Client{Timeout: 10 * 1000000000}
 	start := time.Now()
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	fullURL := host + url
+
+	queryInfo := types.QueryInfo{
+		Success:   false,
+		Node:      host,
+		QueryType: queryType,
+	}
+
+	req, err := http.NewRequest(http.MethodGet, fullURL, nil)
 	if err != nil {
 		return err
 	}
 
 	req.Header.Set("User-Agent", "missed-blocks-checker")
 
-	rpc.logger.Trace().Str("url", url).Msg("Doing a query...")
+	rpc.logger.Trace().
+		Str("url", fullURL).
+		Msg("Doing a query...")
 
 	res, err := client.Do(req)
 	if err != nil {
-		rpc.logger.Warn().Str("url", url).Err(err).Msg("Query failed")
+		rpc.logger.Warn().Str("url", fullURL).Err(err).Msg("Query failed")
+		rpc.metricsManager.LogTendermintQuery(queryInfo)
 		return err
 	}
 	defer res.Body.Close()
 
 	rpc.logger.Debug().Str("url", url).Dur("duration", time.Since(start)).Msg("Query is finished")
+
+	queryInfo.Success = true
+	rpc.metricsManager.LogTendermintQuery(queryInfo)
 
 	return json.NewDecoder(res.Body).Decode(target)
 }

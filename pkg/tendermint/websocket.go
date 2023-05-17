@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"main/pkg/config"
 	"main/pkg/constants"
+	"main/pkg/metrics"
 	"reflect"
 	"strings"
 	"time"
@@ -18,12 +19,13 @@ import (
 )
 
 type WebsocketClient struct {
-	logger zerolog.Logger
-	config *config.Config
-	url    string
-	client *tmClient.WSClient
-	active bool
-	error  error
+	logger         zerolog.Logger
+	config         *config.Config
+	metricsManager *metrics.Manager
+	url            string
+	client         *tmClient.WSClient
+	active         bool
+	error          error
 
 	Channel chan types.WebsocketEmittable
 }
@@ -32,6 +34,7 @@ func NewWebsocketClient(
 	logger zerolog.Logger,
 	url string,
 	config *config.Config,
+	metricsManager *metrics.Manager,
 ) *WebsocketClient {
 	return &WebsocketClient{
 		logger: logger.With().
@@ -39,10 +42,11 @@ func NewWebsocketClient(
 			Str("url", url).
 			Str("chain", config.ChainConfig.Name).
 			Logger(),
-		url:     url,
-		config:  config,
-		active:  false,
-		Channel: make(chan types.WebsocketEmittable),
+		url:            url,
+		config:         config,
+		metricsManager: metricsManager,
+		active:         false,
+		Channel:        make(chan types.WebsocketEmittable),
 	}
 }
 
@@ -53,6 +57,8 @@ func SetUnexportedField(field reflect.Value, value interface{}) {
 }
 
 func (t *WebsocketClient) Listen() {
+	t.metricsManager.LogNodeConnection(t.url, false)
+
 	client, err := tmClient.NewWSWithOptions(
 		t.url,
 		"/websocket",
@@ -88,6 +94,7 @@ func (t *WebsocketClient) Listen() {
 	} else {
 		t.logger.Debug().Msg("Connected to a node")
 		t.active = true
+		t.metricsManager.LogNodeConnection(t.url, true)
 	}
 
 	t.SubscribeToUpdates()

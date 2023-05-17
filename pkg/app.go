@@ -5,6 +5,7 @@ import (
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	loggerPkg "main/pkg/logger"
+	"main/pkg/metrics"
 	reportersPkg "main/pkg/reporters"
 	"main/pkg/reporters/telegram"
 	snapshotPkg "main/pkg/snapshot"
@@ -23,6 +24,7 @@ type App struct {
 	StateManager          *statePkg.Manager
 	SnapshotManager       *snapshotPkg.Manager
 	WebsocketManager      *tendermint.WebsocketManager
+	MetricsManager        *metrics.Manager
 	Reporters             []reportersPkg.Reporter
 	IsPopulatingBlocks    bool
 	IsPopulatingActiveSet bool
@@ -43,9 +45,11 @@ func NewApp(configPath string) *App {
 		With().
 		Str("chain", config.ChainConfig.Name).
 		Logger()
-	rpcManager := tendermint.NewRPCManager(config.ChainConfig.RPCEndpoints, logger)
-	stateManager := statePkg.NewManager(logger, config)
-	websocketManager := tendermint.NewWebsocketManager(logger, config)
+
+	metricsManager := metrics.NewManager(logger, config)
+	rpcManager := tendermint.NewRPCManager(config.ChainConfig.RPCEndpoints, logger, metricsManager)
+	stateManager := statePkg.NewManager(logger, config, metricsManager)
+	websocketManager := tendermint.NewWebsocketManager(logger, config, metricsManager)
 	snapshotManager := snapshotPkg.NewManager(logger, config)
 
 	reporters := []reportersPkg.Reporter{
@@ -59,6 +63,7 @@ func NewApp(configPath string) *App {
 		StateManager:          stateManager,
 		SnapshotManager:       snapshotManager,
 		WebsocketManager:      websocketManager,
+		MetricsManager:        metricsManager,
 		Reporters:             reporters,
 		IsPopulatingBlocks:    false,
 		IsPopulatingActiveSet: false,
@@ -67,6 +72,8 @@ func NewApp(configPath string) *App {
 
 func (a *App) Start() {
 	a.StateManager.Init()
+
+	go a.MetricsManager.Start()
 
 	for _, reporter := range a.Reporters {
 		reporter.Init()
@@ -174,6 +181,8 @@ func (a *App) ListenForEvents() {
 				continue
 			}
 
+			a.MetricsManager.LogReport(report)
+
 			for _, entry := range report.Entries {
 				a.Logger.Info().
 					Str("entry", fmt.Sprintf("%+v", entry)).
@@ -219,6 +228,7 @@ func (a *App) PopulateInBackground() {
 
 	blocksTicker := time.NewTicker(60 * time.Second)
 	activeSetTicker := time.NewTicker(60 * time.Second)
+	latestBlockTimer := time.NewTicker(120 * time.Second)
 	quit := make(chan struct{})
 
 	for {
@@ -227,6 +237,8 @@ func (a *App) PopulateInBackground() {
 			a.PopulateBlocks()
 		case <-activeSetTicker.C:
 			a.PopulateActiveSet()
+		case <-latestBlockTimer.C:
+			a.PopulateLatestBlock()
 		case <-quit:
 			blocksTicker.Stop()
 			activeSetTicker.Stop()
