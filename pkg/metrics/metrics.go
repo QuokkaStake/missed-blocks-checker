@@ -220,7 +220,7 @@ func (m *Manager) LogAppVersion(version string) {
 }
 
 func (m *Manager) LogWSEvent(node string) {
-	m.appVersionGauge.
+	m.eventsCounter.
 		With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "node": node}).
 		Inc()
 }
