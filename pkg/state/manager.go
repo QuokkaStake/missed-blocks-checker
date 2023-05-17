@@ -115,7 +115,7 @@ func (m *Manager) TrimBlocks() error {
 	defer m.mutex.Unlock()
 
 	trimHeight := m.state.GetLastBlockHeight() - m.config.ChainConfig.StoreBlocks
-	m.logger.Debug().
+	m.logger.Info().
 		Int64("height", m.state.GetLastBlockHeight()).
 		Int64("trim_height", trimHeight).
 		Msg("Need to trim blocks")
@@ -133,7 +133,7 @@ func (m *Manager) TrimHistoricalValidators() error {
 	defer m.mutex.Unlock()
 
 	trimHeight := m.state.GetLastBlockHeight() - m.config.ChainConfig.StoreBlocks
-	m.logger.Debug().
+	m.logger.Info().
 		Int64("height", m.state.GetLastBlockHeight()).
 		Int64("trim_height", trimHeight).
 		Msg("Need to trim historical validators")
