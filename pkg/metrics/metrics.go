@@ -31,6 +31,8 @@ type Manager struct {
 
 	totalBlocksGauge               *prometheus.GaugeVec
 	totalHistoricalValidatorsGauge *prometheus.GaugeVec
+
+	reporterEnabledGauge *prometheus.GaugeVec
 }
 
 func NewManager(logger zerolog.Logger, config *configPkg.Config) *Manager {
@@ -73,6 +75,10 @@ func NewManager(logger zerolog.Logger, config *configPkg.Config) *Manager {
 			Name: constants.PrometheusMetricsPrefix + "node_historical_validators",
 			Help: "Total amount of historical validators stored",
 		}, []string{"chain"}),
+		reporterEnabledGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
+			Name: constants.PrometheusMetricsPrefix + "reporter_enabled",
+			Help: "Whether the reporter is enabled (1 if yes, 0 if no",
+		}, []string{"chain", "name"}),
 	}
 }
 
@@ -158,4 +164,10 @@ func (m *Manager) LogTotalHistoricalValidatorsAmount(amount int64) {
 	m.totalHistoricalValidatorsGauge.
 		With(prometheus.Labels{"chain": m.config.ChainConfig.Name}).
 		Set(float64(amount))
+}
+
+func (m *Manager) LogReporterEnabled(name string, enabled bool) {
+	m.reporterEnabledGauge.
+		With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "name": name}).
+		Set(utils.BoolToFloat64(enabled))
 }

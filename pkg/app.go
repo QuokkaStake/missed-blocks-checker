@@ -79,6 +79,8 @@ func (a *App) Start() {
 	for _, reporter := range a.Reporters {
 		reporter.Init()
 
+		a.MetricsManager.LogReporterEnabled(reporter.Name(), reporter.Enabled())
+
 		if reporter.Enabled() {
 			a.Logger.Debug().Str("name", reporter.Name()).Msg("Reporter is enabled")
 		} else {
