@@ -111,7 +111,7 @@ func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 
 	activeSetMap := make(map[string]bool)
 
-	for true {
+	for {
 		queryURL := fmt.Sprintf(
 			"/validators?height=%d&per_page=%d&page=%d",
 			height,

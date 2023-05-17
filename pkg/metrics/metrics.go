@@ -1,15 +1,17 @@
 package metrics
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/rs/zerolog"
 	configPkg "main/pkg/config"
+	"main/pkg/constants"
 	"main/pkg/report"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"net/http"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/rs/zerolog"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -36,39 +38,39 @@ func NewManager(logger zerolog.Logger, config *configPkg.Config) *Manager {
 		logger: logger.With().Str("component", "metrics").Logger(),
 		config: config,
 		lastBlockHeightCollector: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: "missed_blocks_checker_last_height",
+			Name: constants.PrometheusMetricsPrefix + "last_height",
 			Help: "Height of the last block processed",
 		}, []string{"chain"}),
 		lastBlockTimeCollector: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: "missed_blocks_checker_last_time",
+			Name: constants.PrometheusMetricsPrefix + "last_time",
 			Help: "Time of the last block processed",
 		}, []string{"chain"}),
 		nodeConnectedCollector: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: "missed_blocks_node_connected",
+			Name: constants.PrometheusMetricsPrefix + "node_connected",
 			Help: "Whether the node is successfully connected (1 if yes, 0 if no)",
 		}, []string{"chain", "node"}),
 		successfulQueriesCollector: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: "missed_blocks_node_successful_queries",
+			Name: constants.PrometheusMetricsPrefix + "node_successful_queries_total",
 			Help: "Counter of successful node queries",
 		}, []string{"chain", "node", "type"}),
 		failedQueriesCollector: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: "missed_blocks_node_failed_queries",
+			Name: constants.PrometheusMetricsPrefix + "node_failed_queries_total",
 			Help: "Counter of failed node queries",
 		}, []string{"chain", "node", "type"}),
 		reportsCounter: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: "missed_blocks_node_reports",
+			Name: constants.PrometheusMetricsPrefix + "node_reports",
 			Help: "Counter of reports to send",
 		}, []string{"chain"}),
 		reportEntriesCounter: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: "missed_blocks_node_report_entries",
+			Name: constants.PrometheusMetricsPrefix + "node_report_entries_total",
 			Help: "Counter of report entries send",
 		}, []string{"chain", "type"}),
 		totalBlocksGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: "missed_blocks_node_blocks",
+			Name: constants.PrometheusMetricsPrefix + "node_blocks",
 			Help: "Total amount of blocks stored",
 		}, []string{"chain"}),
 		totalHistoricalValidatorsGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: "missed_blocks_node_historical_validators",
+			Name: constants.PrometheusMetricsPrefix + "node_historical_validators",
 			Help: "Total amount of historical validators stored",
 		}, []string{"chain"}),
 	}

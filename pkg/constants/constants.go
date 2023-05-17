@@ -13,4 +13,6 @@ const (
 
 	ValidatorSigned       = 2
 	ValidatorNilSignature = 3
+
+	PrometheusMetricsPrefix = "missed_blocks_checker_"
 )
