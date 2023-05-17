@@ -141,7 +141,7 @@ func (a *App) ListenForEvents() {
 			hasEnoughHistoricalValidators := historicalValidatorsCount >= a.Config.ChainConfig.StoreBlocks
 
 			if !hasEnoughBlocks || !hasEnoughHistoricalValidators {
-				a.Logger.Debug().
+				a.Logger.Info().
 					Int64("blocks_count", blocksCount).
 					Int64("historical_validators_count", historicalValidatorsCount).
 					Int64("expected", a.Config.ChainConfig.BlocksWindow).
@@ -328,7 +328,7 @@ func (a *App) PopulateBlocks() {
 		}
 
 		if len(blocksToFetch) == 0 {
-			a.Logger.Info().
+			a.Logger.Trace().
 				Int64("start_height", blockHeight).
 				Msg("No need to fetch blocks in this batch, skipping")
 			blockHeight -= constants.BlockSearchPagination
