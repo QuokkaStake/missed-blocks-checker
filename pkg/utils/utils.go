@@ -68,3 +68,22 @@ func BoolToFloat64(value bool) float64 {
 
 	return 0
 }
+
+func SplitIntoChunks[T any](items []T, chunkSize int) (chunks [][]T) {
+	if len(items) == 0 {
+		return nil
+	}
+
+	divided := make([][]T, (len(items)+chunkSize-1)/chunkSize)
+	prev := 0
+	i := 0
+	till := len(items) - chunkSize
+	for prev < till {
+		next := prev + chunkSize
+		divided[i] = items[prev:next]
+		prev = next
+		i++
+	}
+	divided[i] = items[prev:]
+	return divided
+}

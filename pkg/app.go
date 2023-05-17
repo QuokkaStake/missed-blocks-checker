@@ -12,6 +12,7 @@ import (
 	statePkg "main/pkg/state"
 	"main/pkg/tendermint"
 	"main/pkg/types"
+	"main/pkg/utils"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -298,52 +299,29 @@ func (a *App) PopulateBlocks() {
 	latestBlockHeight := a.StateManager.GetLatestBlock()
 	blockHeight := latestBlockHeight
 
-	for {
+	missingBlocks := a.StateManager.GetMissingBlocksSinceLatest(a.Config.ChainConfig.StoreBlocks)
+	if len(missingBlocks) == 0 {
+		a.Logger.Info().
+			Int64("count", a.Config.ChainConfig.StoreBlocks).
+			Msg("Got enough blocks for populating")
+		a.IsPopulatingBlocks = false
+		return
+	}
+
+	blocksChunks := utils.SplitIntoChunks(missingBlocks, int(constants.BlockSearchPagination))
+
+	for _, chunk := range blocksChunks {
 		count := a.StateManager.GetBlocksCountSinceLatest(a.Config.ChainConfig.StoreBlocks)
-		if count >= a.Config.ChainConfig.StoreBlocks {
-			a.Logger.Info().
-				Int64("count", count).
-				Msg("Got enough blocks for populating")
-			a.IsPopulatingBlocks = false
-			break
-		}
-
-		earliestBlock := a.StateManager.GetEarliestBlock()
-		if earliestBlock != nil && earliestBlock.Height <= latestBlockHeight-a.Config.ChainConfig.StoreBlocks {
-			a.Logger.Info().
-				Int64("count", count).
-				Int64("earliest_height", earliestBlock.Height).
-				Int64("latest_height", latestBlockHeight).
-				Msg("Getting out of bounds when querying for blocks, terminating.")
-			a.IsPopulatingActiveSet = false
-			break
-		}
-
-		blocksToFetch := make([]int64, 0)
-
-		for height := blockHeight; height > blockHeight-constants.BlockSearchPagination; height-- {
-			if !a.StateManager.HasBlockAtHeight(height) {
-				blocksToFetch = append(blocksToFetch, height)
-			}
-		}
-
-		if len(blocksToFetch) == 0 {
-			a.Logger.Trace().
-				Int64("start_height", blockHeight).
-				Msg("No need to fetch blocks in this batch, skipping")
-			blockHeight -= constants.BlockSearchPagination
-			continue
-		}
 
 		a.Logger.Info().
 			Int64("count", count).
 			Int64("required", a.Config.ChainConfig.StoreBlocks).
 			Int64("height", blockHeight).
 			Int64("needed_blocks", constants.BlockSearchPagination).
-			Ints64("missing_blocks", blocksToFetch).
-			Msg("Not enough blocks, fetching more blocks...")
+			Ints64("blocks", chunk).
+			Msg("Fetching more blocks...")
 
-		blocks, errs := a.RPCManager.GetBlocksAtHeights(blocksToFetch)
+		blocks, errs := a.RPCManager.GetBlocksAtHeights(chunk)
 
 		if len(errs) > 0 {
 			a.Logger.Error().Errs("errors", errs).Msg("Error querying for blocks")
@@ -369,8 +347,6 @@ func (a *App) PopulateBlocks() {
 				return
 			}
 		}
-
-		blockHeight -= constants.BlockSearchPagination
 	}
 
 	a.IsPopulatingBlocks = false

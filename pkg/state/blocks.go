@@ -96,3 +96,15 @@ func (b *Blocks) GetCountSinceLatest(expected int64) int64 {
 
 	return expectedCount
 }
+
+func (b *Blocks) GetMissingSinceLatest(expected int64) []int64 {
+	var missed []int64
+
+	for height := b.lastHeight; height > b.lastHeight-expected; height-- {
+		if !b.HasBlockAtHeight(height) {
+			missed = append(missed, height)
+		}
+	}
+
+	return missed
+}

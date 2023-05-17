@@ -158,6 +158,10 @@ func (m *Manager) GetBlocksCountSinceLatest(expected int64) int64 {
 	return m.state.GetBlocksCountSinceLatest(expected)
 }
 
+func (m *Manager) GetMissingBlocksSinceLatest(expected int64) []int64 {
+	return m.state.GetMissingBlocksSinceLatest(expected)
+}
+
 func (m *Manager) GetActiveSetsCountSinceLatest(expected int64) int64 {
 	return m.state.GetActiveSetsCountSinceLatest(expected)
 }
