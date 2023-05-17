@@ -166,6 +166,10 @@ func (m *Manager) GetActiveSetsCountSinceLatest(expected int64) int64 {
 	return m.state.GetActiveSetsCountSinceLatest(expected)
 }
 
+func (m *Manager) GetMissingHistoricalValidatorsSinceLatest(expected int64) []int64 {
+	return m.state.GetMissingActiveSetsSinceLatest(expected)
+}
+
 func (m *Manager) GetSnapshot() *snapshot.Snapshot {
 	validators := m.state.GetValidators()
 	entries := make(map[string]snapshot.Entry, len(validators))

@@ -84,3 +84,15 @@ func (h *HistoricalValidators) GetCountSinceLatest(expected int64, lastHeight in
 
 	return expectedCount
 }
+
+func (h *HistoricalValidators) GetMissingSinceLatest(expected int64, lastHeight int64) []int64 {
+	var missing []int64
+
+	for height := lastHeight; height > h.lastHeight-expected; height-- {
+		if !h.HasSetAtBlock(height) {
+			missing = append(missing, height)
+		}
+	}
+
+	return missing
+}

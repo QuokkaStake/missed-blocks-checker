@@ -60,6 +60,10 @@ func (s *State) GetActiveSetsCountSinceLatest(expected int64) int64 {
 	return s.historicalValidators.GetCountSinceLatest(expected, s.blocks.lastHeight)
 }
 
+func (s *State) GetMissingActiveSetsSinceLatest(expected int64) []int64 {
+	return s.historicalValidators.GetMissingSinceLatest(expected, s.blocks.lastHeight)
+}
+
 func (s *State) HasBlockAtHeight(height int64) bool {
 	return s.blocks.HasBlockAtHeight(height)
 }

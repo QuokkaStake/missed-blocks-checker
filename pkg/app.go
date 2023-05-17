@@ -296,9 +296,6 @@ func (a *App) PopulateBlocks() {
 
 	a.IsPopulatingBlocks = true
 
-	latestBlockHeight := a.StateManager.GetLatestBlock()
-	blockHeight := latestBlockHeight
-
 	missingBlocks := a.StateManager.GetMissingBlocksSinceLatest(a.Config.ChainConfig.StoreBlocks)
 	if len(missingBlocks) == 0 {
 		a.Logger.Info().
@@ -316,7 +313,6 @@ func (a *App) PopulateBlocks() {
 		a.Logger.Info().
 			Int64("count", count).
 			Int64("required", a.Config.ChainConfig.StoreBlocks).
-			Int64("height", blockHeight).
 			Int64("needed_blocks", constants.BlockSearchPagination).
 			Ints64("blocks", chunk).
 			Msg("Fetching more blocks...")
@@ -362,58 +358,26 @@ func (a *App) PopulateActiveSet() {
 
 	a.IsPopulatingActiveSet = true
 
-	latestBlockHeight := a.StateManager.GetLatestBlock()
-	blockHeight := latestBlockHeight
+	missing := a.StateManager.GetMissingHistoricalValidatorsSinceLatest(a.Config.ChainConfig.StoreBlocks)
+	if len(missing) == 0 {
+		a.Logger.Info().
+			Int64("count", a.Config.ChainConfig.StoreBlocks).
+			Msg("Got enough historical validators for populating")
+		a.IsPopulatingActiveSet = false
+		return
+	}
 
-	for {
-		count := a.StateManager.GetActiveSetsCountSinceLatest(a.Config.ChainConfig.StoreBlocks)
-		if count >= a.Config.ChainConfig.StoreBlocks {
-			a.Logger.Info().
-				Int64("count", count).
-				Msg("Got enough historical validators for populating")
-			a.IsPopulatingActiveSet = false
-			break
-		}
-
-		earliestBlock := a.StateManager.GetEarliestBlock()
-		if earliestBlock != nil && earliestBlock.Height < latestBlockHeight-a.Config.ChainConfig.StoreBlocks {
-			a.Logger.Info().
-				Int64("count", count).
-				Int64("earliest_height", earliestBlock.Height).
-				Int64("latest_height", latestBlockHeight).
-				Msg("Getting out of bounds when querying for active sets, terminating.")
-			a.IsPopulatingActiveSet = false
-			break
-		}
-
-		blocksToFetch := make([]int64, 0)
-		presentedCount := 0
-
-		for height := blockHeight; height > blockHeight-constants.ActiveSetsBulkQueryCount; height-- {
-			if a.StateManager.HasActiveSetAtHeight(height) {
-				a.Logger.Trace().
-					Int64("height", height).
-					Msg("Already have active set at this block, skipping")
-				presentedCount += 1
-			} else {
-				blocksToFetch = append(blocksToFetch, height)
-			}
-		}
-
-		if len(blocksToFetch) == 0 {
-			a.Logger.Trace().Msg("No need to fetch active sets in this batch, skipping")
-			blockHeight -= constants.ActiveSetsBulkQueryCount
-			continue
-		}
+	chunks := utils.SplitIntoChunks(missing, int(constants.ActiveSetsBulkQueryCount))
+	for _, chunk := range chunks {
+		count := a.StateManager.GetBlocksCountSinceLatest(a.Config.ChainConfig.StoreBlocks)
 
 		a.Logger.Info().
 			Int64("count", count).
-			Ints64("blocks_to_fetch", blocksToFetch).
+			Ints64("blocks_to_fetch", chunk).
 			Int64("required", a.Config.ChainConfig.StoreBlocks).
-			Int("present", presentedCount).
 			Msg("Not enough historical validators, fetching more...")
 
-		heightActiveSets, errs := a.RPCManager.GetActiveSetAtBlocks(blocksToFetch)
+		heightActiveSets, errs := a.RPCManager.GetActiveSetAtBlocks(chunk)
 		if len(errs) > 0 {
 			a.Logger.Error().
 				Errs("errors", errs).
@@ -431,8 +395,6 @@ func (a *App) PopulateActiveSet() {
 				return
 			}
 		}
-
-		blockHeight -= constants.ActiveSetsBulkQueryCount
 	}
 
 	a.IsPopulatingActiveSet = false
