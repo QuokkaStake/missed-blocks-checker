@@ -26,6 +26,7 @@ type Manager struct {
 	successfulQueriesCollector *prometheus.CounterVec
 	failedQueriesCollector     *prometheus.CounterVec
 	eventsCounter              *prometheus.CounterVec
+	reconnectsCounter          *prometheus.CounterVec
 
 	reportsCounter       *prometheus.CounterVec
 	reportEntriesCounter *prometheus.CounterVec
@@ -90,6 +91,10 @@ func NewManager(logger zerolog.Logger, config *configPkg.Config) *Manager {
 			Name: constants.PrometheusMetricsPrefix + "events_total",
 			Help: "WebSocket events received by node",
 		}, []string{"chain", "node"}),
+		reconnectsCounter: promauto.NewCounterVec(prometheus.CounterOpts{
+			Name: constants.PrometheusMetricsPrefix + "reconnects_total",
+			Help: "Node reconnects count",
+		}, []string{"chain", "node"}),
 	}
 }
 
@@ -120,6 +125,10 @@ func (m *Manager) SetDefaultMetrics() {
 
 	for _, node := range m.config.ChainConfig.RPCEndpoints {
 		m.eventsCounter.
+			With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "node": node}).
+			Add(0)
+
+		m.reconnectsCounter.
 			With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "node": node}).
 			Add(0)
 	}
@@ -221,6 +230,12 @@ func (m *Manager) LogAppVersion(version string) {
 
 func (m *Manager) LogWSEvent(node string) {
 	m.eventsCounter.
+		With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "node": node}).
+		Inc()
+}
+
+func (m *Manager) LogNodeReconnect(node string) {
+	m.reconnectsCounter.
 		With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "node": node}).
 		Inc()
 }

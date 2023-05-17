@@ -66,6 +66,7 @@ func (t *WebsocketClient) Listen() {
 	)
 
 	client.OnReconnect(func() {
+		t.metricsManager.LogNodeReconnect(t.url)
 		t.logger.Info().Msg("Reconnecting...")
 		t.SubscribeToUpdates()
 	})
