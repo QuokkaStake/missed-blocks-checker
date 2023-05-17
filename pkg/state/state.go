@@ -64,12 +64,6 @@ func (s *State) HasActiveSetAtHeight(height int64) bool {
 	return s.historicalValidators.HasSetAtBlock(height)
 }
 
-func (s *State) IsPopulated(appConfig *config.Config) bool {
-	expected := appConfig.ChainConfig.BlocksWindow
-	return s.historicalValidators.GetCountSinceLatest(expected, s.blocks.lastHeight) >= expected &&
-		s.blocks.GetCountSinceLatest(expected) >= expected
-}
-
 func (s *State) TrimBlocksBefore(trimHeight int64) {
 	s.blocks.TrimBefore(trimHeight)
 }

@@ -137,7 +137,10 @@ func (a *App) ListenForEvents() {
 
 			historicalValidatorsCount := a.StateManager.GetActiveSetsCountSinceLatest(a.Config.ChainConfig.StoreBlocks)
 
-			if !a.StateManager.IsPopulated() {
+			hasEnoughBlocks := blocksCount >= a.Config.ChainConfig.StoreBlocks
+			hasEnoughHistoricalValidators := historicalValidatorsCount >= a.Config.ChainConfig.StoreBlocks
+
+			if !hasEnoughBlocks || !hasEnoughHistoricalValidators {
 				a.Logger.Debug().
 					Int64("blocks_count", blocksCount).
 					Int64("historical_validators_count", historicalValidatorsCount).

@@ -15,15 +15,20 @@ import (
 )
 
 type Manager struct {
-	logger                     zerolog.Logger
-	config                     *configPkg.Config
-	lastBlockHeightCollector   *prometheus.GaugeVec
-	lastBlockTimeCollector     *prometheus.GaugeVec
+	logger                   zerolog.Logger
+	config                   *configPkg.Config
+	lastBlockHeightCollector *prometheus.GaugeVec
+	lastBlockTimeCollector   *prometheus.GaugeVec
+
 	nodeConnectedCollector     *prometheus.GaugeVec
 	successfulQueriesCollector *prometheus.CounterVec
 	failedQueriesCollector     *prometheus.CounterVec
-	reportsCounter             *prometheus.CounterVec
-	reportEntriesCounter       *prometheus.CounterVec
+
+	reportsCounter       *prometheus.CounterVec
+	reportEntriesCounter *prometheus.CounterVec
+
+	totalBlocksGauge               *prometheus.GaugeVec
+	totalHistoricalValidatorsGauge *prometheus.GaugeVec
 }
 
 func NewManager(logger zerolog.Logger, config *configPkg.Config) *Manager {
@@ -58,6 +63,14 @@ func NewManager(logger zerolog.Logger, config *configPkg.Config) *Manager {
 			Name: "missed_blocks_node_report_entries",
 			Help: "Counter of report entries send",
 		}, []string{"chain", "type"}),
+		totalBlocksGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "missed_blocks_node_blocks",
+			Help: "Total amount of blocks stored",
+		}, []string{"chain"}),
+		totalHistoricalValidatorsGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "missed_blocks_node_historical_validators",
+			Help: "Total amount of historical validators stored",
+		}, []string{"chain"}),
 	}
 }
 
@@ -127,4 +140,16 @@ func (m *Manager) LogReport(report *report.Report) {
 			}).
 			Inc()
 	}
+}
+
+func (m *Manager) LogTotalBlocksAmount(amount int64) {
+	m.totalBlocksGauge.
+		With(prometheus.Labels{"chain": m.config.ChainConfig.Name}).
+		Set(float64(amount))
+}
+
+func (m *Manager) LogTotalHistoricalValidatorsAmount(amount int64) {
+	m.totalHistoricalValidatorsGauge.
+		With(prometheus.Labels{"chain": m.config.ChainConfig.Name}).
+		Set(float64(amount))
 }

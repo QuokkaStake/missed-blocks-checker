@@ -105,6 +105,8 @@ func (m *Manager) AddBlock(block *types.Block) error {
 		}
 	}
 
+	m.metricsManager.LogTotalBlocksAmount(m.GetBlocksCountSinceLatest(m.config.ChainConfig.StoreBlocks))
+
 	return nil
 }
 
@@ -132,6 +134,8 @@ func (m *Manager) AddActiveSet(height int64, activeSet map[string]bool) error {
 		}
 	}
 
+	m.metricsManager.LogTotalHistoricalValidatorsAmount(m.GetActiveSetsCountSinceLatest(m.config.ChainConfig.StoreBlocks))
+
 	return nil
 }
 
@@ -149,10 +153,6 @@ func (m *Manager) GetBlocksCountSinceLatest(expected int64) int64 {
 
 func (m *Manager) GetActiveSetsCountSinceLatest(expected int64) int64 {
 	return m.state.GetActiveSetsCountSinceLatest(expected)
-}
-
-func (m *Manager) IsPopulated() bool {
-	return m.state.IsPopulated(m.config)
 }
 
 func (m *Manager) GetSnapshot() *snapshot.Snapshot {
