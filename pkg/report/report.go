@@ -1,10 +1,11 @@
 package report
 
-type ReportEntry interface {
+type Entry interface {
+	Type() string
 }
 
 type Report struct {
-	Entries []ReportEntry
+	Entries []Entry
 }
 
 func (d *Report) Empty() bool {

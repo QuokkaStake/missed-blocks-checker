@@ -6,7 +6,8 @@ import (
 	"os"
 
 	"github.com/BurntSushi/toml"
-	"github.com/mcuadros/go-defaults"
+	"github.com/creasty/defaults"
+	"gopkg.in/guregu/null.v4"
 )
 
 type Config struct {
@@ -15,6 +16,7 @@ type Config struct {
 	ChainConfig    ChainConfig    `toml:"chain"`
 	DatabaseConfig DatabaseConfig `toml:"database"`
 	ExplorerConfig ExplorerConfig `toml:"explorer"`
+	MetricsConfig  MetricsConfig  `toml:"metrics"`
 
 	MissedBlocksGroups MissedBlocksGroups `toml:"missed-blocks-groups"`
 }
@@ -166,7 +168,9 @@ func GetConfig(path string) (*Config, error) {
 	if _, err = toml.Decode(configString, configStruct); err != nil {
 		return nil, err
 	}
-	defaults.SetDefaults(configStruct)
+	if err := defaults.Set(configStruct); err != nil {
+		return nil, err
+	}
 
 	return configStruct, nil
 }
@@ -203,4 +207,9 @@ func (config *Config) SetDefaultMissedBlocksGroups() {
 	groups[0].DescEnd = fmt.Sprintf("is recovered (< %.1f%%)", percents[1])
 
 	config.MissedBlocksGroups = groups
+}
+
+type MetricsConfig struct {
+	Enabled    null.Bool `toml:"enabled" default:"true"`
+	ListenAddr string    `toml:"listen-addr" default:":9570"`
 }

@@ -82,7 +82,7 @@ func (reporter *Reporter) Enabled() bool {
 	return reporter.Token != "" && reporter.Chat != 0
 }
 
-func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.ReportEntry) string {
+func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.Entry) string {
 	switch entry := rawEntry.(type) {
 	case events.ValidatorGroupChanged:
 		timeToJailStr := ""

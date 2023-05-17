@@ -21,7 +21,7 @@ func NewSnapshot(entries map[string]Entry) *Snapshot {
 }
 
 func (snapshot *Snapshot) GetReport(olderSnapshot *Snapshot, appConfig *config.Config) *report.Report {
-	var entries []report.ReportEntry
+	var entries []report.Entry
 
 	for valoper, entry := range snapshot.Entries {
 		olderEntry, ok := olderSnapshot.Entries[valoper]

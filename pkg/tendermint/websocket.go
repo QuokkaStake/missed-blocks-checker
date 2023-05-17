@@ -118,7 +118,6 @@ func (t *WebsocketClient) ProcessEvent(event rpcTypes.RPCResponse) {
 	}
 
 	if len(event.Result) == 0 {
-		t.logger.Debug().Msg("Event result is empty, skipping.")
 		return
 	}
 

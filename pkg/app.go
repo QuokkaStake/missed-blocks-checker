@@ -112,7 +112,7 @@ func (a *App) ListenForEvents() {
 			if err := a.AddLastActiveSet(block.Height); err != nil {
 				a.Logger.Error().
 					Err(err).
-					Msg("Error updating validators")
+					Msg("Error updating historical validators")
 			}
 
 			a.Logger.Debug().Int64("height", block.Height).Msg("Got new block from Tendermint")
