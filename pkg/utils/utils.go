@@ -69,7 +69,7 @@ func BoolToFloat64(value bool) float64 {
 	return 0
 }
 
-func SplitIntoChunks[T any](items []T, chunkSize int) (chunks [][]T) {
+func SplitIntoChunks[T any](items []T, chunkSize int) [][]T {
 	if len(items) == 0 {
 		return nil
 	}
