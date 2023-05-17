@@ -29,9 +29,10 @@ type App struct {
 	Reporters             []reportersPkg.Reporter
 	IsPopulatingBlocks    bool
 	IsPopulatingActiveSet bool
+	Version               string
 }
 
-func NewApp(configPath string) *App {
+func NewApp(configPath string, version string) *App {
 	config, err := configPkg.GetConfig(configPath)
 	if err != nil {
 		loggerPkg.GetDefaultLogger().Fatal().Err(err).Msg("Could not load config")
@@ -68,10 +69,13 @@ func NewApp(configPath string) *App {
 		Reporters:             reporters,
 		IsPopulatingBlocks:    false,
 		IsPopulatingActiveSet: false,
+		Version:               version,
 	}
 }
 
 func (a *App) Start() {
+	a.MetricsManager.LogAppVersion(a.Version)
+
 	a.StateManager.Init()
 
 	go a.MetricsManager.Start()

@@ -33,6 +33,8 @@ type Manager struct {
 	totalHistoricalValidatorsGauge *prometheus.GaugeVec
 
 	reporterEnabledGauge *prometheus.GaugeVec
+
+	appVersionGauge *prometheus.GaugeVec
 }
 
 func NewManager(logger zerolog.Logger, config *configPkg.Config) *Manager {
@@ -77,8 +79,12 @@ func NewManager(logger zerolog.Logger, config *configPkg.Config) *Manager {
 		}, []string{"chain"}),
 		reporterEnabledGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
 			Name: constants.PrometheusMetricsPrefix + "reporter_enabled",
-			Help: "Whether the reporter is enabled (1 if yes, 0 if no",
+			Help: "Whether the reporter is enabled (1 if yes, 0 if no)",
 		}, []string{"chain", "name"}),
+		appVersionGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
+			Name: constants.PrometheusMetricsPrefix + "version",
+			Help: "App version",
+		}, []string{"version"}),
 	}
 }
 
@@ -170,4 +176,10 @@ func (m *Manager) LogReporterEnabled(name string, enabled bool) {
 	m.reporterEnabledGauge.
 		With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "name": name}).
 		Set(utils.BoolToFloat64(enabled))
+}
+
+func (m *Manager) LogAppVersion(version string) {
+	m.appVersionGauge.
+		With(prometheus.Labels{"version": version}).
+		Set(1)
 }
