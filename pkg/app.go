@@ -50,9 +50,9 @@ func NewApp(configPath string, version string) *App {
 
 	metricsManager := metrics.NewManager(logger, config)
 	rpcManager := tendermint.NewRPCManager(config.ChainConfig.RPCEndpoints, logger, metricsManager)
-	stateManager := statePkg.NewManager(logger, config, metricsManager)
-	websocketManager := tendermint.NewWebsocketManager(logger, config, metricsManager)
 	snapshotManager := snapshotPkg.NewManager(logger, config)
+	stateManager := statePkg.NewManager(logger, config, metricsManager, snapshotManager)
+	websocketManager := tendermint.NewWebsocketManager(logger, config, metricsManager)
 
 	reporters := []reportersPkg.Reporter{
 		telegram.NewReporter(config, logger, stateManager),
@@ -170,13 +170,19 @@ func (a *App) ListenForEvents() {
 					Msg("Validator signing info")
 			}
 
-			if !a.SnapshotManager.HasOlderSnapshot() {
+			if !a.SnapshotManager.HasNewerSnapshot() {
 				a.Logger.Info().Msg("No older snapshot present, cannot generate report")
 				a.SnapshotManager.CommitNewSnapshot(block.Height, snapshot)
 				continue
 			}
 
 			a.SnapshotManager.CommitNewSnapshot(block.Height, snapshot)
+			if err := a.StateManager.SaveSnapshot(&snapshotPkg.Info{
+				Height:   block.Height,
+				Snapshot: snapshot,
+			}); err != nil {
+				a.Logger.Error().Err(err).Msg("Could not save latest snapshot to database")
+			}
 
 			olderHeight := a.SnapshotManager.GetOlderHeight()
 			a.Logger.Info().

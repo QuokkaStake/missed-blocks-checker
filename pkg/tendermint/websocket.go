@@ -108,6 +108,34 @@ func (t *WebsocketClient) Listen() {
 	}
 }
 
+func (t *WebsocketClient) Reconnect() {
+	t.logger.Info().Msg("Reconnecting manually...")
+
+	if t.client != nil {
+		return
+	}
+
+	t.metricsManager.LogNodeReconnect(t.url)
+	t.active = false
+	t.metricsManager.LogNodeConnection(t.url, false)
+
+	if err := t.client.Stop(); err != nil {
+		t.logger.Warn().Err(err).Msg("Error stopping the node")
+		t.Channel <- &types.WSError{Error: err}
+		return
+	}
+
+	if err := t.client.Start(); err != nil {
+		t.logger.Warn().Err(err).Msg("Error starting the node")
+		t.Channel <- &types.WSError{Error: err}
+		return
+	}
+
+	t.active = true
+	t.metricsManager.LogNodeConnection(t.url, true)
+	t.SubscribeToUpdates()
+}
+
 func (t *WebsocketClient) Stop() {
 	t.logger.Info().Msg("Stopping the node...")
 

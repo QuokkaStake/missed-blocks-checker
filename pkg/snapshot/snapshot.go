@@ -16,11 +16,11 @@ type Snapshot struct {
 	Entries map[string]Entry
 }
 
-func NewSnapshot(entries map[string]Entry) *Snapshot {
-	return &Snapshot{Entries: entries}
+func NewSnapshot(entries map[string]Entry) Snapshot {
+	return Snapshot{Entries: entries}
 }
 
-func (snapshot *Snapshot) GetReport(olderSnapshot *Snapshot, appConfig *config.Config) *report.Report {
+func (snapshot *Snapshot) GetReport(olderSnapshot Snapshot, appConfig *config.Config) *report.Report {
 	var entries []report.Entry
 
 	for valoper, entry := range snapshot.Entries {
@@ -73,4 +73,9 @@ func (snapshot *Snapshot) GetReport(olderSnapshot *Snapshot, appConfig *config.C
 	}
 
 	return &report.Report{Entries: entries}
+}
+
+type Info struct {
+	Height   int64
+	Snapshot Snapshot
 }

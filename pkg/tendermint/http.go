@@ -169,14 +169,18 @@ func (rpc *RPC) Get(url string, queryType string, target interface{}) error {
 	var sb strings.Builder
 
 	sb.WriteString("All LCD requests failed:\n")
-	for index, url := range rpc.urls {
-		sb.WriteString(fmt.Sprintf("#%d: %s -> %s\n", index+1, url, errors[index]))
+	for index, nodeUrl := range rpc.urls {
+		sb.WriteString(fmt.Sprintf("#%d: %s -> %s\n", index+1, nodeUrl, errors[index]))
 	}
 
 	return fmt.Errorf(sb.String())
 }
 
-func (rpc *RPC) GetFull(host, url string, queryType string, target interface{}) error {
+func (rpc *RPC) GetFull(
+	host, url string,
+	queryType string,
+	target interface{},
+) error {
 	client := &http.Client{Timeout: 10 * 1000000000}
 	start := time.Now()
 

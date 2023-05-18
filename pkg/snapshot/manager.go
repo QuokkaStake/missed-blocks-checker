@@ -11,10 +11,8 @@ type Manager struct {
 	logger zerolog.Logger
 	config *configPkg.Config
 
-	olderSnapshot       *Snapshot
-	newerSnapshot       *Snapshot
-	olderSnapshotHeight int64
-	newerSnapshotHeight int64
+	olderSnapshot *Info
+	newerSnapshot *Info
 }
 
 func NewManager(logger zerolog.Logger, config *configPkg.Config) *Manager {
@@ -24,22 +22,23 @@ func NewManager(logger zerolog.Logger, config *configPkg.Config) *Manager {
 	}
 }
 
-func (m *Manager) CommitNewSnapshot(height int64, snapshot *Snapshot) {
+func (m *Manager) CommitNewSnapshot(height int64, snapshot Snapshot) {
 	m.olderSnapshot = m.newerSnapshot
-	m.olderSnapshotHeight = m.newerSnapshotHeight
 
-	m.newerSnapshot = snapshot
-	m.newerSnapshotHeight = height
+	m.newerSnapshot = &Info{
+		Snapshot: snapshot,
+		Height:   height,
+	}
 }
 
-func (m *Manager) HasOlderSnapshot() bool {
-	return m.olderSnapshot != nil
+func (m *Manager) HasNewerSnapshot() bool {
+	return m.newerSnapshot != nil
 }
 
 func (m *Manager) GetOlderHeight() int64 {
-	return m.olderSnapshotHeight
+	return m.olderSnapshot.Height
 }
 
 func (m *Manager) GetReport() *reportPkg.Report {
-	return m.newerSnapshot.GetReport(m.olderSnapshot, m.config)
+	return m.newerSnapshot.Snapshot.GetReport(m.olderSnapshot.Snapshot, m.config)
 }

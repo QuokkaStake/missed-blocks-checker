@@ -3,7 +3,9 @@ package state
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	configPkg "main/pkg/config"
+	snapshotPkg "main/pkg/snapshot"
 	"main/pkg/types"
 	migrations "main/sql"
 	"sync"
@@ -439,12 +441,79 @@ func (d *Database) InsertActiveSet(height int64, activeSet map[string]bool) erro
 
 func (d *Database) TrimActiveSetsBefore(height int64) error {
 	_, err := d.client.Exec(
-		"DELETE FROM validators WHERE chain = $4 AND height <= $2",
+		"DELETE FROM validators WHERE chain = $1 AND height <= $2",
 		d.config.ChainConfig.Name,
 		height,
 	)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Could not trim active set")
+		return err
+	}
+
+	return nil
+}
+
+func (d *Database) GetValueByKey(key string) ([]byte, error) {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+
+	var value []byte
+
+	err := d.client.
+		QueryRow("SELECT value FROM data WHERE key = $1 AND chain = $2", key, d.config.ChainConfig.Name).
+		Scan(&value)
+
+	if err != nil {
+		d.logger.Error().Err(err).Str("key", key).Msg("Could not get value")
+		return value, err
+	}
+
+	return value, err
+}
+
+func (d *Database) SetValueByKey(key string, data []byte) error {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+
+	_, err := d.client.Exec(
+		"INSERT INTO data (chain, key, value) VALUES ($1, $2, $3) ON CONFLICT DO UPDATE SET value = $3",
+		d.config.ChainConfig.Name,
+		key,
+		data,
+	)
+	if err != nil {
+		d.logger.Error().Err(err).Str("key", key).Msg("Could not insert value")
+		return err
+	}
+
+	return nil
+}
+
+func (d *Database) GetLastSnapshot() (*snapshotPkg.Info, error) {
+	rawData, err := d.GetValueByKey("snapshot")
+	if err != nil {
+		d.logger.Error().Err(err).Msg("Could not get snapshot")
+		return nil, err
+	}
+
+	var snapshot snapshotPkg.Info
+	if err := json.Unmarshal(rawData, &snapshot); err != nil {
+		d.logger.Error().Err(err).Msg("Could not unmarshal snapshot")
+		return nil, err
+	}
+
+	return &snapshot, nil
+}
+
+func (d *Database) SetSnapshot(snapshot *snapshotPkg.Info) error {
+	rawData, err := json.Marshal(snapshot)
+	if err != nil {
+		d.logger.Error().Err(err).Msg("Could not marshal snapshot")
+		return err
+	}
+
+	if err := d.SetValueByKey("snapshot", rawData); err != nil {
+		d.logger.Error().Err(err).Msg("Could not save snapshot")
 		return err
 	}
 

@@ -3,7 +3,7 @@ package state
 import (
 	configPkg "main/pkg/config"
 	"main/pkg/metrics"
-	"main/pkg/snapshot"
+	snapshotPkg "main/pkg/snapshot"
 	"main/pkg/types"
 	"sync"
 	"time"
@@ -12,21 +12,28 @@ import (
 )
 
 type Manager struct {
-	logger         zerolog.Logger
-	config         *configPkg.Config
-	metricsManager *metrics.Manager
-	state          *State
-	database       *Database
-	mutex          sync.Mutex
+	logger          zerolog.Logger
+	config          *configPkg.Config
+	metricsManager  *metrics.Manager
+	snapshotManager *snapshotPkg.Manager
+	state           *State
+	database        *Database
+	mutex           sync.Mutex
 }
 
-func NewManager(logger zerolog.Logger, config *configPkg.Config, metricsManager *metrics.Manager) *Manager {
+func NewManager(
+	logger zerolog.Logger,
+	config *configPkg.Config,
+	metricsManager *metrics.Manager,
+	snapshotManager *snapshotPkg.Manager,
+) *Manager {
 	return &Manager{
-		logger:         logger.With().Str("component", "state_manager").Logger(),
-		config:         config,
-		metricsManager: metricsManager,
-		state:          NewState(),
-		database:       NewDatabase(logger, config),
+		logger:          logger.With().Str("component", "state_manager").Logger(),
+		config:          config,
+		metricsManager:  metricsManager,
+		snapshotManager: snapshotManager,
+		state:           NewState(),
+		database:        NewDatabase(logger, config),
 	}
 }
 
@@ -71,6 +78,18 @@ func (m *Manager) Init() {
 		Int("len", len(activeSet)).
 		Float64("duration", time.Since(activeSetStart).Seconds()).
 		Msg("Loaded historical validators from database")
+
+	snapshotStart := time.Now()
+
+	snapshot, err := m.database.GetLastSnapshot()
+	if err != nil {
+		m.logger.Error().Err(err).Msg("Could not get snapshot from the database")
+	} else {
+		m.logger.Info().
+			Float64("duration", time.Since(snapshotStart).Seconds()).
+			Msg("Loaded snapshot from database")
+		m.snapshotManager.CommitNewSnapshot(snapshot.Height, snapshot.Snapshot)
+	}
 }
 
 func (m *Manager) GetLatestBlock() int64 {
@@ -170,18 +189,18 @@ func (m *Manager) GetMissingHistoricalValidatorsSinceLatest(expected int64) []in
 	return m.state.GetMissingActiveSetsSinceLatest(expected)
 }
 
-func (m *Manager) GetSnapshot() *snapshot.Snapshot {
+func (m *Manager) GetSnapshot() snapshotPkg.Snapshot {
 	validators := m.state.GetValidators()
-	entries := make(map[string]snapshot.Entry, len(validators))
+	entries := make(map[string]snapshotPkg.Entry, len(validators))
 
 	for _, validator := range validators {
-		entries[validator.OperatorAddress] = snapshot.Entry{
+		entries[validator.OperatorAddress] = snapshotPkg.Entry{
 			Validator:     validator,
 			SignatureInfo: m.state.GetValidatorMissedBlocks(validator, m.config.ChainConfig.BlocksWindow),
 		}
 	}
 
-	return snapshot.NewSnapshot(entries)
+	return snapshotPkg.NewSnapshot(entries)
 }
 
 func (m *Manager) AddNotifier(operatorAddress, reporter, notifier string) bool {
@@ -228,6 +247,10 @@ func (m *Manager) GetValidatorMissedBlocks(validator *types.Validator) types.Sig
 
 func (m *Manager) SetValidators(validators types.ValidatorsMap) {
 	m.state.SetValidators(validators)
+}
+
+func (m *Manager) SaveSnapshot(snapshot *snapshotPkg.Info) error {
+	return m.database.SetSnapshot(snapshot)
 }
 
 func (m *Manager) GetEarliestBlock() *types.Block {
