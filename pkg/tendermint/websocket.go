@@ -111,7 +111,7 @@ func (t *WebsocketClient) Listen() {
 func (t *WebsocketClient) Reconnect() {
 	t.logger.Info().Msg("Reconnecting manually...")
 
-	if t.client != nil {
+	if t.client == nil {
 		return
 	}
 
@@ -122,13 +122,11 @@ func (t *WebsocketClient) Reconnect() {
 	if err := t.client.Stop(); err != nil {
 		t.logger.Warn().Err(err).Msg("Error stopping the node")
 		t.Channel <- &types.WSError{Error: err}
-		return
 	}
 
 	if err := t.client.Start(); err != nil {
 		t.logger.Warn().Err(err).Msg("Error starting the node")
 		t.Channel <- &types.WSError{Error: err}
-		return
 	}
 
 	t.active = true

@@ -28,6 +28,10 @@ type RPC struct {
 	logger         zerolog.Logger
 }
 
+func AlwaysNoError(interface{}) error {
+	return nil
+}
+
 func NewRPC(urls []string, logger zerolog.Logger, metricsManager *metrics.Manager) *RPC {
 	return &RPC{
 		urls:           urls,
@@ -43,7 +47,7 @@ func (rpc *RPC) GetBlock(height int64) (*types.SingleBlockResponse, error) {
 	}
 
 	var response types.SingleBlockResponse
-	if err := rpc.Get(queryURL, "block", &response); err != nil {
+	if err := rpc.Get(queryURL, "block", &response, AlwaysNoError); err != nil {
 		return nil, err
 	}
 
@@ -69,7 +73,7 @@ func (rpc *RPC) AbciQuery(
 	)
 
 	var response types.AbciQueryResponse
-	if err := rpc.Get(queryURL, "abci_"+queryType, &response); err != nil {
+	if err := rpc.Get(queryURL, "abci_"+queryType, &response, AlwaysNoError); err != nil {
 		return err
 	}
 
@@ -120,12 +124,19 @@ func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 		)
 
 		var response types.ValidatorsResponse
-		if err := rpc.Get(queryURL, "historical_validators", &response); err != nil {
-			return nil, err
-		}
+		if err := rpc.Get(queryURL, "historical_validators", &response, func(v interface{}) error {
+			response, ok := v.(*types.ValidatorsResponse)
+			if !ok {
+				return fmt.Errorf("error converting validators")
+			}
 
-		if len(response.Result.Validators) == 0 {
-			return nil, fmt.Errorf("malformed result of validators active set: got 0 validators")
+			if len(response.Result.Validators) == 0 {
+				return fmt.Errorf("malformed result of validators active set: got 0 validators")
+			}
+
+			return nil
+		}); err != nil {
+			return nil, err
 		}
 
 		for _, validator := range response.Result.Validators {
@@ -142,7 +153,12 @@ func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 	return activeSetMap, nil
 }
 
-func (rpc *RPC) Get(url string, queryType string, target interface{}) error {
+func (rpc *RPC) Get(
+	url string,
+	queryType string,
+	target interface{},
+	predicate func(interface{}) error,
+) error {
 	errors := make([]error, len(rpc.urls))
 
 	for index, lcd := range rpc.urls {
@@ -156,12 +172,19 @@ func (rpc *RPC) Get(url string, queryType string, target interface{}) error {
 			target,
 		)
 
-		if err == nil {
-			return nil
+		if err != nil {
+			rpc.logger.Warn().Str("url", fullURL).Err(err).Msg("LCD request failed")
+			errors[index] = err
+			continue
 		}
 
-		rpc.logger.Warn().Str("url", fullURL).Err(err).Msg("LCD request failed")
-		errors[index] = err
+		if predicateErr := predicate(target); predicateErr != nil {
+			rpc.logger.Warn().Str("url", fullURL).Err(predicateErr).Msg("LCD precondition failed")
+			errors[index] = fmt.Errorf("precondition failed")
+			continue
+		}
+
+		return nil
 	}
 
 	rpc.logger.Warn().Str("url", url).Msg("All LCD requests failed")
