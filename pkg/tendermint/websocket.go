@@ -134,6 +134,8 @@ func (t *WebsocketClient) Reconnect() {
 	t.active = true
 	t.metricsManager.LogNodeConnection(t.url, true)
 	t.SubscribeToUpdates()
+
+	t.logger.Info().Msg("Reconnected manually")
 }
 
 func (t *WebsocketClient) Stop() {
@@ -156,6 +158,7 @@ func (t *WebsocketClient) ProcessEvent(event rpcTypes.RPCResponse) {
 	}
 
 	if len(event.Result) == 0 {
+		t.Reconnect()
 		return
 	}
 

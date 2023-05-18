@@ -169,8 +169,8 @@ func (rpc *RPC) Get(url string, queryType string, target interface{}) error {
 	var sb strings.Builder
 
 	sb.WriteString("All LCD requests failed:\n")
-	for index, nodeUrl := range rpc.urls {
-		sb.WriteString(fmt.Sprintf("#%d: %s -> %s\n", index+1, nodeUrl, errors[index]))
+	for index, nodeURL := range rpc.urls {
+		sb.WriteString(fmt.Sprintf("#%d: %s -> %s\n", index+1, nodeURL, errors[index]))
 	}
 
 	return fmt.Errorf(sb.String())
