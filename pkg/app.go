@@ -144,15 +144,15 @@ func (a *App) ListenForEvents() {
 
 			historicalValidatorsCount := a.StateManager.GetActiveSetsCountSinceLatest(a.Config.ChainConfig.StoreBlocks)
 
-			hasEnoughBlocks := blocksCount >= a.Config.ChainConfig.StoreBlocks
-			hasEnoughHistoricalValidators := historicalValidatorsCount >= a.Config.ChainConfig.StoreBlocks
+			hasEnoughBlocks := blocksCount >= a.Config.ChainConfig.BlocksWindow
+			hasEnoughHistoricalValidators := historicalValidatorsCount >= a.Config.ChainConfig.BlocksWindow
 
 			if !hasEnoughBlocks || !hasEnoughHistoricalValidators {
 				a.Logger.Info().
 					Int64("blocks_count", blocksCount).
 					Int64("historical_validators_count", historicalValidatorsCount).
 					Int64("expected", a.Config.ChainConfig.BlocksWindow).
-					Msg("Not enough blocks for producing a snapshot, skipping.")
+					Msg("Not enough data for producing a snapshot, skipping.")
 				continue
 			}
 
