@@ -57,8 +57,6 @@ func SetUnexportedField(field reflect.Value, value interface{}) {
 }
 
 func (t *WebsocketClient) Listen() {
-	t.metricsManager.LogNodeConnection(t.url, false)
-
 	client, err := tmClient.NewWSWithOptions(
 		t.url,
 		"/websocket",
@@ -85,27 +83,34 @@ func (t *WebsocketClient) Listen() {
 	}
 
 	t.client = client
-
 	t.logger.Trace().Msg("Connecting to a node...")
+	t.ConnectAndListen()
+}
 
-	if err = client.Start(); err != nil {
-		t.error = err
-		t.Channel <- &types.WSError{Error: err}
-		t.logger.Warn().Err(err).Msg("Error connecting to node")
-	} else {
-		t.logger.Debug().Msg("Connected to a node")
-		t.active = true
-		t.metricsManager.LogNodeConnection(t.url, true)
+func (t *WebsocketClient) ConnectAndListen() {
+	t.active = false
+	t.metricsManager.LogNodeConnection(t.url, false)
+
+	for {
+		if err := t.client.Start(); err != nil {
+			t.error = err
+			t.Channel <- &types.WSError{Error: err}
+			t.logger.Warn().Err(err).Msg("Error connecting to node")
+		} else {
+			t.logger.Debug().Msg("Connected to a node")
+			t.active = true
+			t.metricsManager.LogNodeConnection(t.url, true)
+			break
+		}
 	}
 
 	t.SubscribeToUpdates()
 
-	for {
-		select {
-		case result := <-client.ResponsesCh:
-			t.ProcessEvent(result)
-		}
+	for result := range t.client.ResponsesCh {
+		t.ProcessEvent(result)
 	}
+
+	t.logger.Info().Msg("Finished listening")
 }
 
 func (t *WebsocketClient) Reconnect() {
@@ -116,24 +121,13 @@ func (t *WebsocketClient) Reconnect() {
 	}
 
 	t.metricsManager.LogNodeReconnect(t.url)
-	t.active = false
-	t.metricsManager.LogNodeConnection(t.url, false)
 
 	if err := t.client.Stop(); err != nil {
 		t.logger.Warn().Err(err).Msg("Error stopping the node")
 		t.Channel <- &types.WSError{Error: err}
 	}
 
-	if err := t.client.Start(); err != nil {
-		t.logger.Warn().Err(err).Msg("Error starting the node")
-		t.Channel <- &types.WSError{Error: err}
-	}
-
-	t.active = true
-	t.metricsManager.LogNodeConnection(t.url, true)
-	t.SubscribeToUpdates()
-
-	t.logger.Info().Msg("Reconnected manually")
+	t.ConnectAndListen()
 }
 
 func (t *WebsocketClient) Stop() {
