@@ -47,7 +47,18 @@ func (rpc *RPC) GetBlock(height int64) (*types.SingleBlockResponse, error) {
 	}
 
 	var response types.SingleBlockResponse
-	if err := rpc.Get(queryURL, "block", &response, AlwaysNoError); err != nil {
+	if err := rpc.Get(queryURL, "block", &response, func(v interface{}) error {
+		response, ok := v.(*types.SingleBlockResponse)
+		if !ok {
+			return fmt.Errorf("error converting block")
+		}
+
+		if response.Result.Block.Header.Height == "" {
+			return fmt.Errorf("malformed result of block: empty block height")
+		}
+
+		return nil
+	}); err != nil {
 		return nil, err
 	}
 
