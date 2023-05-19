@@ -172,7 +172,11 @@ func (rpc *RPC) Get(
 ) error {
 	errors := make([]error, len(rpc.urls))
 
-	for index, lcd := range rpc.urls {
+	indexes := utils.MakeShuffledArray(len(rpc.urls))
+
+	for _, index := range indexes {
+		lcd := rpc.urls[index]
+
 		fullURL := lcd + url
 		rpc.logger.Trace().Str("url", fullURL).Msg("Trying making request to LCD")
 

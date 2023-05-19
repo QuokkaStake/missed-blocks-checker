@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"math/rand"
 	"strings"
+	"time"
 )
 
 func Filter[T any](slice []T, f func(T) bool) []T {
@@ -86,4 +88,18 @@ func SplitIntoChunks[T any](items []T, chunkSize int) [][]T {
 	}
 	divided[i] = items[prev:]
 	return divided
+}
+
+func MakeShuffledArray(length int) []int {
+	array := make([]int, length)
+	for i := range array {
+		array[i] = i
+	}
+
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(array), func(i, j int) {
+		array[i], array[j] = array[j], array[i]
+	})
+
+	return array
 }
