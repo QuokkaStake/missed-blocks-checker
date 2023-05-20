@@ -114,11 +114,12 @@ func (c *ExplorerConfig) GetValidatorLink(validator *types.Validator) types.Link
 }
 
 type ChainConfig struct {
-	Name               string   `toml:"name"`
-	RPCEndpoints       []string `toml:"rpc-endpoints"`
-	StoreBlocks        int64    `toml:"store-blocks" default:"20000"`
-	BlocksWindow       int64    `toml:"blocks-window" default:"10000"`
-	MinSignedPerWindow float64  `toml:"min-signed-per-window" default:"0.05"`
+	Name                 string    `toml:"name"`
+	RPCEndpoints         []string  `toml:"rpc-endpoints"`
+	StoreBlocks          int64     `toml:"store-blocks" default:"20000"`
+	BlocksWindow         int64     `toml:"blocks-window" default:"10000"`
+	MinSignedPerWindow   float64   `toml:"min-signed-per-window" default:"0.05"`
+	QueryEachSigningInfo null.Bool `toml:"query-each-signing-info" default:"false"`
 }
 
 func (c *ChainConfig) GetBlocksSignCount() int64 {

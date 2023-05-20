@@ -5,6 +5,7 @@ import (
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/rs/zerolog"
+	configPkg "main/pkg/config"
 	converterPkg "main/pkg/converter"
 	"main/pkg/tendermint"
 	"main/pkg/types"
@@ -14,20 +15,26 @@ import (
 
 type Manager struct {
 	logger      zerolog.Logger
+	config      *configPkg.Config
 	httpManager *tendermint.RPCManager
 	converter   *converterPkg.Converter
 }
 
-func NewManager(logger zerolog.Logger, httpManager *tendermint.RPCManager) *Manager {
+func NewManager(
+	logger zerolog.Logger,
+	config *configPkg.Config,
+	httpManager *tendermint.RPCManager,
+) *Manager {
 	return &Manager{
 		logger:      logger.With().Str("component", "data_manager").Logger(),
+		config:      config,
 		httpManager: httpManager,
 		converter:   converterPkg.NewConverter(),
 	}
 }
 
 func (m *Manager) GetValidators() (types.Validators, error) {
-	if true {
+	if m.config.ChainConfig.QueryEachSigningInfo.Bool {
 		return m.GetValidatorsAndEachSigningInfo()
 	}
 
