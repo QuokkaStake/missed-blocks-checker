@@ -1,11 +1,12 @@
 package tendermint
 
 import (
-	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"main/pkg/metrics"
 	"main/pkg/types"
 	"sync"
+
+	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/rs/zerolog"
 )

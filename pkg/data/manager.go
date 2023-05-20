@@ -1,16 +1,16 @@
 package data
 
 import (
-	"fmt"
-	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/rs/zerolog"
 	configPkg "main/pkg/config"
 	converterPkg "main/pkg/converter"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"sync"
+
+	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/rs/zerolog"
 )
 
 type Manager struct {
@@ -55,7 +55,6 @@ func (m *Manager) GetValidators() (types.Validators, error) {
 	go func() {
 		signingInfoResponse, signingInfoErr = m.httpManager.GetSigningInfos()
 		wg.Done()
-
 	}()
 
 	wg.Wait()
@@ -66,12 +65,6 @@ func (m *Manager) GetValidators() (types.Validators, error) {
 
 	if signingInfoErr != nil {
 		return nil, signingInfoErr
-	}
-
-	fmt.Printf("len: %d\n", len(signingInfoResponse.Info))
-
-	for _, info := range signingInfoResponse.Info {
-		fmt.Printf("info: %+v\n", info)
 	}
 
 	validators := make([]*types.Validator, len(validatorsResponse.Validators))
@@ -130,7 +123,6 @@ func (m *Manager) GetValidatorsAndEachSigningInfo() (types.Validators, error) {
 			mutex.Lock()
 			validators[index] = validator
 			mutex.Unlock()
-
 		}(validatorRaw, index)
 	}
 

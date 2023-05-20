@@ -2,12 +2,13 @@ package converter
 
 import (
 	"fmt"
+	"main/pkg/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTyped "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"main/pkg/types"
 )
 
 type Converter struct {
