@@ -43,3 +43,4 @@ linters:
     - gci
     - musttag
     - gofmt
+    - ireturn
