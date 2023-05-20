@@ -91,7 +91,7 @@ func (rpc *RPC) AbciQuery(
 	return output.Unmarshal(response.Result.Response.Value)
 }
 
-func (rpc *RPC) GetValidators() (types.Validators, error) {
+func (rpc *RPC) GetValidators() (*stakingTypes.QueryValidatorsResponse, error) {
 	query := stakingTypes.QueryValidatorsRequest{
 		Pagination: &queryTypes.PageRequest{
 			Limit: constants.ValidatorsQueryPagination,
@@ -103,10 +103,10 @@ func (rpc *RPC) GetValidators() (types.Validators, error) {
 		return nil, err
 	}
 
-	return utils.Map(validatorsResponse.Validators, types.ValidatorFromCosmosValidator), nil
+	return &validatorsResponse, nil
 }
 
-func (rpc *RPC) GetSigningInfo() error {
+func (rpc *RPC) GetSigningInfos() (*slashingTypes.QuerySigningInfosResponse, error) {
 	query := slashingTypes.QuerySigningInfosRequest{
 		Pagination: &queryTypes.PageRequest{
 			Limit: constants.ValidatorsQueryPagination,
@@ -115,10 +115,23 @@ func (rpc *RPC) GetSigningInfo() error {
 
 	var response slashingTypes.QuerySigningInfosResponse
 	if err := rpc.AbciQuery("/cosmos.slashing.v1beta1.Query/SigningInfos", &query, "signing_infos", &response); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &response, nil
+}
+
+func (rpc *RPC) GetSigningInfo(valcons string) (*slashingTypes.QuerySigningInfoResponse, error) {
+	query := slashingTypes.QuerySigningInfoRequest{
+		ConsAddress: valcons,
+	}
+
+	var response slashingTypes.QuerySigningInfoResponse
+	if err := rpc.AbciQuery("/cosmos.slashing.v1beta1.Query/SigningInfo", &query, "signing_info", &response); err != nil {
+		return nil, err
+	}
+
+	return &response, nil
 }
 
 func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {

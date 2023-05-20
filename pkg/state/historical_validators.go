@@ -69,7 +69,7 @@ func (h *HistoricalValidators) IsValidatorActiveAtBlock(validator *types.Validat
 		return false
 	}
 
-	_, ok := h.validators[height][validator.ConsensusAddress]
+	_, ok := h.validators[height][validator.ConsensusAddressHex]
 	return ok
 }
 

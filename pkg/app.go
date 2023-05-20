@@ -4,6 +4,7 @@ import (
 	"fmt"
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
+	dataPkg "main/pkg/data"
 	loggerPkg "main/pkg/logger"
 	"main/pkg/metrics"
 	reportersPkg "main/pkg/reporters"
@@ -22,6 +23,7 @@ type App struct {
 	Logger                zerolog.Logger
 	Config                *configPkg.Config
 	RPCManager            *tendermint.RPCManager
+	DataManager           *dataPkg.Manager
 	StateManager          *statePkg.Manager
 	SnapshotManager       *snapshotPkg.Manager
 	WebsocketManager      *tendermint.WebsocketManager
@@ -50,6 +52,7 @@ func NewApp(configPath string, version string) *App {
 
 	metricsManager := metrics.NewManager(logger, config)
 	rpcManager := tendermint.NewRPCManager(config.ChainConfig.RPCEndpoints, logger, metricsManager)
+	dataManager := dataPkg.NewManager(logger, rpcManager)
 	snapshotManager := snapshotPkg.NewManager(logger, config)
 	stateManager := statePkg.NewManager(logger, config, metricsManager, snapshotManager)
 	websocketManager := tendermint.NewWebsocketManager(logger, config, metricsManager)
@@ -62,6 +65,7 @@ func NewApp(configPath string, version string) *App {
 		Logger:                logger,
 		Config:                config,
 		RPCManager:            rpcManager,
+		DataManager:           dataManager,
 		StateManager:          stateManager,
 		SnapshotManager:       snapshotManager,
 		WebsocketManager:      websocketManager,
@@ -218,7 +222,7 @@ func (a *App) ListenForEvents() {
 }
 
 func (a *App) UpdateValidators() error {
-	validators, err := a.RPCManager.GetValidators()
+	validators, err := a.DataManager.GetValidators()
 	if err != nil {
 		return err
 	}

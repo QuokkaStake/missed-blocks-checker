@@ -1,6 +1,8 @@
 package tendermint
 
 import (
+	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"main/pkg/metrics"
 	"main/pkg/types"
 	"sync"
@@ -21,8 +23,16 @@ func (manager *RPCManager) GetBlock(height int64) (*types.SingleBlockResponse, e
 	return manager.rpc.GetBlock(height)
 }
 
-func (manager *RPCManager) GetValidators() (types.Validators, error) {
+func (manager *RPCManager) GetValidators() (*stakingTypes.QueryValidatorsResponse, error) {
 	return manager.rpc.GetValidators()
+}
+
+func (manager *RPCManager) GetSigningInfos() (*slashingTypes.QuerySigningInfosResponse, error) {
+	return manager.rpc.GetSigningInfos()
+}
+
+func (manager *RPCManager) GetSigningInfo(valcons string) (*slashingTypes.QuerySigningInfoResponse, error) {
+	return manager.rpc.GetSigningInfo(valcons)
 }
 
 func (manager *RPCManager) GetActiveSetAtBlock(height int64) (map[string]bool, error) {

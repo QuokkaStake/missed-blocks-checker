@@ -172,11 +172,11 @@ func (s *State) GetValidatorMissedBlocks(validator *types.Validator, blocksToChe
 			continue
 		}
 
-		if block.Proposer == validator.ConsensusAddress {
+		if block.Proposer == validator.ConsensusAddressHex {
 			signatureInfo.Proposed++
 		}
 
-		value, ok := block.Signatures[validator.ConsensusAddress]
+		value, ok := block.Signatures[validator.ConsensusAddressHex]
 
 		if !ok {
 			signatureInfo.NoSignature++
