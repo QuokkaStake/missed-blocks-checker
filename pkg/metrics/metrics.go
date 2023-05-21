@@ -104,24 +104,20 @@ func (m *Manager) SetDefaultMetrics() {
 		Add(0)
 
 	m.reportEntriesCounter.
-		With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "type": constants.EventValidatorActive}).
+		With(prometheus.Labels{
+			"chain": m.config.ChainConfig.Name,
+			"type":  string(constants.EventValidatorActive),
+		}).
 		Add(0)
 
-	m.reportEntriesCounter.
-		With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "type": constants.EventValidatorInactive}).
-		Add(0)
-
-	m.reportEntriesCounter.
-		With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "type": constants.EventValidatorJailed}).
-		Add(0)
-
-	m.reportEntriesCounter.
-		With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "type": constants.EventValidatorUnjailed}).
-		Add(0)
-
-	m.reportEntriesCounter.
-		With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "type": constants.EventValidatorGroupChanged}).
-		Add(0)
+	for _, eventName := range constants.GetEventNames() {
+		m.reportEntriesCounter.
+			With(prometheus.Labels{
+				"chain": m.config.ChainConfig.Name,
+				"type":  string(eventName),
+			}).
+			Add(0)
+	}
 
 	for _, node := range m.config.ChainConfig.RPCEndpoints {
 		m.eventsCounter.
@@ -198,7 +194,7 @@ func (m *Manager) LogReport(report *report.Report) {
 		m.reportEntriesCounter.
 			With(prometheus.Labels{
 				"chain": m.config.ChainConfig.Name,
-				"type":  entry.Type(),
+				"type":  string(entry.Type()),
 			}).
 			Inc()
 	}
@@ -216,9 +212,9 @@ func (m *Manager) LogTotalHistoricalValidatorsAmount(amount int64) {
 		Set(float64(amount))
 }
 
-func (m *Manager) LogReporterEnabled(name string, enabled bool) {
+func (m *Manager) LogReporterEnabled(name constants.ReporterName, enabled bool) {
 	m.reporterEnabledGauge.
-		With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "name": name}).
+		With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "name": string(name)}).
 		Set(utils.BoolToFloat64(enabled))
 }
 

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	configPkg "main/pkg/config"
+	"main/pkg/constants"
 	snapshotPkg "main/pkg/snapshot"
 	"main/pkg/types"
 	migrations "main/sql"
@@ -299,7 +300,7 @@ func (d *Database) GetAllNotifiers() (*types.Notifiers, error) {
 	for rows.Next() {
 		var (
 			operatorAddress string
-			reporter        string
+			reporter        constants.ReporterName
 			notifier        string
 		)
 
@@ -321,7 +322,11 @@ func (d *Database) GetAllNotifiers() (*types.Notifiers, error) {
 	return &notifiers, nil
 }
 
-func (d *Database) InsertNotifier(operatorAddress, reporter, notifier string) error {
+func (d *Database) InsertNotifier(
+	operatorAddress string,
+	reporter constants.ReporterName,
+	notifier string,
+) error {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 
@@ -340,7 +345,11 @@ func (d *Database) InsertNotifier(operatorAddress, reporter, notifier string) er
 	return nil
 }
 
-func (d *Database) RemoveNotifier(operatorAddress, reporter, notifier string) error {
+func (d *Database) RemoveNotifier(
+	operatorAddress string,
+	reporter constants.ReporterName,
+	notifier string,
+) error {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 

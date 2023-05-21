@@ -2,6 +2,7 @@ package state
 
 import (
 	configPkg "main/pkg/config"
+	"main/pkg/constants"
 	"main/pkg/metrics"
 	snapshotPkg "main/pkg/snapshot"
 	"main/pkg/types"
@@ -203,7 +204,11 @@ func (m *Manager) GetSnapshot() snapshotPkg.Snapshot {
 	return snapshotPkg.NewSnapshot(entries)
 }
 
-func (m *Manager) AddNotifier(operatorAddress, reporter, notifier string) bool {
+func (m *Manager) AddNotifier(
+	operatorAddress string,
+	reporter constants.ReporterName,
+	notifier string,
+) bool {
 	if added := m.state.AddNotifier(operatorAddress, reporter, notifier); !added {
 		return false
 	}
@@ -212,7 +217,11 @@ func (m *Manager) AddNotifier(operatorAddress, reporter, notifier string) bool {
 	return err == nil
 }
 
-func (m *Manager) RemoveNotifier(operatorAddress, reporter, notifier string) bool {
+func (m *Manager) RemoveNotifier(
+	operatorAddress string,
+	reporter constants.ReporterName,
+	notifier string,
+) bool {
 	if removed := m.state.RemoveNotifier(operatorAddress, reporter, notifier); !removed {
 		return false
 	}
@@ -221,11 +230,17 @@ func (m *Manager) RemoveNotifier(operatorAddress, reporter, notifier string) boo
 	return err == nil
 }
 
-func (m *Manager) GetNotifiersForReporter(operatorAddress, reporter string) []string {
+func (m *Manager) GetNotifiersForReporter(
+	operatorAddress string,
+	reporter constants.ReporterName,
+) []string {
 	return m.state.GetNotifiersForReporter(operatorAddress, reporter)
 }
 
-func (m *Manager) GetValidatorsForNotifier(reporter, notifier string) []string {
+func (m *Manager) GetValidatorsForNotifier(
+	reporter constants.ReporterName,
+	notifier string,
+) []string {
 	return m.state.GetValidatorsForNotifier(reporter, notifier)
 }
 

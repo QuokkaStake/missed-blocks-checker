@@ -102,7 +102,11 @@ func (s *State) SetActiveSet(activeSet types.HistoricalValidatorsMap) {
 	s.historicalValidators.SetAllValidators(activeSet)
 }
 
-func (s *State) AddNotifier(operatorAddress, reporter, notifier string) bool {
+func (s *State) AddNotifier(
+	operatorAddress string,
+	reporter constants.ReporterName,
+	notifier string,
+) bool {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -114,7 +118,11 @@ func (s *State) AddNotifier(operatorAddress, reporter, notifier string) bool {
 	return added
 }
 
-func (s *State) RemoveNotifier(operatorAddress, reporter, notifier string) bool {
+func (s *State) RemoveNotifier(
+	operatorAddress string,
+	reporter constants.ReporterName,
+	notifier string,
+) bool {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -126,11 +134,17 @@ func (s *State) RemoveNotifier(operatorAddress, reporter, notifier string) bool 
 	return removed
 }
 
-func (s *State) GetNotifiersForReporter(operatorAddress, reporter string) []string {
+func (s *State) GetNotifiersForReporter(
+	operatorAddress string,
+	reporter constants.ReporterName,
+) []string {
 	return s.notifiers.GetNotifiersForReporter(operatorAddress, reporter)
 }
 
-func (s *State) GetValidatorsForNotifier(reporter, notifier string) []string {
+func (s *State) GetValidatorsForNotifier(
+	reporter constants.ReporterName,
+	notifier string,
+) []string {
 	return s.notifiers.GetValidatorsForNotifier(reporter, notifier)
 }
 

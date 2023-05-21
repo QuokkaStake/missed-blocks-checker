@@ -9,6 +9,6 @@ type ValidatorJailed struct {
 	Validator *types.Validator
 }
 
-func (e ValidatorJailed) Type() string {
+func (e ValidatorJailed) Type() constants.EventName {
 	return constants.EventValidatorJailed
 }

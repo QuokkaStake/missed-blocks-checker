@@ -1,12 +1,13 @@
 package types
 
 import (
+	"main/pkg/constants"
 	"main/pkg/utils"
 )
 
 type Notifier struct {
 	OperatorAddress string
-	Reporter        string
+	Reporter        constants.ReporterName
 	Notifier        string
 }
 
@@ -18,7 +19,11 @@ func (n Notifier) Equals(another *Notifier) bool {
 
 type Notifiers []*Notifier
 
-func (n Notifiers) AddNotifier(operatorAddress, reporter, notifier string) (*Notifiers, bool) {
+func (n Notifiers) AddNotifier(
+	operatorAddress string,
+	reporter constants.ReporterName,
+	notifier string,
+) (*Notifiers, bool) {
 	newNotifier := &Notifier{
 		OperatorAddress: operatorAddress,
 		Reporter:        reporter,
@@ -35,7 +40,10 @@ func (n Notifiers) AddNotifier(operatorAddress, reporter, notifier string) (*Not
 	return &n, true
 }
 
-func (n Notifiers) GetNotifiersForReporter(operatorAddress, reporter string) []string {
+func (n Notifiers) GetNotifiersForReporter(
+	operatorAddress string,
+	reporter constants.ReporterName,
+) []string {
 	notifiers := utils.Filter(n, func(notifier *Notifier) bool {
 		return notifier.OperatorAddress == operatorAddress && notifier.Reporter == reporter
 	})
@@ -45,7 +53,10 @@ func (n Notifiers) GetNotifiersForReporter(operatorAddress, reporter string) []s
 	})
 }
 
-func (n Notifiers) GetValidatorsForNotifier(reporter, notifier string) []string {
+func (n Notifiers) GetValidatorsForNotifier(
+	reporter constants.ReporterName,
+	notifier string,
+) []string {
 	notifiers := utils.Filter(n, func(notifierInternal *Notifier) bool {
 		return notifierInternal.Notifier == notifier && notifierInternal.Reporter == reporter
 	})
@@ -55,7 +66,11 @@ func (n Notifiers) GetValidatorsForNotifier(reporter, notifier string) []string 
 	})
 }
 
-func (n Notifiers) RemoveNotifier(operatorAddress, reporter, notifier string) (*Notifiers, bool) {
+func (n Notifiers) RemoveNotifier(
+	operatorAddress string,
+	reporter constants.ReporterName,
+	notifier string,
+) (*Notifiers, bool) {
 	deletedNotifier := &Notifier{
 		OperatorAddress: operatorAddress,
 		Reporter:        reporter,

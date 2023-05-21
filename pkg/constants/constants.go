@@ -1,5 +1,8 @@
 package constants
 
+type EventName string
+type ReporterName string
+
 const (
 	BlockSearchPagination       int64  = 100
 	ValidatorsQueryPagination   uint64 = 1000
@@ -16,9 +19,21 @@ const (
 
 	PrometheusMetricsPrefix = "missed_blocks_checker_"
 
-	EventValidatorActive       = "ValidatorActive"
-	EventValidatorGroupChanged = "ValidatorGroupChanged"
-	EventValidatorInactive     = "ValidatorInactive"
-	EventValidatorJailed       = "ValidatorJailed"
-	EventValidatorUnjailed     = "ValidatorUnjailed"
+	EventValidatorActive       EventName = "ValidatorActive"
+	EventValidatorGroupChanged EventName = "ValidatorGroupChanged"
+	EventValidatorInactive     EventName = "ValidatorInactive"
+	EventValidatorJailed       EventName = "ValidatorJailed"
+	EventValidatorUnjailed     EventName = "ValidatorUnjailed"
+
+	TelegramReporterName ReporterName = "telegram"
 )
+
+func GetEventNames() []EventName {
+	return []EventName{
+		EventValidatorActive,
+		EventValidatorGroupChanged,
+		EventValidatorInactive,
+		EventValidatorJailed,
+		EventValidatorUnjailed,
+	}
+}

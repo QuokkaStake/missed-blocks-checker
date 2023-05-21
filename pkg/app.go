@@ -90,9 +90,9 @@ func (a *App) Start() {
 		a.MetricsManager.LogReporterEnabled(reporter.Name(), reporter.Enabled())
 
 		if reporter.Enabled() {
-			a.Logger.Debug().Str("name", reporter.Name()).Msg("Reporter is enabled")
+			a.Logger.Debug().Str("name", string(reporter.Name())).Msg("Reporter is enabled")
 		} else {
-			a.Logger.Debug().Str("name", reporter.Name()).Msg("Reporter is disabled")
+			a.Logger.Debug().Str("name", string(reporter.Name())).Msg("Reporter is disabled")
 		}
 	}
 
@@ -213,7 +213,7 @@ func (a *App) ListenForEvents() {
 				if err := reporter.Send(report); err != nil {
 					a.Logger.Error().
 						Err(err).
-						Str("name", reporter.Name()).
+						Str("name", string(reporter.Name())).
 						Msg("Error sending report")
 				}
 			}

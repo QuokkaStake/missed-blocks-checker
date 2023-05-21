@@ -1,7 +1,9 @@
 package report
 
+import "main/pkg/constants"
+
 type Entry interface {
-	Type() string
+	Type() constants.EventName
 }
 
 type Report struct {

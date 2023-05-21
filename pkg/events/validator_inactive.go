@@ -9,6 +9,6 @@ type ValidatorInactive struct {
 	Validator *types.Validator
 }
 
-func (e ValidatorInactive) Type() string {
+func (e ValidatorInactive) Type() constants.EventName {
 	return constants.EventValidatorInactive
 }

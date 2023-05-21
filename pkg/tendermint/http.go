@@ -109,7 +109,7 @@ func (rpc *RPC) GetValidators() (*stakingTypes.QueryValidatorsResponse, error) {
 func (rpc *RPC) GetSigningInfos() (*slashingTypes.QuerySigningInfosResponse, error) {
 	query := slashingTypes.QuerySigningInfosRequest{
 		Pagination: &queryTypes.PageRequest{
-			Limit: constants.ValidatorsQueryPagination,
+			Limit: constants.SigningInfosQueryPagination,
 		},
 	}
 

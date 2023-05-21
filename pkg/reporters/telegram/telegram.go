@@ -3,6 +3,7 @@ package telegram
 import (
 	"fmt"
 	"html"
+	"main/pkg/constants"
 	"main/pkg/events"
 	reportPkg "main/pkg/report"
 	statePkg "main/pkg/state"
@@ -150,8 +151,8 @@ func (reporter *Reporter) Send(report *reportPkg.Report) error {
 	return nil
 }
 
-func (reporter *Reporter) Name() string {
-	return "telegram-reporter"
+func (reporter *Reporter) Name() constants.ReporterName {
+	return constants.TelegramReporterName
 }
 
 func (reporter *Reporter) BotSend(msg string) error {
