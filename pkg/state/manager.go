@@ -3,6 +3,7 @@ package state
 import (
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
+	databasePkg "main/pkg/database"
 	"main/pkg/metrics"
 	snapshotPkg "main/pkg/snapshot"
 	"main/pkg/types"
@@ -14,27 +15,28 @@ import (
 
 type Manager struct {
 	logger          zerolog.Logger
-	config          *configPkg.Config
+	config          configPkg.ChainConfig
 	metricsManager  *metrics.Manager
 	snapshotManager *snapshotPkg.Manager
 	state           *State
-	database        *Database
+	database        *databasePkg.Database
 	mutex           sync.Mutex
 }
 
 func NewManager(
 	logger zerolog.Logger,
-	config *configPkg.Config,
+	databaseConfig configPkg.DatabaseConfig,
+	chainConfig configPkg.ChainConfig,
 	metricsManager *metrics.Manager,
 	snapshotManager *snapshotPkg.Manager,
 ) *Manager {
 	return &Manager{
 		logger:          logger.With().Str("component", "state_manager").Logger(),
-		config:          config,
+		config:          chainConfig,
 		metricsManager:  metricsManager,
 		snapshotManager: snapshotManager,
 		state:           NewState(),
-		database:        NewDatabase(logger, config),
+		database:        databasePkg.NewDatabase(logger, databaseConfig),
 	}
 }
 
@@ -43,7 +45,7 @@ func (m *Manager) Init() {
 
 	blocksStart := time.Now()
 
-	blocks, err := m.database.GetAllBlocks()
+	blocks, err := m.database.GetAllBlocks(m.config.Name)
 	if err != nil {
 		m.logger.Fatal().Err(err).Msg("Could not get blocks from the database")
 	}
@@ -56,7 +58,7 @@ func (m *Manager) Init() {
 
 	notifiersStart := time.Now()
 
-	notifiers, err := m.database.GetAllNotifiers()
+	notifiers, err := m.database.GetAllNotifiers(m.config.Name)
 	if err != nil {
 		m.logger.Fatal().Err(err).Msg("Could not get notifiers from the database")
 	}
@@ -69,7 +71,7 @@ func (m *Manager) Init() {
 
 	activeSetStart := time.Now()
 
-	activeSet, err := m.database.GetAllActiveSets()
+	activeSet, err := m.database.GetAllActiveSets(m.config.Name)
 	if err != nil {
 		m.logger.Fatal().Err(err).Msg("Could not get historical validators from the database")
 	}
@@ -82,7 +84,7 @@ func (m *Manager) Init() {
 
 	snapshotStart := time.Now()
 
-	snapshot, err := m.database.GetLastSnapshot()
+	snapshot, err := m.database.GetLastSnapshot(m.config.Name)
 	if err != nil {
 		m.logger.Error().Err(err).Msg("Could not get snapshot from the database")
 	} else {
@@ -107,11 +109,11 @@ func (m *Manager) AddBlock(block *types.Block) error {
 		m.metricsManager.LogLastHeight(block.Height, block.Time)
 	}
 
-	if err := m.database.InsertBlock(block); err != nil {
+	if err := m.database.InsertBlock(m.config.Name, block); err != nil {
 		return err
 	}
 
-	m.metricsManager.LogTotalBlocksAmount(m.GetBlocksCountSinceLatest(m.config.ChainConfig.StoreBlocks))
+	m.metricsManager.LogTotalBlocksAmount(m.GetBlocksCountSinceLatest(m.config.StoreBlocks))
 
 	return nil
 }
@@ -122,10 +124,10 @@ func (m *Manager) AddActiveSet(height int64, activeSet map[string]bool) error {
 
 	m.state.AddActiveSet(height, activeSet)
 
-	if err := m.database.InsertActiveSet(height, activeSet); err != nil {
+	if err := m.database.InsertActiveSet(m.config.Name, height, activeSet); err != nil {
 		return err
 	}
-	m.metricsManager.LogTotalHistoricalValidatorsAmount(m.GetActiveSetsCountSinceLatest(m.config.ChainConfig.StoreBlocks))
+	m.metricsManager.LogTotalHistoricalValidatorsAmount(m.GetActiveSetsCountSinceLatest(m.config.StoreBlocks))
 
 	return nil
 }
@@ -134,14 +136,14 @@ func (m *Manager) TrimBlocks() error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	trimHeight := m.state.GetLastBlockHeight() - m.config.ChainConfig.StoreBlocks
+	trimHeight := m.state.GetLastBlockHeight() - m.config.StoreBlocks
 	m.logger.Info().
 		Int64("height", m.state.GetLastBlockHeight()).
 		Int64("trim_height", trimHeight).
 		Msg("Need to trim blocks")
 
 	m.state.TrimBlocksBefore(trimHeight)
-	if err := m.database.TrimBlocksBefore(trimHeight); err != nil {
+	if err := m.database.TrimBlocksBefore(m.config.Name, trimHeight); err != nil {
 		return err
 	}
 
@@ -152,14 +154,14 @@ func (m *Manager) TrimHistoricalValidators() error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	trimHeight := m.state.GetLastBlockHeight() - m.config.ChainConfig.StoreBlocks
+	trimHeight := m.state.GetLastBlockHeight() - m.config.StoreBlocks
 	m.logger.Info().
 		Int64("height", m.state.GetLastBlockHeight()).
 		Int64("trim_height", trimHeight).
 		Msg("Need to trim historical validators")
 
 	m.state.TrimActiveSetsBefore(trimHeight)
-	if err := m.database.TrimActiveSetsBefore(trimHeight); err != nil {
+	if err := m.database.TrimActiveSetsBefore(m.config.Name, trimHeight); err != nil {
 		return err
 	}
 
@@ -197,7 +199,7 @@ func (m *Manager) GetSnapshot() snapshotPkg.Snapshot {
 	for _, validator := range validators {
 		entries[validator.OperatorAddress] = snapshotPkg.Entry{
 			Validator:     validator,
-			SignatureInfo: m.state.GetValidatorMissedBlocks(validator, m.config.ChainConfig.BlocksWindow),
+			SignatureInfo: m.state.GetValidatorMissedBlocks(validator, m.config.BlocksWindow),
 		}
 	}
 
@@ -213,7 +215,7 @@ func (m *Manager) AddNotifier(
 		return false
 	}
 
-	err := m.database.InsertNotifier(operatorAddress, reporter, notifier)
+	err := m.database.InsertNotifier(m.config.Name, operatorAddress, reporter, notifier)
 	return err == nil
 }
 
@@ -226,7 +228,7 @@ func (m *Manager) RemoveNotifier(
 		return false
 	}
 
-	err := m.database.RemoveNotifier(operatorAddress, reporter, notifier)
+	err := m.database.RemoveNotifier(m.config.Name, operatorAddress, reporter, notifier)
 	return err == nil
 }
 
@@ -257,7 +259,7 @@ func (m *Manager) GetTimeTillJail(validator *types.Validator) (time.Duration, bo
 }
 
 func (m *Manager) GetValidatorMissedBlocks(validator *types.Validator) types.SignatureInto {
-	return m.state.GetValidatorMissedBlocks(validator, m.config.ChainConfig.BlocksWindow)
+	return m.state.GetValidatorMissedBlocks(validator, m.config.BlocksWindow)
 }
 
 func (m *Manager) SetValidators(validators types.ValidatorsMap) {
@@ -265,7 +267,7 @@ func (m *Manager) SetValidators(validators types.ValidatorsMap) {
 }
 
 func (m *Manager) SaveSnapshot(snapshot *snapshotPkg.Info) error {
-	return m.database.SetSnapshot(snapshot)
+	return m.database.SetSnapshot(m.config.Name, snapshot)
 }
 
 func (m *Manager) GetEarliestBlock() *types.Block {

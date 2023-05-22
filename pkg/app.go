@@ -54,7 +54,7 @@ func NewApp(configPath string, version string) *App {
 	rpcManager := tendermint.NewRPCManager(config.ChainConfig.RPCEndpoints, logger, metricsManager)
 	dataManager := dataPkg.NewManager(logger, config, rpcManager)
 	snapshotManager := snapshotPkg.NewManager(logger, config)
-	stateManager := statePkg.NewManager(logger, config, metricsManager, snapshotManager)
+	stateManager := statePkg.NewManager(logger, config.DatabaseConfig, config.ChainConfig, metricsManager, snapshotManager)
 	websocketManager := tendermint.NewWebsocketManager(logger, config, metricsManager)
 
 	reporters := []reportersPkg.Reporter{

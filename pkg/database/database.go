@@ -1,4 +1,4 @@
-package state
+package database
 
 import (
 	"context"
@@ -18,12 +18,15 @@ import (
 
 type Database struct {
 	logger zerolog.Logger
-	config *configPkg.Config
+	config configPkg.DatabaseConfig
 	client *sql.DB
 	mutex  sync.Mutex
 }
 
-func NewDatabase(logger zerolog.Logger, config *configPkg.Config) *Database {
+func NewDatabase(
+	logger zerolog.Logger,
+	config configPkg.DatabaseConfig,
+) *Database {
 	return &Database{
 		logger: logger.With().Str("component", "state_manager").Logger(),
 		config: config,
@@ -31,7 +34,7 @@ func NewDatabase(logger zerolog.Logger, config *configPkg.Config) *Database {
 }
 
 func (d *Database) Init() {
-	db, err := sql.Open("sqlite3", d.config.DatabaseConfig.Path)
+	db, err := sql.Open("sqlite3", d.config.Path)
 
 	if err != nil {
 		d.logger.Fatal().Err(err).Msg("Could not open sqlite database")
@@ -46,7 +49,7 @@ func (d *Database) Init() {
 
 	d.logger.Info().
 		Str("version", version).
-		Str("path", d.config.DatabaseConfig.Path).
+		Str("path", d.config.Path).
 		Msg("sqlite database connected")
 
 	entries, err := migrations.FS.ReadDir(".")
@@ -74,19 +77,20 @@ func (d *Database) Init() {
 				Err(err).
 				Msg("Could not prepare migration")
 		}
-		defer statement.Close()
 		if _, err := statement.Exec(); err != nil {
 			d.logger.Fatal().
 				Str("name", entry.Name()).
 				Err(err).
 				Msg("Could not execute migration")
 		}
+
+		statement.Close()
 	}
 
 	d.client = db
 }
 
-func (d *Database) InsertBlock(block *types.Block) error {
+func (d *Database) InsertBlock(chain string, block *types.Block) error {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 
@@ -100,7 +104,7 @@ func (d *Database) InsertBlock(block *types.Block) error {
 	_, err = tx.ExecContext(
 		ctx,
 		"INSERT INTO blocks (chain, height, time, proposer) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING",
-		d.config.ChainConfig.Name,
+		chain,
 		block.Height,
 		block.Time.Unix(),
 		block.Proposer,
@@ -119,7 +123,7 @@ func (d *Database) InsertBlock(block *types.Block) error {
 		_, err = tx.ExecContext(
 			ctx,
 			"INSERT INTO signatures (chain, height, validator_address, signature) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING",
-			d.config.ChainConfig.Name,
+			chain,
 			block.Height,
 			key,
 			signature,
@@ -144,7 +148,7 @@ func (d *Database) InsertBlock(block *types.Block) error {
 	return nil
 }
 
-func (d *Database) GetAllBlocks() (map[int64]*types.Block, error) {
+func (d *Database) GetAllBlocks(chain string) (map[int64]*types.Block, error) {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 
@@ -153,7 +157,7 @@ func (d *Database) GetAllBlocks() (map[int64]*types.Block, error) {
 	// Getting blocks
 	blocksRows, err := d.client.Query(
 		"SELECT height, time, proposer FROM blocks WHERE chain = $1",
-		d.config.ChainConfig.Name,
+		chain,
 	)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Error getting all blocks")
@@ -189,7 +193,7 @@ func (d *Database) GetAllBlocks() (map[int64]*types.Block, error) {
 	// Fetching signatures
 	signaturesRows, err := d.client.Query(
 		"SELECT height, validator_address, signature FROM signatures WHERE chain = $1",
-		d.config.ChainConfig.Name,
+		chain,
 	)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Error getting all blocks")
@@ -226,7 +230,7 @@ func (d *Database) GetAllBlocks() (map[int64]*types.Block, error) {
 	return blocks, nil
 }
 
-func (d *Database) TrimBlocksBefore(height int64) error {
+func (d *Database) TrimBlocksBefore(chain string, height int64) error {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 
@@ -241,7 +245,7 @@ func (d *Database) TrimBlocksBefore(height int64) error {
 		ctx,
 		"DELETE FROM blocks WHERE height <= $1 AND chain = $2",
 		height,
-		d.config.ChainConfig.Name,
+		chain,
 	)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Error trimming blocks")
@@ -257,7 +261,7 @@ func (d *Database) TrimBlocksBefore(height int64) error {
 		ctx,
 		"DELETE FROM signatures WHERE height <= $1 AND chain = $2",
 		height,
-		d.config.ChainConfig.Name,
+		chain,
 	)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Error trimming signatures")
@@ -278,7 +282,7 @@ func (d *Database) TrimBlocksBefore(height int64) error {
 	return nil
 }
 
-func (d *Database) GetAllNotifiers() (*types.Notifiers, error) {
+func (d *Database) GetAllNotifiers(chain string) (*types.Notifiers, error) {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 
@@ -286,7 +290,7 @@ func (d *Database) GetAllNotifiers() (*types.Notifiers, error) {
 
 	rows, err := d.client.Query(
 		"SELECT operator_address, reporter, notifier FROM notifiers WHERE chain = $1",
-		d.config.ChainConfig.Name,
+		chain,
 	)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Error getting all blocks")
@@ -323,6 +327,7 @@ func (d *Database) GetAllNotifiers() (*types.Notifiers, error) {
 }
 
 func (d *Database) InsertNotifier(
+	chain string,
 	operatorAddress string,
 	reporter constants.ReporterName,
 	notifier string,
@@ -332,7 +337,7 @@ func (d *Database) InsertNotifier(
 
 	_, err := d.client.Exec(
 		"INSERT INTO notifiers (chain, operator_address, reporter, notifier) VALUES ($1, $2, $3, $2) ON CONFLICT DO NOTHING",
-		d.config.ChainConfig.Name,
+		chain,
 		operatorAddress,
 		reporter,
 		notifier,
@@ -346,6 +351,7 @@ func (d *Database) InsertNotifier(
 }
 
 func (d *Database) RemoveNotifier(
+	chain string,
 	operatorAddress string,
 	reporter constants.ReporterName,
 	notifier string,
@@ -358,7 +364,7 @@ func (d *Database) RemoveNotifier(
 		operatorAddress,
 		reporter,
 		notifier,
-		d.config.ChainConfig.Name,
+		chain,
 	)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Could not delete notifier")
@@ -368,7 +374,7 @@ func (d *Database) RemoveNotifier(
 	return nil
 }
 
-func (d *Database) GetAllActiveSets() (types.HistoricalValidatorsMap, error) {
+func (d *Database) GetAllActiveSets(chain string) (types.HistoricalValidatorsMap, error) {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 
@@ -376,7 +382,7 @@ func (d *Database) GetAllActiveSets() (types.HistoricalValidatorsMap, error) {
 
 	rows, err := d.client.Query(
 		"SELECT height, validator_address FROM validators WHERE chain = $1",
-		d.config.ChainConfig.Name,
+		chain,
 	)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Error getting all blocks")
@@ -409,7 +415,7 @@ func (d *Database) GetAllActiveSets() (types.HistoricalValidatorsMap, error) {
 	return activeSets, nil
 }
 
-func (d *Database) InsertActiveSet(height int64, activeSet map[string]bool) error {
+func (d *Database) InsertActiveSet(chain string, height int64, activeSet map[string]bool) error {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 
@@ -424,7 +430,7 @@ func (d *Database) InsertActiveSet(height int64, activeSet map[string]bool) erro
 		_, err = tx.ExecContext(
 			ctx,
 			"INSERT INTO validators (chain, validator_address, height) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
-			d.config.ChainConfig.Name,
+			chain,
 			validator,
 			height,
 		)
@@ -448,10 +454,10 @@ func (d *Database) InsertActiveSet(height int64, activeSet map[string]bool) erro
 	return nil
 }
 
-func (d *Database) TrimActiveSetsBefore(height int64) error {
+func (d *Database) TrimActiveSetsBefore(chain string, height int64) error {
 	_, err := d.client.Exec(
 		"DELETE FROM validators WHERE chain = $1 AND height <= $2",
-		d.config.ChainConfig.Name,
+		chain,
 		height,
 	)
 	if err != nil {
@@ -462,14 +468,14 @@ func (d *Database) TrimActiveSetsBefore(height int64) error {
 	return nil
 }
 
-func (d *Database) GetValueByKey(key string) ([]byte, error) {
+func (d *Database) GetValueByKey(chain string, key string) ([]byte, error) {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 
 	var value []byte
 
 	err := d.client.
-		QueryRow("SELECT value FROM data WHERE key = $1 AND chain = $2", key, d.config.ChainConfig.Name).
+		QueryRow("SELECT value FROM data WHERE key = $1 AND chain = $2", key, chain).
 		Scan(&value)
 
 	if err != nil {
@@ -480,13 +486,13 @@ func (d *Database) GetValueByKey(key string) ([]byte, error) {
 	return value, err
 }
 
-func (d *Database) SetValueByKey(key string, data []byte) error {
+func (d *Database) SetValueByKey(chain string, key string, data []byte) error {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 
 	_, err := d.client.Exec(
 		"INSERT INTO data (chain, key, value) VALUES ($1, $2, $3) ON CONFLICT DO UPDATE SET value = $3",
-		d.config.ChainConfig.Name,
+		chain,
 		key,
 		data,
 	)
@@ -498,8 +504,8 @@ func (d *Database) SetValueByKey(key string, data []byte) error {
 	return nil
 }
 
-func (d *Database) GetLastSnapshot() (*snapshotPkg.Info, error) {
-	rawData, err := d.GetValueByKey("snapshot")
+func (d *Database) GetLastSnapshot(chain string) (*snapshotPkg.Info, error) {
+	rawData, err := d.GetValueByKey(chain, "snapshot")
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Could not get snapshot")
 		return nil, err
@@ -514,14 +520,14 @@ func (d *Database) GetLastSnapshot() (*snapshotPkg.Info, error) {
 	return &snapshot, nil
 }
 
-func (d *Database) SetSnapshot(snapshot *snapshotPkg.Info) error {
+func (d *Database) SetSnapshot(chain string, snapshot *snapshotPkg.Info) error {
 	rawData, err := json.Marshal(snapshot)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Could not marshal snapshot")
 		return err
 	}
 
-	if err := d.SetValueByKey("snapshot", rawData); err != nil {
+	if err := d.SetValueByKey(chain, "snapshot", rawData); err != nil {
 		d.logger.Error().Err(err).Msg("Could not save snapshot")
 		return err
 	}

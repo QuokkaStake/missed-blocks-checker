@@ -225,15 +225,15 @@ func (s *State) GetBlockTime() time.Duration {
 
 func (s *State) GetTimeTillJail(
 	validator *types.Validator,
-	appConfig *config.Config,
+	chainConfig config.ChainConfig,
 ) (time.Duration, bool) {
 	validator, found := s.GetValidator(validator.OperatorAddress)
 	if !found {
 		return 0, false
 	}
 
-	missedBlocks := s.GetValidatorMissedBlocks(validator, appConfig.ChainConfig.StoreBlocks)
-	needToSign := appConfig.ChainConfig.GetBlocksSignCount()
+	missedBlocks := s.GetValidatorMissedBlocks(validator, chainConfig.StoreBlocks)
+	needToSign := chainConfig.GetBlocksSignCount()
 	blocksToJail := needToSign - missedBlocks.GetNotSigned()
 	blockTime := s.GetBlockTime()
 	nanoToJail := blockTime.Nanoseconds() * blocksToJail
