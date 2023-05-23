@@ -5,6 +5,7 @@ import (
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	dataPkg "main/pkg/data"
+	databasePkg "main/pkg/database"
 	loggerPkg "main/pkg/logger"
 	"main/pkg/metrics"
 	reportersPkg "main/pkg/reporters"
@@ -21,8 +22,9 @@ import (
 
 type App struct {
 	Logger                zerolog.Logger
-	Config                *configPkg.Config
+	Config                configPkg.ChainConfig
 	RPCManager            *tendermint.RPCManager
+	Database              *databasePkg.Database
 	DataManager           *dataPkg.Manager
 	StateManager          *statePkg.Manager
 	SnapshotManager       *snapshotPkg.Manager
@@ -54,7 +56,8 @@ func NewApp(configPath string, version string) *App {
 	rpcManager := tendermint.NewRPCManager(config.ChainConfig, logger, metricsManager)
 	dataManager := dataPkg.NewManager(logger, config, rpcManager)
 	snapshotManager := snapshotPkg.NewManager(logger, config)
-	stateManager := statePkg.NewManager(logger, config.DatabaseConfig, config.ChainConfig, metricsManager, snapshotManager)
+	database := databasePkg.NewDatabase(logger, config.DatabaseConfig)
+	stateManager := statePkg.NewManager(logger, config.ChainConfig, metricsManager, snapshotManager, database)
 	websocketManager := tendermint.NewWebsocketManager(logger, config.ChainConfig, metricsManager)
 
 	reporters := []reportersPkg.Reporter{
@@ -63,9 +66,10 @@ func NewApp(configPath string, version string) *App {
 
 	return &App{
 		Logger:                logger,
-		Config:                config,
+		Config:                config.ChainConfig,
 		RPCManager:            rpcManager,
 		DataManager:           dataManager,
+		Database:              database,
 		StateManager:          stateManager,
 		SnapshotManager:       snapshotManager,
 		WebsocketManager:      websocketManager,
@@ -78,7 +82,9 @@ func NewApp(configPath string, version string) *App {
 }
 
 func (a *App) Start() {
-	a.MetricsManager.SetDefaultMetrics(a.Config.ChainConfig)
+	a.Database.Init()
+
+	a.MetricsManager.SetDefaultMetrics(a.Config)
 	a.MetricsManager.LogAppVersion(a.Version)
 
 	a.StateManager.Init()
@@ -88,7 +94,7 @@ func (a *App) Start() {
 	for _, reporter := range a.Reporters {
 		reporter.Init()
 
-		a.MetricsManager.LogReporterEnabled(a.Config.ChainConfig.Name, reporter.Name(), reporter.Enabled())
+		a.MetricsManager.LogReporterEnabled(a.Config.Name, reporter.Name(), reporter.Enabled())
 
 		if reporter.Enabled() {
 			a.Logger.Debug().Str("name", string(reporter.Name())).Msg("Reporter is enabled")
@@ -141,22 +147,22 @@ func (a *App) ListenForEvents() {
 					Msg("Error inserting new block")
 			}
 
-			blocksCount := a.StateManager.GetBlocksCountSinceLatest(a.Config.ChainConfig.StoreBlocks)
+			blocksCount := a.StateManager.GetBlocksCountSinceLatest(a.Config.StoreBlocks)
 			a.Logger.Info().
 				Int64("count", blocksCount).
 				Int64("height", block.Height).
 				Msg("Added new Tendermint block into state")
 
-			historicalValidatorsCount := a.StateManager.GetActiveSetsCountSinceLatest(a.Config.ChainConfig.StoreBlocks)
+			historicalValidatorsCount := a.StateManager.GetActiveSetsCountSinceLatest(a.Config.StoreBlocks)
 
-			hasEnoughBlocks := blocksCount >= a.Config.ChainConfig.BlocksWindow
-			hasEnoughHistoricalValidators := historicalValidatorsCount >= a.Config.ChainConfig.BlocksWindow
+			hasEnoughBlocks := blocksCount >= a.Config.BlocksWindow
+			hasEnoughHistoricalValidators := historicalValidatorsCount >= a.Config.BlocksWindow
 
 			if !hasEnoughBlocks || !hasEnoughHistoricalValidators {
 				a.Logger.Info().
 					Int64("blocks_count", blocksCount).
 					Int64("historical_validators_count", historicalValidatorsCount).
-					Int64("expected", a.Config.ChainConfig.BlocksWindow).
+					Int64("expected", a.Config.BlocksWindow).
 					Msg("Not enough data for producing a snapshot, skipping.")
 				continue
 			}
@@ -202,7 +208,7 @@ func (a *App) ListenForEvents() {
 				continue
 			}
 
-			a.MetricsManager.LogReport(a.Config.ChainConfig.Name, report)
+			a.MetricsManager.LogReport(a.Config.Name, report)
 
 			for _, entry := range report.Entries {
 				a.Logger.Info().
@@ -313,10 +319,10 @@ func (a *App) PopulateBlocks() {
 
 	a.IsPopulatingBlocks = true
 
-	missingBlocks := a.StateManager.GetMissingBlocksSinceLatest(a.Config.ChainConfig.StoreBlocks)
+	missingBlocks := a.StateManager.GetMissingBlocksSinceLatest(a.Config.StoreBlocks)
 	if len(missingBlocks) == 0 {
 		a.Logger.Info().
-			Int64("count", a.Config.ChainConfig.StoreBlocks).
+			Int64("count", a.Config.StoreBlocks).
 			Msg("Got enough blocks for populating")
 		a.IsPopulatingBlocks = false
 		return
@@ -325,11 +331,11 @@ func (a *App) PopulateBlocks() {
 	blocksChunks := utils.SplitIntoChunks(missingBlocks, int(constants.BlockSearchPagination))
 
 	for _, chunk := range blocksChunks {
-		count := a.StateManager.GetBlocksCountSinceLatest(a.Config.ChainConfig.StoreBlocks)
+		count := a.StateManager.GetBlocksCountSinceLatest(a.Config.StoreBlocks)
 
 		a.Logger.Info().
 			Int64("count", count).
-			Int64("required", a.Config.ChainConfig.StoreBlocks).
+			Int64("required", a.Config.StoreBlocks).
 			Int64("needed_blocks", constants.BlockSearchPagination).
 			Ints64("blocks", chunk).
 			Msg("Fetching more blocks...")
@@ -375,10 +381,10 @@ func (a *App) PopulateActiveSet() {
 
 	a.IsPopulatingActiveSet = true
 
-	missing := a.StateManager.GetMissingHistoricalValidatorsSinceLatest(a.Config.ChainConfig.StoreBlocks)
+	missing := a.StateManager.GetMissingHistoricalValidatorsSinceLatest(a.Config.StoreBlocks)
 	if len(missing) == 0 {
 		a.Logger.Info().
-			Int64("count", a.Config.ChainConfig.StoreBlocks).
+			Int64("count", a.Config.StoreBlocks).
 			Msg("Got enough historical validators for populating")
 		a.IsPopulatingActiveSet = false
 		return
@@ -386,12 +392,12 @@ func (a *App) PopulateActiveSet() {
 
 	chunks := utils.SplitIntoChunks(missing, int(constants.ActiveSetsBulkQueryCount))
 	for _, chunk := range chunks {
-		count := a.StateManager.GetBlocksCountSinceLatest(a.Config.ChainConfig.StoreBlocks)
+		count := a.StateManager.GetBlocksCountSinceLatest(a.Config.StoreBlocks)
 
 		a.Logger.Info().
 			Int64("count", count).
 			Ints64("blocks_to_fetch", chunk).
-			Int64("required", a.Config.ChainConfig.StoreBlocks).
+			Int64("required", a.Config.StoreBlocks).
 			Msg("Not enough historical validators, fetching more...")
 
 		heightActiveSets, errs := a.RPCManager.GetActiveSetAtBlocks(chunk)

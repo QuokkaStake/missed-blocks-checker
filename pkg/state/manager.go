@@ -25,10 +25,10 @@ type Manager struct {
 
 func NewManager(
 	logger zerolog.Logger,
-	databaseConfig configPkg.DatabaseConfig,
 	chainConfig configPkg.ChainConfig,
 	metricsManager *metrics.Manager,
 	snapshotManager *snapshotPkg.Manager,
+	database *databasePkg.Database,
 ) *Manager {
 	return &Manager{
 		logger:          logger.With().Str("component", "state_manager").Logger(),
@@ -36,13 +36,11 @@ func NewManager(
 		metricsManager:  metricsManager,
 		snapshotManager: snapshotManager,
 		state:           NewState(),
-		database:        databasePkg.NewDatabase(logger, databaseConfig),
+		database:        database,
 	}
 }
 
 func (m *Manager) Init() {
-	m.database.Init()
-
 	blocksStart := time.Now()
 
 	blocks, err := m.database.GetAllBlocks(m.config.Name)
