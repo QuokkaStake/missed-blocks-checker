@@ -46,7 +46,7 @@ func (reporter *Reporter) HandleListValidators(c tele.Context) error {
 			group.EmojiEnd,
 			reporter.SerializeLink(link),
 			signatureInfo.GetNotSigned(),
-			float64(signatureInfo.GetNotSigned())/float64(reporter.Config.ChainConfig.BlocksWindow)*100,
+			float64(signatureInfo.GetNotSigned())/float64(reporter.Config.BlocksWindow)*100,
 		))
 	}
 

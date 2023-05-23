@@ -48,7 +48,7 @@ func (reporter *Reporter) HandleStatus(c tele.Context) error {
 				"<strong>%s:</strong> %d missed blocks (%.2f%%)\n",
 				reporter.SerializeLink(link),
 				signatureInfo.GetNotSigned(),
-				float64(signatureInfo.GetNotSigned())/float64(reporter.Config.ChainConfig.BlocksWindow)*100,
+				float64(signatureInfo.GetNotSigned())/float64(reporter.Config.BlocksWindow)*100,
 			))
 		}
 	}

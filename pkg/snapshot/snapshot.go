@@ -20,7 +20,7 @@ func NewSnapshot(entries map[string]Entry) Snapshot {
 	return Snapshot{Entries: entries}
 }
 
-func (snapshot *Snapshot) GetReport(olderSnapshot Snapshot, appConfig *config.Config) *report.Report {
+func (snapshot *Snapshot) GetReport(olderSnapshot Snapshot, chainConfig config.ChainConfig) *report.Report {
 	var entries []report.Entry
 
 	for valoper, entry := range snapshot.Entries {
@@ -32,8 +32,8 @@ func (snapshot *Snapshot) GetReport(olderSnapshot Snapshot, appConfig *config.Co
 		missedBlocksBefore := olderEntry.SignatureInfo.GetNotSigned()
 		missedBlocksAfter := entry.SignatureInfo.GetNotSigned()
 
-		beforeGroup, _ := appConfig.MissedBlocksGroups.GetGroup(missedBlocksBefore)
-		afterGroup, _ := appConfig.MissedBlocksGroups.GetGroup(missedBlocksAfter)
+		beforeGroup, _ := chainConfig.MissedBlocksGroups.GetGroup(missedBlocksBefore)
+		afterGroup, _ := chainConfig.MissedBlocksGroups.GetGroup(missedBlocksAfter)
 
 		missedBlocksGroupsEqual := beforeGroup.Start == afterGroup.Start
 

@@ -15,14 +15,14 @@ import (
 
 type Manager struct {
 	logger      zerolog.Logger
-	config      *configPkg.Config
+	config      configPkg.ChainConfig
 	httpManager *tendermint.RPCManager
 	converter   *converterPkg.Converter
 }
 
 func NewManager(
 	logger zerolog.Logger,
-	config *configPkg.Config,
+	config configPkg.ChainConfig,
 	httpManager *tendermint.RPCManager,
 ) *Manager {
 	return &Manager{
@@ -34,7 +34,7 @@ func NewManager(
 }
 
 func (m *Manager) GetValidators() (types.Validators, error) {
-	if m.config.ChainConfig.QueryEachSigningInfo.Bool {
+	if m.config.QueryEachSigningInfo.Bool {
 		return m.GetValidatorsAndEachSigningInfo()
 	}
 

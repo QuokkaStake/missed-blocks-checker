@@ -11,14 +11,10 @@ import (
 )
 
 type Config struct {
-	TelegramConfig TelegramConfig `toml:"telegram"`
 	LogConfig      LogConfig      `toml:"log"`
 	ChainConfig    ChainConfig    `toml:"chain"`
 	DatabaseConfig DatabaseConfig `toml:"database"`
-	ExplorerConfig ExplorerConfig `toml:"explorer"`
 	MetricsConfig  MetricsConfig  `toml:"metrics"`
-
-	MissedBlocksGroups MissedBlocksGroups `toml:"missed-blocks-groups"`
 }
 
 type MissedBlocksGroup struct {
@@ -120,6 +116,10 @@ type ChainConfig struct {
 	BlocksWindow         int64     `toml:"blocks-window" default:"10000"`
 	MinSignedPerWindow   float64   `toml:"min-signed-per-window" default:"0.05"`
 	QueryEachSigningInfo null.Bool `toml:"query-each-signing-info" default:"false"`
+
+	MissedBlocksGroups MissedBlocksGroups `toml:"missed-blocks-groups"`
+	ExplorerConfig     ExplorerConfig     `toml:"explorer"`
+	TelegramConfig     TelegramConfig     `toml:"telegram"`
 }
 
 func (c *ChainConfig) GetBlocksSignCount() int64 {
@@ -176,13 +176,13 @@ func GetConfig(path string) (*Config, error) {
 	return configStruct, nil
 }
 
-func (config *Config) SetDefaultMissedBlocksGroups() {
+func (config *ChainConfig) SetDefaultMissedBlocksGroups() {
 	if config.MissedBlocksGroups != nil {
 		// GetDefaultLogger().Debug().Msg("MissedBlockGroups is set, not setting the default ones.")
 		return
 	}
 
-	totalRange := float64(config.ChainConfig.BlocksWindow) + 1 // from 0 till max blocks allowed, including
+	totalRange := float64(config.BlocksWindow) + 1 // from 0 till max blocks allowed, including
 
 	percents := []float64{0, 0.5, 1, 5, 10, 25, 50, 75, 90, 100}
 	emojiStart := []string{"🟡", "🟡", "🟡", "🟠", "🟠", "🟠", "🔴", "🔴", "🔴"}

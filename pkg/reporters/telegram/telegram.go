@@ -26,7 +26,7 @@ type Reporter struct {
 
 	TelegramBot *tele.Bot
 	Logger      zerolog.Logger
-	Config      *config.Config
+	Config      config.ChainConfig
 	Manager     *statePkg.Manager
 }
 
@@ -35,15 +35,15 @@ const (
 )
 
 func NewReporter(
-	appConfig *config.Config,
+	chainConfig config.ChainConfig,
 	logger zerolog.Logger,
 	manager *statePkg.Manager,
 ) *Reporter {
 	return &Reporter{
-		Token:   appConfig.TelegramConfig.Token,
-		Chat:    appConfig.TelegramConfig.Chat,
-		Admins:  appConfig.TelegramConfig.Admins,
-		Config:  appConfig,
+		Token:   chainConfig.TelegramConfig.Token,
+		Chat:    chainConfig.TelegramConfig.Chat,
+		Admins:  chainConfig.TelegramConfig.Admins,
+		Config:  chainConfig,
 		Logger:  logger.With().Str("component", "telegram_reporter").Logger(),
 		Manager: manager,
 	}
