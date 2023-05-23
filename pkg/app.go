@@ -50,12 +50,12 @@ func NewApp(configPath string, version string) *App {
 		Str("chain", config.ChainConfig.Name).
 		Logger()
 
-	metricsManager := metrics.NewManager(logger, config)
-	rpcManager := tendermint.NewRPCManager(config.ChainConfig.RPCEndpoints, logger, metricsManager)
+	metricsManager := metrics.NewManager(logger, config.MetricsConfig)
+	rpcManager := tendermint.NewRPCManager(config.ChainConfig, logger, metricsManager)
 	dataManager := dataPkg.NewManager(logger, config, rpcManager)
 	snapshotManager := snapshotPkg.NewManager(logger, config)
 	stateManager := statePkg.NewManager(logger, config.DatabaseConfig, config.ChainConfig, metricsManager, snapshotManager)
-	websocketManager := tendermint.NewWebsocketManager(logger, config, metricsManager)
+	websocketManager := tendermint.NewWebsocketManager(logger, config.ChainConfig, metricsManager)
 
 	reporters := []reportersPkg.Reporter{
 		telegram.NewReporter(config, logger, stateManager),
@@ -78,6 +78,7 @@ func NewApp(configPath string, version string) *App {
 }
 
 func (a *App) Start() {
+	a.MetricsManager.SetDefaultMetrics(a.Config.ChainConfig)
 	a.MetricsManager.LogAppVersion(a.Version)
 
 	a.StateManager.Init()
@@ -87,7 +88,7 @@ func (a *App) Start() {
 	for _, reporter := range a.Reporters {
 		reporter.Init()
 
-		a.MetricsManager.LogReporterEnabled(reporter.Name(), reporter.Enabled())
+		a.MetricsManager.LogReporterEnabled(a.Config.ChainConfig.Name, reporter.Name(), reporter.Enabled())
 
 		if reporter.Enabled() {
 			a.Logger.Debug().Str("name", string(reporter.Name())).Msg("Reporter is enabled")
@@ -201,7 +202,7 @@ func (a *App) ListenForEvents() {
 				continue
 			}
 
-			a.MetricsManager.LogReport(report)
+			a.MetricsManager.LogReport(a.Config.ChainConfig.Name, report)
 
 			for _, entry := range report.Entries {
 				a.Logger.Info().

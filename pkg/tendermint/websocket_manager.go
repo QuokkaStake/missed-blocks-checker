@@ -53,13 +53,13 @@ type WebsocketManager struct {
 
 func NewWebsocketManager(
 	logger zerolog.Logger,
-	appConfig *config.Config,
+	config config.ChainConfig,
 	metricsManager *metrics.Manager,
 ) *WebsocketManager {
-	nodes := make([]*WebsocketClient, len(appConfig.ChainConfig.RPCEndpoints))
+	nodes := make([]*WebsocketClient, len(config.RPCEndpoints))
 
-	for index, url := range appConfig.ChainConfig.RPCEndpoints {
-		nodes[index] = NewWebsocketClient(logger, url, appConfig, metricsManager)
+	for index, url := range config.RPCEndpoints {
+		nodes[index] = NewWebsocketClient(logger, url, config, metricsManager)
 	}
 
 	return &WebsocketManager{

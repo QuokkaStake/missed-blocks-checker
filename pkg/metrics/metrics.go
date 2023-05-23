@@ -18,7 +18,7 @@ import (
 
 type Manager struct {
 	logger                   zerolog.Logger
-	config                   *configPkg.Config
+	config                   configPkg.MetricsConfig
 	lastBlockHeightCollector *prometheus.GaugeVec
 	lastBlockTimeCollector   *prometheus.GaugeVec
 
@@ -39,7 +39,7 @@ type Manager struct {
 	appVersionGauge *prometheus.GaugeVec
 }
 
-func NewManager(logger zerolog.Logger, config *configPkg.Config) *Manager {
+func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager {
 	return &Manager{
 		logger: logger.With().Str("component", "metrics").Logger(),
 		config: config,
@@ -98,14 +98,14 @@ func NewManager(logger zerolog.Logger, config *configPkg.Config) *Manager {
 	}
 }
 
-func (m *Manager) SetDefaultMetrics() {
+func (m *Manager) SetDefaultMetrics(chain configPkg.ChainConfig) {
 	m.reportsCounter.
-		With(prometheus.Labels{"chain": m.config.ChainConfig.Name}).
+		With(prometheus.Labels{"chain": chain.Name}).
 		Add(0)
 
 	m.reportEntriesCounter.
 		With(prometheus.Labels{
-			"chain": m.config.ChainConfig.Name,
+			"chain": chain.Name,
 			"type":  string(constants.EventValidatorActive),
 		}).
 		Add(0)
@@ -113,108 +113,106 @@ func (m *Manager) SetDefaultMetrics() {
 	for _, eventName := range constants.GetEventNames() {
 		m.reportEntriesCounter.
 			With(prometheus.Labels{
-				"chain": m.config.ChainConfig.Name,
+				"chain": chain.Name,
 				"type":  string(eventName),
 			}).
 			Add(0)
 	}
 
-	for _, node := range m.config.ChainConfig.RPCEndpoints {
+	for _, node := range chain.RPCEndpoints {
 		m.eventsCounter.
-			With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "node": node}).
+			With(prometheus.Labels{"chain": chain.Name, "node": node}).
 			Add(0)
 
 		m.reconnectsCounter.
-			With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "node": node}).
+			With(prometheus.Labels{"chain": chain.Name, "node": node}).
 			Add(0)
 	}
 }
 
 func (m *Manager) Start() {
-	if !m.config.MetricsConfig.Enabled.Bool {
+	if !m.config.Enabled.Bool {
 		m.logger.Info().Msg("Metrics not enabled")
 		return
 	}
 
-	m.SetDefaultMetrics()
-
 	m.logger.Info().
-		Str("addr", m.config.MetricsConfig.ListenAddr).
+		Str("addr", m.config.ListenAddr).
 		Msg("Metrics handler listening")
 
 	http.Handle("/metrics", promhttp.Handler())
-	if err := http.ListenAndServe(m.config.MetricsConfig.ListenAddr, nil); err != nil {
+	if err := http.ListenAndServe(m.config.ListenAddr, nil); err != nil {
 		m.logger.Fatal().
 			Err(err).
-			Str("addr", m.config.MetricsConfig.ListenAddr).
+			Str("addr", m.config.ListenAddr).
 			Msg("Cannot start metrics handler")
 	}
 }
 
-func (m *Manager) LogLastHeight(height int64, blockTime time.Time) {
+func (m *Manager) LogLastHeight(chain string, height int64, blockTime time.Time) {
 	m.lastBlockHeightCollector.
-		With(prometheus.Labels{"chain": m.config.ChainConfig.Name}).
+		With(prometheus.Labels{"chain": chain}).
 		Set(float64(height))
 
 	m.lastBlockTimeCollector.
-		With(prometheus.Labels{"chain": m.config.ChainConfig.Name}).
+		With(prometheus.Labels{"chain": chain}).
 		Set(float64(blockTime.Unix()))
 }
 
-func (m *Manager) LogNodeConnection(node string, connected bool) {
+func (m *Manager) LogNodeConnection(chain, node string, connected bool) {
 	m.nodeConnectedCollector.
-		With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "node": node}).
+		With(prometheus.Labels{"chain": chain, "node": node}).
 		Set(utils.BoolToFloat64(connected))
 }
 
-func (m *Manager) LogTendermintQuery(query types.QueryInfo) {
+func (m *Manager) LogTendermintQuery(chain string, query types.QueryInfo) {
 	if query.Success {
 		m.successfulQueriesCollector.
 			With(prometheus.Labels{
-				"chain": m.config.ChainConfig.Name,
+				"chain": chain,
 				"node":  query.Node,
 				"type":  query.QueryType,
 			}).Inc()
 	} else {
 		m.failedQueriesCollector.
 			With(prometheus.Labels{
-				"chain": m.config.ChainConfig.Name,
+				"chain": chain,
 				"node":  query.Node,
 				"type":  query.QueryType,
 			}).Inc()
 	}
 }
 
-func (m *Manager) LogReport(report *report.Report) {
+func (m *Manager) LogReport(chain string, report *report.Report) {
 	m.reportsCounter.
-		With(prometheus.Labels{"chain": m.config.ChainConfig.Name}).
+		With(prometheus.Labels{"chain": chain}).
 		Inc()
 
 	for _, entry := range report.Entries {
 		m.reportEntriesCounter.
 			With(prometheus.Labels{
-				"chain": m.config.ChainConfig.Name,
+				"chain": chain,
 				"type":  string(entry.Type()),
 			}).
 			Inc()
 	}
 }
 
-func (m *Manager) LogTotalBlocksAmount(amount int64) {
+func (m *Manager) LogTotalBlocksAmount(chain string, amount int64) {
 	m.totalBlocksGauge.
-		With(prometheus.Labels{"chain": m.config.ChainConfig.Name}).
+		With(prometheus.Labels{"chain": chain}).
 		Set(float64(amount))
 }
 
-func (m *Manager) LogTotalHistoricalValidatorsAmount(amount int64) {
+func (m *Manager) LogTotalHistoricalValidatorsAmount(chain string, amount int64) {
 	m.totalHistoricalValidatorsGauge.
-		With(prometheus.Labels{"chain": m.config.ChainConfig.Name}).
+		With(prometheus.Labels{"chain": chain}).
 		Set(float64(amount))
 }
 
-func (m *Manager) LogReporterEnabled(name constants.ReporterName, enabled bool) {
+func (m *Manager) LogReporterEnabled(chain string, name constants.ReporterName, enabled bool) {
 	m.reporterEnabledGauge.
-		With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "name": string(name)}).
+		With(prometheus.Labels{"chain": chain, "name": string(name)}).
 		Set(utils.BoolToFloat64(enabled))
 }
 
@@ -224,14 +222,14 @@ func (m *Manager) LogAppVersion(version string) {
 		Set(1)
 }
 
-func (m *Manager) LogWSEvent(node string) {
+func (m *Manager) LogWSEvent(chain string, node string) {
 	m.eventsCounter.
-		With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "node": node}).
+		With(prometheus.Labels{"chain": chain, "node": node}).
 		Inc()
 }
 
-func (m *Manager) LogNodeReconnect(node string) {
+func (m *Manager) LogNodeReconnect(chain string, node string) {
 	m.reconnectsCounter.
-		With(prometheus.Labels{"chain": m.config.ChainConfig.Name, "node": node}).
+		With(prometheus.Labels{"chain": chain, "node": node}).
 		Inc()
 }

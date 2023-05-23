@@ -106,14 +106,14 @@ func (m *Manager) AddBlock(block *types.Block) error {
 	m.state.AddBlock(block)
 
 	if lastBlock := m.state.GetLatestBlock(); lastBlock == block.Height {
-		m.metricsManager.LogLastHeight(block.Height, block.Time)
+		m.metricsManager.LogLastHeight(m.config.Name, block.Height, block.Time)
 	}
 
 	if err := m.database.InsertBlock(m.config.Name, block); err != nil {
 		return err
 	}
 
-	m.metricsManager.LogTotalBlocksAmount(m.GetBlocksCountSinceLatest(m.config.StoreBlocks))
+	m.metricsManager.LogTotalBlocksAmount(m.config.Name, m.GetBlocksCountSinceLatest(m.config.StoreBlocks))
 
 	return nil
 }
@@ -127,7 +127,7 @@ func (m *Manager) AddActiveSet(height int64, activeSet map[string]bool) error {
 	if err := m.database.InsertActiveSet(m.config.Name, height, activeSet); err != nil {
 		return err
 	}
-	m.metricsManager.LogTotalHistoricalValidatorsAmount(m.GetActiveSetsCountSinceLatest(m.config.StoreBlocks))
+	m.metricsManager.LogTotalHistoricalValidatorsAmount(m.config.Name, m.GetActiveSetsCountSinceLatest(m.config.StoreBlocks))
 
 	return nil
 }

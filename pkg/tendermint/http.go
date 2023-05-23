@@ -3,6 +3,7 @@ package tendermint
 import (
 	"encoding/json"
 	"fmt"
+	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/metrics"
 	"main/pkg/utils"
@@ -23,7 +24,7 @@ import (
 )
 
 type RPC struct {
-	urls           []string
+	config         configPkg.ChainConfig
 	metricsManager *metrics.Manager
 	logger         zerolog.Logger
 }
@@ -32,9 +33,9 @@ func AlwaysNoError(interface{}) error {
 	return nil
 }
 
-func NewRPC(urls []string, logger zerolog.Logger, metricsManager *metrics.Manager) *RPC {
+func NewRPC(config configPkg.ChainConfig, logger zerolog.Logger, metricsManager *metrics.Manager) *RPC {
 	return &RPC{
-		urls:           urls,
+		config:         config,
 		metricsManager: metricsManager,
 		logger:         logger.With().Str("component", "rpc").Logger(),
 	}
@@ -183,12 +184,12 @@ func (rpc *RPC) Get(
 	target interface{},
 	predicate func(interface{}) error,
 ) error {
-	errors := make([]error, len(rpc.urls))
+	errors := make([]error, len(rpc.config.RPCEndpoints))
 
-	indexes := utils.MakeShuffledArray(len(rpc.urls))
+	indexes := utils.MakeShuffledArray(len(rpc.config.RPCEndpoints))
 
 	for _, index := range indexes {
-		lcd := rpc.urls[index]
+		lcd := rpc.config.RPCEndpoints[index]
 
 		fullURL := lcd + url
 		rpc.logger.Trace().Str("url", fullURL).Msg("Trying making request to LCD")
@@ -220,7 +221,7 @@ func (rpc *RPC) Get(
 	var sb strings.Builder
 
 	sb.WriteString("All LCD requests failed:\n")
-	for index, nodeURL := range rpc.urls {
+	for index, nodeURL := range rpc.config.RPCEndpoints {
 		sb.WriteString(fmt.Sprintf("#%d: %s -> %s\n", index+1, nodeURL, errors[index]))
 	}
 
@@ -257,7 +258,7 @@ func (rpc *RPC) GetFull(
 	res, err := client.Do(req)
 	if err != nil {
 		rpc.logger.Warn().Str("url", fullURL).Err(err).Msg("Query failed")
-		rpc.metricsManager.LogTendermintQuery(queryInfo)
+		rpc.metricsManager.LogTendermintQuery(rpc.config.Name, queryInfo)
 		return err
 	}
 	defer res.Body.Close()
@@ -265,7 +266,7 @@ func (rpc *RPC) GetFull(
 	rpc.logger.Debug().Str("url", url).Dur("duration", time.Since(start)).Msg("Query is finished")
 
 	queryInfo.Success = true
-	rpc.metricsManager.LogTendermintQuery(queryInfo)
+	rpc.metricsManager.LogTendermintQuery(rpc.config.Name, queryInfo)
 
 	return json.NewDecoder(res.Body).Decode(target)
 }

@@ -3,7 +3,7 @@ package tendermint
 import (
 	"context"
 	"encoding/json"
-	"main/pkg/config"
+	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/metrics"
 	"reflect"
@@ -20,7 +20,7 @@ import (
 
 type WebsocketClient struct {
 	logger         zerolog.Logger
-	config         *config.Config
+	config         configPkg.ChainConfig
 	metricsManager *metrics.Manager
 	url            string
 	client         *tmClient.WSClient
@@ -33,14 +33,14 @@ type WebsocketClient struct {
 func NewWebsocketClient(
 	logger zerolog.Logger,
 	url string,
-	config *config.Config,
+	config configPkg.ChainConfig,
 	metricsManager *metrics.Manager,
 ) *WebsocketClient {
 	return &WebsocketClient{
 		logger: logger.With().
 			Str("component", "tendermint_ws_client").
 			Str("url", url).
-			Str("chain", config.ChainConfig.Name).
+			Str("chain", config.Name).
 			Logger(),
 		url:            url,
 		config:         config,
@@ -64,7 +64,7 @@ func (t *WebsocketClient) Listen() {
 	)
 
 	client.OnReconnect(func() {
-		t.metricsManager.LogNodeReconnect(t.url)
+		t.metricsManager.LogNodeReconnect(t.config.Name, t.url)
 		t.logger.Info().Msg("Reconnecting...")
 		t.SubscribeToUpdates()
 	})
@@ -89,7 +89,7 @@ func (t *WebsocketClient) Listen() {
 
 func (t *WebsocketClient) ConnectAndListen() {
 	t.active = false
-	t.metricsManager.LogNodeConnection(t.url, false)
+	t.metricsManager.LogNodeConnection(t.config.Name, t.url, false)
 
 	for {
 		if err := t.client.Start(); err != nil {
@@ -99,7 +99,7 @@ func (t *WebsocketClient) ConnectAndListen() {
 		} else {
 			t.logger.Debug().Msg("Connected to a node")
 			t.active = true
-			t.metricsManager.LogNodeConnection(t.url, true)
+			t.metricsManager.LogNodeConnection(t.config.Name, t.url, true)
 			break
 		}
 	}
@@ -120,7 +120,7 @@ func (t *WebsocketClient) Reconnect() {
 		return
 	}
 
-	t.metricsManager.LogNodeReconnect(t.url)
+	t.metricsManager.LogNodeReconnect(t.config.Name, t.url)
 
 	if err := t.client.Stop(); err != nil {
 		t.logger.Warn().Err(err).Msg("Error stopping the node")
@@ -141,7 +141,7 @@ func (t *WebsocketClient) Stop() {
 }
 
 func (t *WebsocketClient) ProcessEvent(event rpcTypes.RPCResponse) {
-	t.metricsManager.LogWSEvent(t.url)
+	t.metricsManager.LogWSEvent(t.config.Name, t.url)
 
 	if event.Error != nil && event.Error.Message != "" {
 		t.logger.Error().Str("msg", event.Error.Error()).Msg("Got error in RPC response")

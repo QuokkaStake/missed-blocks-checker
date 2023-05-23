@@ -1,6 +1,7 @@
 package tendermint
 
 import (
+	configPkg "main/pkg/config"
 	"main/pkg/metrics"
 	"main/pkg/types"
 	"sync"
@@ -15,8 +16,8 @@ type RPCManager struct {
 	rpc *RPC
 }
 
-func NewRPCManager(urls []string, logger zerolog.Logger, metricsManager *metrics.Manager) *RPCManager {
-	rpc := NewRPC(urls, logger, metricsManager)
+func NewRPCManager(config configPkg.ChainConfig, logger zerolog.Logger, metricsManager *metrics.Manager) *RPCManager {
+	rpc := NewRPC(config, logger, metricsManager)
 	return &RPCManager{rpc: rpc}
 }
 
