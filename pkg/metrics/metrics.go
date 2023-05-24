@@ -98,7 +98,7 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 	}
 }
 
-func (m *Manager) SetDefaultMetrics(chain configPkg.ChainConfig) {
+func (m *Manager) SetDefaultMetrics(chain *configPkg.ChainConfig) {
 	m.reportsCounter.
 		With(prometheus.Labels{"chain": chain.Name}).
 		Add(0)

@@ -26,7 +26,7 @@ type Reporter struct {
 
 	TelegramBot *tele.Bot
 	Logger      zerolog.Logger
-	Config      config.ChainConfig
+	Config      *config.ChainConfig
 	Manager     *statePkg.Manager
 }
 
@@ -35,7 +35,7 @@ const (
 )
 
 func NewReporter(
-	chainConfig config.ChainConfig,
+	chainConfig *config.ChainConfig,
 	logger zerolog.Logger,
 	manager *statePkg.Manager,
 ) *Reporter {

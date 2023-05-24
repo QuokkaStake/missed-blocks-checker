@@ -20,7 +20,7 @@ import (
 
 type WebsocketClient struct {
 	logger         zerolog.Logger
-	config         configPkg.ChainConfig
+	config         *configPkg.ChainConfig
 	metricsManager *metrics.Manager
 	url            string
 	client         *tmClient.WSClient
@@ -33,7 +33,7 @@ type WebsocketClient struct {
 func NewWebsocketClient(
 	logger zerolog.Logger,
 	url string,
-	config configPkg.ChainConfig,
+	config *configPkg.ChainConfig,
 	metricsManager *metrics.Manager,
 ) *WebsocketClient {
 	return &WebsocketClient{

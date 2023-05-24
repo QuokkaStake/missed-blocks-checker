@@ -15,14 +15,14 @@ import (
 
 type Manager struct {
 	logger      zerolog.Logger
-	config      configPkg.ChainConfig
+	config      *configPkg.ChainConfig
 	httpManager *tendermint.RPCManager
 	converter   *converterPkg.Converter
 }
 
 func NewManager(
 	logger zerolog.Logger,
-	config configPkg.ChainConfig,
+	config *configPkg.ChainConfig,
 	httpManager *tendermint.RPCManager,
 ) *Manager {
 	return &Manager{

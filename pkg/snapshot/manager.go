@@ -9,13 +9,13 @@ import (
 
 type Manager struct {
 	logger zerolog.Logger
-	config configPkg.ChainConfig
+	config *configPkg.ChainConfig
 
 	olderSnapshot *Info
 	newerSnapshot *Info
 }
 
-func NewManager(logger zerolog.Logger, config configPkg.ChainConfig) *Manager {
+func NewManager(logger zerolog.Logger, config *configPkg.ChainConfig) *Manager {
 	return &Manager{
 		logger: logger.With().Str("component", "state_manager").Logger(),
 		config: config,

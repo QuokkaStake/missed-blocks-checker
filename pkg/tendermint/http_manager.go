@@ -16,7 +16,7 @@ type RPCManager struct {
 	rpc *RPC
 }
 
-func NewRPCManager(config configPkg.ChainConfig, logger zerolog.Logger, metricsManager *metrics.Manager) *RPCManager {
+func NewRPCManager(config *configPkg.ChainConfig, logger zerolog.Logger, metricsManager *metrics.Manager) *RPCManager {
 	rpc := NewRPC(config, logger, metricsManager)
 	return &RPCManager{rpc: rpc}
 }

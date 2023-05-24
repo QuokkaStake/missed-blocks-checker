@@ -24,7 +24,7 @@ import (
 )
 
 type RPC struct {
-	config         configPkg.ChainConfig
+	config         *configPkg.ChainConfig
 	metricsManager *metrics.Manager
 	logger         zerolog.Logger
 }
@@ -33,7 +33,7 @@ func AlwaysNoError(interface{}) error {
 	return nil
 }
 
-func NewRPC(config configPkg.ChainConfig, logger zerolog.Logger, metricsManager *metrics.Manager) *RPC {
+func NewRPC(config *configPkg.ChainConfig, logger zerolog.Logger, metricsManager *metrics.Manager) *RPC {
 	return &RPC{
 		config:         config,
 		metricsManager: metricsManager,

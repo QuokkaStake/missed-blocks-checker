@@ -225,7 +225,7 @@ func (s *State) GetBlockTime() time.Duration {
 
 func (s *State) GetTimeTillJail(
 	validator *types.Validator,
-	chainConfig config.ChainConfig,
+	chainConfig *config.ChainConfig,
 ) (time.Duration, bool) {
 	validator, found := s.GetValidator(validator.OperatorAddress)
 	if !found {

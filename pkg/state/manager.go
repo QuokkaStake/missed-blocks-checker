@@ -15,7 +15,7 @@ import (
 
 type Manager struct {
 	logger          zerolog.Logger
-	config          configPkg.ChainConfig
+	config          *configPkg.ChainConfig
 	metricsManager  *metrics.Manager
 	snapshotManager *snapshotPkg.Manager
 	state           *State
@@ -25,7 +25,7 @@ type Manager struct {
 
 func NewManager(
 	logger zerolog.Logger,
-	chainConfig configPkg.ChainConfig,
+	chainConfig *configPkg.ChainConfig,
 	metricsManager *metrics.Manager,
 	snapshotManager *snapshotPkg.Manager,
 	database *databasePkg.Database,

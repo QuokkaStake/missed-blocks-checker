@@ -12,7 +12,7 @@ import (
 
 type Config struct {
 	LogConfig      LogConfig      `toml:"log"`
-	ChainConfig    ChainConfig    `toml:"chain"`
+	ChainConfigs   []*ChainConfig `toml:"chains"`
 	DatabaseConfig DatabaseConfig `toml:"database"`
 	MetricsConfig  MetricsConfig  `toml:"metrics"`
 }
@@ -146,8 +146,14 @@ type LogConfig struct {
 }
 
 func (config *Config) Validate() error {
-	if err := config.ChainConfig.Validate(); err != nil {
-		return fmt.Errorf("error in chain config: %s", err)
+	if len(config.ChainConfigs) == 0 {
+		return fmt.Errorf("no chains specified")
+	}
+
+	for index, chainConfig := range config.ChainConfigs {
+		if err := chainConfig.Validate(); err != nil {
+			return fmt.Errorf("error in chain config #%d: %s", index, err)
+		}
 	}
 
 	if err := config.DatabaseConfig.Validate(); err != nil {

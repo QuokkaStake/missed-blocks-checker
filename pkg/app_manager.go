@@ -21,7 +21,7 @@ import (
 
 type AppManager struct {
 	Logger                zerolog.Logger
-	Config                configPkg.ChainConfig
+	Config                *configPkg.ChainConfig
 	RPCManager            *tendermint.RPCManager
 	Database              *databasePkg.Database
 	DataManager           *dataPkg.Manager
@@ -36,22 +36,27 @@ type AppManager struct {
 
 func NewAppManager(
 	logger zerolog.Logger,
-	config configPkg.ChainConfig,
+	config *configPkg.ChainConfig,
 	metricsManager *metrics.Manager,
 	database *databasePkg.Database,
 ) *AppManager {
-	rpcManager := tendermint.NewRPCManager(config, logger, metricsManager)
-	dataManager := dataPkg.NewManager(logger, config, rpcManager)
-	snapshotManager := snapshotPkg.NewManager(logger, config)
-	stateManager := statePkg.NewManager(logger, config, metricsManager, snapshotManager, database)
-	websocketManager := tendermint.NewWebsocketManager(logger, config, metricsManager)
+	managerLogger := logger.
+		With().
+		Str("chain", config.Name).
+		Logger()
+
+	rpcManager := tendermint.NewRPCManager(config, managerLogger, metricsManager)
+	dataManager := dataPkg.NewManager(managerLogger, config, rpcManager)
+	snapshotManager := snapshotPkg.NewManager(managerLogger, config)
+	stateManager := statePkg.NewManager(managerLogger, config, metricsManager, snapshotManager, database)
+	websocketManager := tendermint.NewWebsocketManager(managerLogger, config, metricsManager)
 
 	reporters := []reportersPkg.Reporter{
-		telegram.NewReporter(config, logger, stateManager),
+		telegram.NewReporter(config, managerLogger, stateManager),
 	}
 
 	return &AppManager{
-		Logger:                logger,
+		Logger:                managerLogger,
 		Config:                config,
 		RPCManager:            rpcManager,
 		DataManager:           dataManager,
@@ -370,7 +375,7 @@ func (a *AppManager) PopulateActiveSet() {
 
 	chunks := utils.SplitIntoChunks(missing, int(constants.ActiveSetsBulkQueryCount))
 	for _, chunk := range chunks {
-		count := a.StateManager.GetBlocksCountSinceLatest(a.Config.StoreBlocks)
+		count := a.StateManager.GetActiveSetsCountSinceLatest(a.Config.StoreBlocks)
 
 		a.Logger.Info().
 			Int64("count", count).

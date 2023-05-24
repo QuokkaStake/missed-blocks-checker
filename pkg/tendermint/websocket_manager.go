@@ -53,7 +53,7 @@ type WebsocketManager struct {
 
 func NewWebsocketManager(
 	logger zerolog.Logger,
-	config config.ChainConfig,
+	config *config.ChainConfig,
 	metricsManager *metrics.Manager,
 ) *WebsocketManager {
 	nodes := make([]*WebsocketClient, len(config.RPCEndpoints))

@@ -20,7 +20,7 @@ func NewSnapshot(entries map[string]Entry) Snapshot {
 	return Snapshot{Entries: entries}
 }
 
-func (snapshot *Snapshot) GetReport(olderSnapshot Snapshot, chainConfig config.ChainConfig) *report.Report {
+func (snapshot *Snapshot) GetReport(olderSnapshot Snapshot, chainConfig *config.ChainConfig) *report.Report {
 	var entries []report.Entry
 
 	for valoper, entry := range snapshot.Entries {
