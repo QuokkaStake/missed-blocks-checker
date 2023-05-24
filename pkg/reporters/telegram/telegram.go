@@ -89,7 +89,7 @@ func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.Entry) string {
 		timeToJailStr := ""
 
 		if entry.IsIncreasing() {
-			if timeToJail, ok := reporter.Manager.GetTimeTillJail(entry.Validator); ok {
+			if timeToJail, ok := reporter.Manager.GetTimeTillJail(entry.Validator, entry.MissedBlocksAfter); ok {
 				timeToJailStr = fmt.Sprintf(" (%s till jail)", timeToJail.Round(time.Second))
 			} else {
 				reporter.Logger.Warn().Msg("Could not calculate time to jail")

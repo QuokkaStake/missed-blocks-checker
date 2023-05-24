@@ -42,7 +42,7 @@ func (c *Converter) GetConsensusAddress(validator stakingTypes.Validator) string
 
 func (c *Converter) ValidatorFromCosmosValidator(
 	validator stakingTypes.Validator,
-	signingInfo slashingTypes.ValidatorSigningInfo,
+	signingInfo *slashingTypes.ValidatorSigningInfo,
 ) *types.Validator {
 	if err := validator.UnpackInterfaces(c.parseCodec); err != nil {
 		panic(err)
@@ -58,6 +58,15 @@ func (c *Converter) ValidatorFromCosmosValidator(
 		panic(err)
 	}
 
+	var valSigningInfo *types.SigningInfo
+
+	if signingInfo != nil {
+		valSigningInfo = &types.SigningInfo{
+			MissedBlocksCounter: signingInfo.MissedBlocksCounter,
+			Tombstoned:          signingInfo.Tombstoned,
+		}
+	}
+
 	return &types.Validator{
 		Moniker:                 validator.Description.Moniker,
 		Description:             validator.Description.Details,
@@ -70,5 +79,6 @@ func (c *Converter) ValidatorFromCosmosValidator(
 		OperatorAddress:         validator.OperatorAddress,
 		Status:                  int32(validator.Status),
 		Jailed:                  validator.Jailed,
+		SigningInfo:             valSigningInfo,
 	}
 }

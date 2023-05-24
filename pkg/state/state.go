@@ -201,6 +201,15 @@ func (s *State) GetValidatorMissedBlocks(validator *types.Validator, blocksToChe
 		}
 	}
 
+	// if a validator was not active during the whole period,
+	// we do not know for sure the missed blocks counter for this validator
+	// and therefore are taking it from signing-info
+	if signatureInfo.NotActive > 0 && validator.SigningInfo != nil {
+		signatureInfo.NoSignature = 0
+		signatureInfo.NotSigned = validator.SigningInfo.MissedBlocksCounter
+		signatureInfo.Signed = blocksToCheck - validator.SigningInfo.MissedBlocksCounter
+	}
+
 	return signatureInfo
 }
 
@@ -226,15 +235,15 @@ func (s *State) GetBlockTime() time.Duration {
 func (s *State) GetTimeTillJail(
 	validator *types.Validator,
 	chainConfig *config.ChainConfig,
+	missedBlocks int64,
 ) (time.Duration, bool) {
 	validator, found := s.GetValidator(validator.OperatorAddress)
 	if !found {
 		return 0, false
 	}
 
-	missedBlocks := s.GetValidatorMissedBlocks(validator, chainConfig.StoreBlocks)
 	needToSign := chainConfig.GetBlocksSignCount()
-	blocksToJail := needToSign - missedBlocks.GetNotSigned()
+	blocksToJail := needToSign - missedBlocks
 	blockTime := s.GetBlockTime()
 	nanoToJail := blockTime.Nanoseconds() * blocksToJail
 	return time.Duration(nanoToJail) * time.Nanosecond, true

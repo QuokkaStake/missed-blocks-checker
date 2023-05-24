@@ -4,6 +4,11 @@ import (
 	"main/pkg/constants"
 )
 
+type SigningInfo struct {
+	Tombstoned          bool
+	MissedBlocksCounter int64
+}
+
 type Validator struct {
 	Moniker                 string
 	Description             string
@@ -16,6 +21,7 @@ type Validator struct {
 	Commission              float64
 	Status                  int32
 	Jailed                  bool
+	SigningInfo             *SigningInfo
 }
 
 func (v *Validator) Active() bool {

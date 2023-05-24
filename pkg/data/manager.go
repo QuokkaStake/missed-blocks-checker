@@ -81,7 +81,7 @@ func (m *Manager) GetValidators() (types.Validators, error) {
 				Msg("Could not find signing info for validator")
 		}
 
-		validator := m.converter.ValidatorFromCosmosValidator(validatorRaw, signingInfo)
+		validator := m.converter.ValidatorFromCosmosValidator(validatorRaw, &signingInfo)
 
 		validators[index] = validator
 	}
@@ -113,9 +113,9 @@ func (m *Manager) GetValidatorsAndEachSigningInfo() (types.Validators, error) {
 					Msg("Error fetching validator signing info")
 			}
 
-			var signingInfo slashingTypes.ValidatorSigningInfo
+			var signingInfo *slashingTypes.ValidatorSigningInfo
 			if signingInfoResponse != nil {
-				signingInfo = signingInfoResponse.ValSigningInfo
+				signingInfo = &signingInfoResponse.ValSigningInfo
 			}
 
 			validator := m.converter.ValidatorFromCosmosValidator(validatorRaw, signingInfo)
