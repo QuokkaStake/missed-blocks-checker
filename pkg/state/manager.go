@@ -170,10 +170,6 @@ func (m *Manager) HasBlockAtHeight(height int64) bool {
 	return m.state.HasBlockAtHeight(height)
 }
 
-func (m *Manager) HasActiveSetAtHeight(height int64) bool {
-	return m.state.HasActiveSetAtHeight(height)
-}
-
 func (m *Manager) GetBlocksCountSinceLatest(expected int64) int64 {
 	return m.state.GetBlocksCountSinceLatest(expected)
 }

@@ -68,10 +68,6 @@ func (s *State) HasBlockAtHeight(height int64) bool {
 	return s.blocks.HasBlockAtHeight(height)
 }
 
-func (s *State) HasActiveSetAtHeight(height int64) bool {
-	return s.historicalValidators.HasSetAtBlock(height)
-}
-
 func (s *State) TrimBlocksBefore(trimHeight int64) {
 	s.blocks.TrimBefore(trimHeight)
 }
@@ -165,8 +161,8 @@ func (s *State) IsValidatorActiveAtBlock(validator *types.Validator, height int6
 }
 
 func (s *State) GetValidator(operatorAddress string) (*types.Validator, bool) {
-	s.mutex.RLock()
-	defer s.mutex.RUnlock()
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 
 	validator, found := s.validators[operatorAddress]
 	return validator, found

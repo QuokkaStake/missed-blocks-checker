@@ -56,8 +56,8 @@ func (b *Blocks) SetBlocks(blocks map[int64]*types.Block) {
 }
 
 func (b *Blocks) GetBlock(height int64) (*types.Block, bool) {
-	b.mutex.RLock()
-	defer b.mutex.RUnlock()
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
 
 	block, ok := b.blocks[height]
 	return block, ok
@@ -71,8 +71,8 @@ func (b *Blocks) GetLatestBlock() *types.Block {
 }
 
 func (b *Blocks) GetEarliestBlock() *types.Block {
-	b.mutex.RLock()
-	defer b.mutex.RUnlock()
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
 
 	earliestHeight := b.lastHeight
 
