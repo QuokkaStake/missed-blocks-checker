@@ -1,11 +1,12 @@
 package pkg
 
 import (
-	"github.com/rs/zerolog"
 	configPkg "main/pkg/config"
 	databasePkg "main/pkg/database"
 	loggerPkg "main/pkg/logger"
 	"main/pkg/metrics"
+
+	"github.com/rs/zerolog"
 )
 
 type App struct {

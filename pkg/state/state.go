@@ -233,15 +233,9 @@ func (s *State) GetBlockTime() time.Duration {
 }
 
 func (s *State) GetTimeTillJail(
-	validator *types.Validator,
 	chainConfig *config.ChainConfig,
 	missedBlocks int64,
 ) (time.Duration, bool) {
-	validator, found := s.GetValidator(validator.OperatorAddress)
-	if !found {
-		return 0, false
-	}
-
 	needToSign := chainConfig.GetBlocksSignCount()
 	blocksToJail := needToSign - missedBlocks
 	blockTime := s.GetBlockTime()
