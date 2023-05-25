@@ -35,6 +35,7 @@ func (reporter *Reporter) HandleListValidators(c tele.Context) error {
 	})
 
 	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Validators' status on %s\n\n", reporter.Config.GetName()))
 
 	for _, validator := range activeValidators {
 		link := reporter.Config.ExplorerConfig.GetValidatorLink(validator)

@@ -7,6 +7,7 @@ import (
 
 type ChainConfig struct {
 	Name                 string    `toml:"name"`
+	PrettyName           string    `toml:"pretty-name"`
 	RPCEndpoints         []string  `toml:"rpc-endpoints"`
 	StoreBlocks          int64     `toml:"store-blocks" default:"20000"`
 	BlocksWindow         int64     `toml:"blocks-window" default:"10000"`
@@ -18,11 +19,23 @@ type ChainConfig struct {
 	TelegramConfig     TelegramConfig     `toml:"telegram"`
 }
 
+func (c *ChainConfig) GetName() string {
+	if c.PrettyName != "" {
+		return c.PrettyName
+	}
+
+	return c.Name
+}
+
 func (c *ChainConfig) GetBlocksSignCount() int64 {
 	return int64(float64(c.BlocksWindow) * (1 - c.MinSignedPerWindow))
 }
 
 func (c *ChainConfig) Validate() error {
+	if c.Name == "" {
+		return fmt.Errorf("chain name is not provided")
+	}
+
 	if len(c.RPCEndpoints) == 0 {
 		return fmt.Errorf("chain has 0 RPC endpoints")
 	}

@@ -41,6 +41,7 @@ func (reporter *Reporter) HandleMissingValidators(c tele.Context) error {
 	})
 
 	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Validators missing blocks on %s\n\n", reporter.Config.GetName()))
 
 	for _, validator := range activeValidators {
 		link := reporter.Config.ExplorerConfig.GetValidatorLink(validator)

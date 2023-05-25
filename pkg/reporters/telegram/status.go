@@ -19,7 +19,10 @@ func (reporter *Reporter) HandleStatus(c tele.Context) error {
 	}
 
 	var sb strings.Builder
-	sb.WriteString("You are subscribed to the following validators' updates:\n")
+	sb.WriteString(fmt.Sprintf(
+		"You are subscribed to the following validators' updates on %s:\n",
+		reporter.Config.GetName(),
+	))
 
 	for _, operatorAddress := range operatorAddresses {
 		validator, found := reporter.Manager.GetValidator(operatorAddress)
