@@ -47,12 +47,12 @@ func NewAppManager(
 
 	rpcManager := tendermint.NewRPCManager(config, managerLogger, metricsManager)
 	dataManager := dataPkg.NewManager(managerLogger, config, rpcManager)
-	snapshotManager := snapshotPkg.NewManager(managerLogger, config)
+	snapshotManager := snapshotPkg.NewManager(managerLogger, config, metricsManager)
 	stateManager := statePkg.NewManager(managerLogger, config, metricsManager, snapshotManager, database)
 	websocketManager := tendermint.NewWebsocketManager(managerLogger, config, metricsManager)
 
 	reporters := []reportersPkg.Reporter{
-		telegram.NewReporter(config, managerLogger, stateManager),
+		telegram.NewReporter(config, managerLogger, stateManager, metricsManager),
 	}
 
 	return &AppManager{
@@ -190,8 +190,6 @@ func (a *AppManager) ListenForEvents() {
 				a.Logger.Info().Msg("Report is empty, no events to send.")
 				continue
 			}
-
-			a.MetricsManager.LogReport(a.Config.Name, report)
 
 			for _, entry := range report.Entries {
 				a.Logger.Info().

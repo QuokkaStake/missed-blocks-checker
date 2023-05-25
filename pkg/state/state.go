@@ -184,6 +184,8 @@ func (s *State) GetValidatorMissedBlocks(validator *types.Validator, blocksToChe
 		if !s.IsValidatorActiveAtBlock(validator, height) {
 			signatureInfo.NotActive++
 			continue
+		} else {
+			signatureInfo.Active++
 		}
 
 		if block.Proposer == validator.ConsensusAddressHex {

@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
-	snapshotPkg "main/pkg/snapshot"
+	"main/pkg/snapshot"
 	"main/pkg/types"
 	migrations "main/sql"
 	"sync"
@@ -504,14 +504,14 @@ func (d *Database) SetValueByKey(chain string, key string, data []byte) error {
 	return nil
 }
 
-func (d *Database) GetLastSnapshot(chain string) (*snapshotPkg.Info, error) {
+func (d *Database) GetLastSnapshot(chain string) (*snapshot.Info, error) {
 	rawData, err := d.GetValueByKey(chain, "snapshot")
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Could not get snapshot")
 		return nil, err
 	}
 
-	var snapshot snapshotPkg.Info
+	var snapshot snapshot.Info
 	if err := json.Unmarshal(rawData, &snapshot); err != nil {
 		d.logger.Error().Err(err).Msg("Could not unmarshal snapshot")
 		return nil, err
@@ -520,7 +520,7 @@ func (d *Database) GetLastSnapshot(chain string) (*snapshotPkg.Info, error) {
 	return &snapshot, nil
 }
 
-func (d *Database) SetSnapshot(chain string, snapshot *snapshotPkg.Info) error {
+func (d *Database) SetSnapshot(chain string, snapshot *snapshot.Info) error {
 	rawData, err := json.Marshal(snapshot)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Could not marshal snapshot")

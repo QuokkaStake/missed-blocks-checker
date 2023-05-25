@@ -5,6 +5,7 @@ type SignatureInto struct {
 	NoSignature int64
 	NotSigned   int64
 	NotActive   int64
+	Active      int64
 	Proposed    int64
 }
 

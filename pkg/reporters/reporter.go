@@ -2,12 +2,13 @@ package reporters
 
 import (
 	"main/pkg/constants"
-	statePkg "main/pkg/report"
+	reportPkg "main/pkg/report"
 )
 
 type Reporter interface {
 	Init()
 	Name() constants.ReporterName
 	Enabled() bool
-	Send(report *statePkg.Report) error
+	Send(*reportPkg.Report) error
+	SerializeEntry(reportPkg.Entry) string
 }

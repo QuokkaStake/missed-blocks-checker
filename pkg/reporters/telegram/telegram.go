@@ -5,6 +5,7 @@ import (
 	"html"
 	"main/pkg/constants"
 	"main/pkg/events"
+	"main/pkg/metrics"
 	reportPkg "main/pkg/report"
 	statePkg "main/pkg/state"
 	"main/pkg/types"
@@ -24,10 +25,11 @@ type Reporter struct {
 	Chat   int64
 	Admins []int64
 
-	TelegramBot *tele.Bot
-	Logger      zerolog.Logger
-	Config      *config.ChainConfig
-	Manager     *statePkg.Manager
+	TelegramBot    *tele.Bot
+	Logger         zerolog.Logger
+	Config         *config.ChainConfig
+	Manager        *statePkg.Manager
+	MetricsManager *metrics.Manager
 }
 
 const (
@@ -38,14 +40,16 @@ func NewReporter(
 	chainConfig *config.ChainConfig,
 	logger zerolog.Logger,
 	manager *statePkg.Manager,
+	metricsManager *metrics.Manager,
 ) *Reporter {
 	return &Reporter{
-		Token:   chainConfig.TelegramConfig.Token,
-		Chat:    chainConfig.TelegramConfig.Chat,
-		Admins:  chainConfig.TelegramConfig.Admins,
-		Config:  chainConfig,
-		Logger:  logger.With().Str("component", "telegram_reporter").Logger(),
-		Manager: manager,
+		Token:          chainConfig.TelegramConfig.Token,
+		Chat:           chainConfig.TelegramConfig.Chat,
+		Admins:         chainConfig.TelegramConfig.Admins,
+		Config:         chainConfig,
+		Logger:         logger.With().Str("component", "telegram_reporter").Logger(),
+		Manager:        manager,
+		MetricsManager: metricsManager,
 	}
 }
 
@@ -134,6 +138,8 @@ func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.Entry) string {
 }
 
 func (reporter *Reporter) Send(report *reportPkg.Report) error {
+	reporter.MetricsManager.LogReport(reporter.Config.Name, report)
+
 	var sb strings.Builder
 
 	for _, entry := range report.Entries {

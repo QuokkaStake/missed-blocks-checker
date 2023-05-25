@@ -1,24 +1,30 @@
 package snapshot
 
 import (
-	configPkg "main/pkg/config"
-	reportPkg "main/pkg/report"
-
 	"github.com/rs/zerolog"
+	configPkg "main/pkg/config"
+	"main/pkg/metrics"
+	reportPkg "main/pkg/report"
 )
 
 type Manager struct {
-	logger zerolog.Logger
-	config *configPkg.ChainConfig
+	logger         zerolog.Logger
+	config         *configPkg.ChainConfig
+	metricsManager *metrics.Manager
 
 	olderSnapshot *Info
 	newerSnapshot *Info
 }
 
-func NewManager(logger zerolog.Logger, config *configPkg.ChainConfig) *Manager {
+func NewManager(
+	logger zerolog.Logger,
+	config *configPkg.ChainConfig,
+	metricsManager *metrics.Manager,
+) *Manager {
 	return &Manager{
-		logger: logger.With().Str("component", "state_manager").Logger(),
-		config: config,
+		logger:         logger.With().Str("component", "state_manager").Logger(),
+		config:         config,
+		metricsManager: metricsManager,
 	}
 }
 
@@ -28,6 +34,10 @@ func (m *Manager) CommitNewSnapshot(height int64, snapshot Snapshot) {
 	m.newerSnapshot = &Info{
 		Snapshot: snapshot,
 		Height:   height,
+	}
+
+	for _, entry := range snapshot.Entries {
+		m.metricsManager.LogValidatorStats(m.config.Name, entry.Validator, entry.SignatureInfo)
 	}
 }
 

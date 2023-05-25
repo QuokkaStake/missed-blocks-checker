@@ -36,6 +36,12 @@ type Manager struct {
 
 	reporterEnabledGauge *prometheus.GaugeVec
 
+	missingBlocksGauge *prometheus.GaugeVec
+	activeBlocksGauge  *prometheus.GaugeVec
+	isActiveGauge      *prometheus.GaugeVec
+	isJailedGauge      *prometheus.GaugeVec
+	isTombstonedGauge  *prometheus.GaugeVec
+
 	appVersionGauge *prometheus.GaugeVec
 }
 
@@ -95,6 +101,26 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 			Name: constants.PrometheusMetricsPrefix + "reconnects_total",
 			Help: "Node reconnects count",
 		}, []string{"chain", "node"}),
+		missingBlocksGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
+			Name: constants.PrometheusMetricsPrefix + "missed_blocks",
+			Help: "Validators' missed blocks count",
+		}, []string{"chain", "moniker", "address"}),
+		activeBlocksGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
+			Name: constants.PrometheusMetricsPrefix + "active_blocks",
+			Help: "Count of each validator's blocks during which they were active",
+		}, []string{"chain", "moniker", "address"}),
+		isActiveGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
+			Name: constants.PrometheusMetricsPrefix + "active",
+			Help: "Whether the validator is active",
+		}, []string{"chain", "moniker", "address"}),
+		isJailedGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
+			Name: constants.PrometheusMetricsPrefix + "jailed",
+			Help: "Whether the validator is jailed",
+		}, []string{"chain", "moniker", "address"}),
+		isTombstonedGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
+			Name: constants.PrometheusMetricsPrefix + "tombstoned",
+			Help: "Whether the validator is tombstoned",
+		}, []string{"chain", "moniker", "address"}),
 	}
 }
 
@@ -232,4 +258,52 @@ func (m *Manager) LogNodeReconnect(chain string, node string) {
 	m.reconnectsCounter.
 		With(prometheus.Labels{"chain": chain, "node": node}).
 		Inc()
+}
+
+func (m *Manager) LogValidatorStats(
+	chain string,
+	validator *types.Validator,
+	signatureInfo types.SignatureInto,
+) {
+	m.missingBlocksGauge.
+		With(prometheus.Labels{
+			"chain":   chain,
+			"moniker": validator.Moniker,
+			"address": validator.OperatorAddress,
+		}).
+		Set(float64(signatureInfo.GetNotSigned()))
+
+	m.activeBlocksGauge.
+		With(prometheus.Labels{
+			"chain":   chain,
+			"moniker": validator.Moniker,
+			"address": validator.OperatorAddress,
+		}).
+		Set(float64(signatureInfo.Active))
+
+	m.isActiveGauge.
+		With(prometheus.Labels{
+			"chain":   chain,
+			"moniker": validator.Moniker,
+			"address": validator.OperatorAddress,
+		}).
+		Set(utils.BoolToFloat64(validator.Active()))
+
+	m.isJailedGauge.
+		With(prometheus.Labels{
+			"chain":   chain,
+			"moniker": validator.Moniker,
+			"address": validator.OperatorAddress,
+		}).
+		Set(utils.BoolToFloat64(validator.Jailed))
+
+	if validator.SigningInfo != nil {
+		m.isTombstonedGauge.
+			With(prometheus.Labels{
+				"chain":   chain,
+				"moniker": validator.Moniker,
+				"address": validator.OperatorAddress,
+			}).
+			Set(utils.BoolToFloat64(validator.SigningInfo.Tombstoned))
+	}
 }
