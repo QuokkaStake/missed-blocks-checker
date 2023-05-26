@@ -2,12 +2,10 @@ package telegram
 
 import (
 	"fmt"
+	tele "gopkg.in/telebot.v3"
 	"main/pkg/snapshot"
 	"main/pkg/utils"
 	"sort"
-	"strings"
-
-	tele "gopkg.in/telebot.v3"
 )
 
 func (reporter *Reporter) HandleListValidators(c tele.Context) error {
@@ -21,10 +19,6 @@ func (reporter *Reporter) HandleListValidators(c tele.Context) error {
 		return v.Validator.Active()
 	})
 
-	if len(activeValidatorsEntries) == 0 {
-		return reporter.BotReply(c, "There are no active validators!")
-	}
-
 	sort.Slice(activeValidatorsEntries, func(firstIndex, secondIndex int) bool {
 		first := activeValidatorsEntries[firstIndex]
 		second := activeValidatorsEntries[secondIndex]
@@ -32,21 +26,26 @@ func (reporter *Reporter) HandleListValidators(c tele.Context) error {
 		return first.SignatureInfo.GetNotSigned() < second.SignatureInfo.GetNotSigned()
 	})
 
-	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Validators' status on %s\n\n", reporter.Config.GetName()))
+	render := missingValidatorsRender{
+		Config: reporter.Config,
+		Validators: utils.Map(activeValidatorsEntries, func(v snapshot.Entry) missingValidatorsEntry {
+			link := reporter.Config.ExplorerConfig.GetValidatorLink(v.Validator)
+			group, _ := reporter.Config.MissedBlocksGroups.GetGroup(v.SignatureInfo.GetNotSigned())
+			link.Text = fmt.Sprintf("%s %s", group.EmojiEnd, v.Validator.Moniker)
 
-	for _, validator := range activeValidatorsEntries {
-		link := reporter.Config.ExplorerConfig.GetValidatorLink(validator.Validator)
-		group, _ := reporter.Config.MissedBlocksGroups.GetGroup(validator.SignatureInfo.GetNotSigned())
-
-		sb.WriteString(fmt.Sprintf(
-			"<strong>%s %s:</strong> %d missed blocks (%.2f%%)\n",
-			group.EmojiEnd,
-			reporter.SerializeLink(link),
-			validator.SignatureInfo.GetNotSigned(),
-			float64(validator.SignatureInfo.GetNotSigned())/float64(reporter.Config.BlocksWindow)*100,
-		))
+			return missingValidatorsEntry{
+				Validator:    v.Validator,
+				Link:         link,
+				NotSigned:    v.SignatureInfo.GetNotSigned(),
+				BlocksWindow: reporter.Config.BlocksWindow,
+			}
+		}),
 	}
 
-	return reporter.BotReply(c, sb.String())
+	template, err := reporter.Render("Missing", render)
+	if err != nil {
+		return err
+	}
+
+	return reporter.BotReply(c, template)
 }

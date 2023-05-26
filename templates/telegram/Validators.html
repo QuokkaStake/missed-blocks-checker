@@ -1,0 +1,7 @@
+{{- if not .Validators }}
+There are no active validators on {{ .Config.GetName }}!
+{{- end }}
+<strong>Validators' status on {{ .Config.GetName }}:</strong>
+{{ range .Validators -}}
+<strong>{{ SerializeLink .Link }}</strong>: {{ .NotSigned }} missed blocks ({{ .FormatMissed }}%)
+{{ end }}

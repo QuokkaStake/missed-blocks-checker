@@ -104,7 +104,9 @@ func (reporter *Reporter) GetTemplate(name string) (*template.Template, error) {
 	reporter.Logger.Trace().Str("type", name).Msg("Loading template")
 
 	t, err := template.New(name+".html").
-		Funcs(template.FuncMap{}).
+		Funcs(template.FuncMap{
+			"SerializeLink": reporter.SerializeLink,
+		}).
 		ParseFS(templates.TemplatesFs, "telegram/"+name+".html")
 	if err != nil {
 		return nil, err
@@ -241,12 +243,12 @@ func (reporter *Reporter) SerializeDate(date time.Time) string {
 	return date.Format(time.RFC822)
 }
 
-func (reporter *Reporter) SerializeLink(link types.Link) string {
+func (reporter *Reporter) SerializeLink(link types.Link) template.HTML {
 	if link.Href == "" {
-		return link.Text
+		return template.HTML(link.Text)
 	}
 
-	return fmt.Sprintf("<a href='%s'>%s</a>", link.Href, link.Text)
+	return template.HTML(fmt.Sprintf("<a href='%s'>%s</a>", link.Href, link.Text))
 }
 
 func (reporter *Reporter) SerializeNotifiers(notifiers []string) string {
