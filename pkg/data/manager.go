@@ -72,7 +72,17 @@ func (m *Manager) GetValidators() (types.Validators, error) {
 		consensusAddr := m.converter.GetConsensusAddress(validatorRaw)
 
 		signingInfo, ok := utils.Find(signingInfoResponse.Info, func(i slashingTypes.ValidatorSigningInfo) bool {
-			return i.Address == consensusAddr
+			equal, compareErr := utils.CompareTwoBech32(i.Address, consensusAddr)
+			if compareErr != nil {
+				m.logger.Error().
+					Str("operator_address", validatorRaw.OperatorAddress).
+					Str("first", i.Address).
+					Str("second", consensusAddr).
+					Msg("Error converting bech32 address")
+				return false
+			}
+
+			return equal
 		})
 
 		if !ok {

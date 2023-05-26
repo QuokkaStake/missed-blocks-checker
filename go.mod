@@ -4,10 +4,12 @@ go 1.19
 
 require (
 	github.com/BurntSushi/toml v1.2.1
+	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/cosmos/cosmos-sdk v0.47.1
 	github.com/creasty/defaults v1.7.0
 	github.com/google/uuid v1.3.0
 	github.com/mattn/go-sqlite3 v1.14.9
+	github.com/prometheus/client_golang v1.14.0
 	github.com/rs/zerolog v1.29.0
 	github.com/spf13/cobra v1.6.1
 	github.com/tendermint/tendermint v0.35.9
@@ -88,7 +90,6 @@ require (
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/client_golang v1.14.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
