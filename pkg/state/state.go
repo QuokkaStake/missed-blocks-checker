@@ -108,7 +108,7 @@ func (s *State) AddNotifier(
 
 	notifiers, added := s.notifiers.AddNotifier(operatorAddress, reporter, notifier)
 	if added {
-		s.SetNotifiers(notifiers)
+		s.notifiers = notifiers
 	}
 
 	return added
@@ -124,7 +124,7 @@ func (s *State) RemoveNotifier(
 
 	notifiers, removed := s.notifiers.RemoveNotifier(operatorAddress, reporter, notifier)
 	if removed {
-		s.SetNotifiers(notifiers)
+		s.notifiers = notifiers
 	}
 
 	return removed
