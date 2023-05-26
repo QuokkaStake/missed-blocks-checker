@@ -2,10 +2,11 @@ package telegram
 
 import (
 	"fmt"
-	tele "gopkg.in/telebot.v3"
 	"main/pkg/snapshot"
 	"main/pkg/utils"
 	"sort"
+
+	tele "gopkg.in/telebot.v3"
 )
 
 func (reporter *Reporter) HandleMissingValidators(c tele.Context) error {
