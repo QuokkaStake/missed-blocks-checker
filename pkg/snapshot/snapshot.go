@@ -12,11 +12,25 @@ type Entry struct {
 	SignatureInfo types.SignatureInto
 }
 
-type Snapshot struct {
-	Entries map[string]Entry
+type Entries map[string]Entry
+
+func (e Entries) ToSlice() []Entry {
+	entries := make([]Entry, len(e))
+
+	index := 0
+	for _, entry := range e {
+		entries[index] = entry
+		index++
+	}
+
+	return entries
 }
 
-func NewSnapshot(entries map[string]Entry) Snapshot {
+type Snapshot struct {
+	Entries Entries
+}
+
+func NewSnapshot(entries Entries) Snapshot {
 	return Snapshot{Entries: entries}
 }
 

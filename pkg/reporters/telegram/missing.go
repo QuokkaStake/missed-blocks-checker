@@ -2,7 +2,7 @@ package telegram
 
 import (
 	"fmt"
-	"main/pkg/types"
+	"main/pkg/snapshot"
 	"main/pkg/utils"
 	"sort"
 	"strings"
@@ -16,44 +16,40 @@ func (reporter *Reporter) HandleMissingValidators(c tele.Context) error {
 		Str("text", c.Text()).
 		Msg("Got missing validators query")
 
-	allValidators := reporter.Manager.GetValidators().ToSlice()
-	activeValidators := utils.Filter(allValidators, func(v *types.Validator) bool {
-		if !v.Active() {
+	validatorEntries := reporter.Manager.GetSnapshot().Entries.ToSlice()
+	activeValidatorsEntries := utils.Filter(validatorEntries, func(v snapshot.Entry) bool {
+		if !v.Validator.Active() {
 			return false
 		}
 
-		signatureInfo := reporter.Manager.GetValidatorMissedBlocks(v)
-		group, _ := reporter.Config.MissedBlocksGroups.GetGroup(signatureInfo.GetNotSigned())
+		group, _ := reporter.Config.MissedBlocksGroups.GetGroup(v.SignatureInfo.GetNotSigned())
 		return group.Start > 0
 	})
 
-	if len(activeValidators) == 0 {
+	if len(activeValidatorsEntries) == 0 {
 		return reporter.BotReply(c, "There are no missing validators!")
 	}
 
-	sort.Slice(activeValidators, func(firstIndex, secondIndex int) bool {
-		first := activeValidators[firstIndex]
-		second := activeValidators[secondIndex]
-		firstSignature := reporter.Manager.GetValidatorMissedBlocks(first)
-		secondSignature := reporter.Manager.GetValidatorMissedBlocks(second)
+	sort.Slice(activeValidatorsEntries, func(firstIndex, secondIndex int) bool {
+		first := activeValidatorsEntries[firstIndex]
+		second := activeValidatorsEntries[secondIndex]
 
-		return firstSignature.GetNotSigned() < secondSignature.GetNotSigned()
+		return first.SignatureInfo.GetNotSigned() < second.SignatureInfo.GetNotSigned()
 	})
 
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("Validators missing blocks on %s\n\n", reporter.Config.GetName()))
 
-	for _, validator := range activeValidators {
-		link := reporter.Config.ExplorerConfig.GetValidatorLink(validator)
-		signatureInfo := reporter.Manager.GetValidatorMissedBlocks(validator)
-		group, _ := reporter.Config.MissedBlocksGroups.GetGroup(signatureInfo.GetNotSigned())
+	for _, validator := range activeValidatorsEntries {
+		link := reporter.Config.ExplorerConfig.GetValidatorLink(validator.Validator)
+		group, _ := reporter.Config.MissedBlocksGroups.GetGroup(validator.SignatureInfo.GetNotSigned())
 
 		sb.WriteString(fmt.Sprintf(
 			"<strong>%s %s:</strong> %d missed blocks (%.2f%%)\n",
 			group.EmojiEnd,
 			reporter.SerializeLink(link),
-			signatureInfo.GetNotSigned(),
-			float64(signatureInfo.GetNotSigned())/float64(reporter.Config.BlocksWindow)*100,
+			validator.SignatureInfo.GetNotSigned(),
+			float64(validator.SignatureInfo.GetNotSigned())/float64(reporter.Config.BlocksWindow)*100,
 		))
 	}
 
