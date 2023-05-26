@@ -96,6 +96,8 @@ func (t *WebsocketClient) ConnectAndListen() {
 			t.error = err
 			t.Channel <- &types.WSError{Error: err}
 			t.logger.Warn().Err(err).Msg("Error connecting to node")
+
+			time.Sleep(time.Minute)
 		} else {
 			t.logger.Debug().Msg("Connected to a node")
 			t.active = true
@@ -114,11 +116,11 @@ func (t *WebsocketClient) ConnectAndListen() {
 }
 
 func (t *WebsocketClient) Reconnect() {
-	t.logger.Info().Msg("Reconnecting manually...")
-
 	if t.client == nil {
 		return
 	}
+
+	t.logger.Info().Msg("Reconnecting manually...")
 
 	t.metricsManager.LogNodeReconnect(t.config.Name, t.url)
 
@@ -127,6 +129,7 @@ func (t *WebsocketClient) Reconnect() {
 		t.Channel <- &types.WSError{Error: err}
 	}
 
+	time.Sleep(time.Second)
 	t.ConnectAndListen()
 }
 
