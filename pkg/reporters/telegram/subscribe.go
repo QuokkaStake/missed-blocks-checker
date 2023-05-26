@@ -27,8 +27,9 @@ func (reporter *Reporter) HandleSubscribe(c tele.Context) error {
 	validator, found := reporter.Manager.GetValidator(address)
 	if !found {
 		return reporter.BotReply(c, fmt.Sprintf(
-			"Could not find a validator with address <code>%s</code>",
+			"Could not find a validator with address <code>%s</code> on %s",
 			address,
+			reporter.Config.GetName(),
 		))
 	}
 
@@ -42,7 +43,8 @@ func (reporter *Reporter) HandleSubscribe(c tele.Context) error {
 	validatorLinkSerialized := reporter.SerializeLink(validatorLink)
 
 	return reporter.BotReply(c, fmt.Sprintf(
-		"Subscribed to validator's notifications: %s",
+		"Subscribed to validator's notifications on %s: %s",
+		reporter.Config.GetName(),
 		validatorLinkSerialized,
 	))
 }

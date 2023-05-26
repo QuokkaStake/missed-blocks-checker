@@ -15,7 +15,10 @@ func (reporter *Reporter) HandleStatus(c tele.Context) error {
 
 	operatorAddresses := reporter.Manager.GetValidatorsForNotifier(reporter.Name(), c.Sender().Username)
 	if len(operatorAddresses) == 0 {
-		return reporter.BotReply(c, "You are not subscribed to any validator's notifications.")
+		return reporter.BotReply(c, fmt.Sprintf(
+			"You are not subscribed to any validator's notifications on %s.",
+			reporter.Config.GetName(),
+		))
 	}
 
 	var sb strings.Builder
@@ -28,8 +31,9 @@ func (reporter *Reporter) HandleStatus(c tele.Context) error {
 		validator, found := reporter.Manager.GetValidator(operatorAddress)
 		if !found {
 			return reporter.BotReply(c, fmt.Sprintf(
-				"Could not find a validator with address <code>%s</code>",
+				"Could not find a validator with address <code>%s</code> on %s",
 				operatorAddress,
+				reporter.Config.GetName(),
 			))
 		}
 
