@@ -1,14 +1,17 @@
 package telegram
 
 import (
+	"bytes"
 	"fmt"
 	"html"
+	"html/template"
 	"main/pkg/constants"
 	"main/pkg/events"
 	"main/pkg/metrics"
 	reportPkg "main/pkg/report"
 	statePkg "main/pkg/state"
 	"main/pkg/types"
+	"main/templates"
 	"strings"
 	"time"
 
@@ -30,6 +33,8 @@ type Reporter struct {
 	Config         *config.ChainConfig
 	Manager        *statePkg.Manager
 	MetricsManager *metrics.Manager
+
+	Templates map[string]*template.Template
 }
 
 const (
@@ -50,6 +55,7 @@ func NewReporter(
 		Logger:         logger.With().Str("component", "telegram_reporter").Logger(),
 		Manager:        manager,
 		MetricsManager: metricsManager,
+		Templates:      make(map[string]*template.Template, 0),
 	}
 }
 
@@ -73,6 +79,8 @@ func (reporter *Reporter) Init() {
 		bot.Use(middleware.Whitelist(reporter.Admins...))
 	}
 
+	bot.Handle("/start", reporter.HandleHelp)
+	bot.Handle("/help", reporter.HandleHelp)
 	bot.Handle("/subscribe", reporter.HandleSubscribe)
 	bot.Handle("/unsubscribe", reporter.HandleUnubscribe)
 	bot.Handle("/status", reporter.HandleStatus)
@@ -85,6 +93,43 @@ func (reporter *Reporter) Init() {
 
 func (reporter *Reporter) Enabled() bool {
 	return reporter.Token != "" && reporter.Chat != 0
+}
+
+func (reporter *Reporter) GetTemplate(name string) (*template.Template, error) {
+	if cachedTemplate, ok := reporter.Templates[name]; ok {
+		reporter.Logger.Trace().Str("type", name).Msg("Using cached template")
+		return cachedTemplate, nil
+	}
+
+	reporter.Logger.Trace().Str("type", name).Msg("Loading template")
+
+	t, err := template.New(name+".html").
+		Funcs(template.FuncMap{}).
+		ParseFS(templates.TemplatesFs, "telegram/"+name+".html")
+	if err != nil {
+		return nil, err
+	}
+
+	reporter.Templates[name] = t
+
+	return t, nil
+}
+
+func (reporter *Reporter) Render(templateName string, data interface{}) (string, error) {
+	templateToRender, err := reporter.GetTemplate(templateName)
+	if err != nil {
+		reporter.Logger.Error().Err(err).Str("type", templateName).Msg("Error loading template")
+		return "", err
+	}
+
+	var buffer bytes.Buffer
+	err = templateToRender.Execute(&buffer, data)
+	if err != nil {
+		reporter.Logger.Error().Err(err).Str("type", templateName).Msg("Error rendering template")
+		return "", err
+	}
+
+	return buffer.String(), err
 }
 
 func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.Entry) string {
