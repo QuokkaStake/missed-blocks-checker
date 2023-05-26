@@ -83,7 +83,7 @@ func (d *Database) Init() {
 				Msg("Could not execute migration")
 		}
 
-		statement.Close()
+		statement.Close() //nolint:all
 	}
 
 	d.client = db
@@ -325,7 +325,7 @@ func (d *Database) InsertActiveSet(chain string, height int64, activeSet map[str
 	historicalValidatorsRaw, err := json.Marshal(activeSet)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Error marshalling historical validators")
-
+		return err
 	}
 
 	_, err = d.client.Exec(
