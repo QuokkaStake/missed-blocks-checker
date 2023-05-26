@@ -54,6 +54,10 @@ func (rpc *RPC) GetBlock(height int64) (*types.SingleBlockResponse, error) {
 			return fmt.Errorf("error converting block")
 		}
 
+		if response.Error != nil {
+			return fmt.Errorf("error in Tendermint response: %s", response.Error.Data)
+		}
+
 		if response.Result.Block.Header.Height == "" {
 			return fmt.Errorf("malformed result of block: empty block height")
 		}
@@ -167,6 +171,10 @@ func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 			response, ok := v.(*types.ValidatorsResponse)
 			if !ok {
 				return fmt.Errorf("error converting validators")
+			}
+
+			if response.Error != nil {
+				return fmt.Errorf("error in Tendermint response: %s", response.Error.Data)
 			}
 
 			if len(response.Result.Validators) == 0 {

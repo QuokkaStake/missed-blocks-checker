@@ -7,10 +7,15 @@ import (
 
 type SingleBlockResponse struct {
 	Result SingleBlockResult `json:"result"`
+	Error  *ResponseError    `json:"error"`
 }
 
 type SingleBlockResult struct {
 	Block TendermintBlock `json:"block"`
+}
+
+type ResponseError struct {
+	Data string `json:"data"`
 }
 
 type TendermintBlock struct {
@@ -78,6 +83,7 @@ type AbciResponse struct {
 
 type ValidatorsResponse struct {
 	Result ValidatorsResult `json:"result"`
+	Error  *ResponseError   `json:"error"`
 }
 
 type ValidatorsResult struct {
