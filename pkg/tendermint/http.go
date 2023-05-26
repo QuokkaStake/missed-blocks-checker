@@ -135,6 +135,20 @@ func (rpc *RPC) GetSigningInfo(valcons string) (*slashingTypes.QuerySigningInfoR
 	return &response, nil
 }
 
+func (rpc *RPC) GetSlashingParams() (*slashingTypes.QueryParamsResponse, error) {
+	var response slashingTypes.QueryParamsResponse
+	if err := rpc.AbciQuery(
+		"/cosmos.slashing.v1beta1.Query/Params",
+		&slashingTypes.QueryParamsRequest{},
+		"slashing_params",
+		&response,
+	); err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
 func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 	page := 1
 

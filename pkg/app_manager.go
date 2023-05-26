@@ -210,6 +210,28 @@ func (a *AppManager) ListenForEvents() {
 	}
 }
 
+func (a *AppManager) PopulateSlashingParams() {
+	if !a.Config.QuerySlashingParams.Bool {
+		return
+	}
+
+	if params, err := a.RPCManager.GetSlashingParams(); err != nil {
+		a.Logger.Warn().
+			Err(err).
+			Msg("Error updating slashing params")
+
+		return
+	} else {
+		a.Config.BlocksWindow = params.Params.SignedBlocksWindow
+		a.Config.MinSignedPerWindow = params.Params.MinSignedPerWindow.MustFloat64()
+
+		a.Logger.Info().
+			Int64("blocks_window", a.Config.BlocksWindow).
+			Float64("min_signed_per_window", a.Config.MinSignedPerWindow).
+			Msg("Got slashing params")
+	}
+}
+
 func (a *AppManager) UpdateValidators() error {
 	validators, err := a.DataManager.GetValidators()
 	if err != nil {
@@ -231,6 +253,7 @@ func (a *AppManager) AddLastActiveSet(height int64) error {
 
 func (a *AppManager) PopulateInBackground() {
 	a.PopulateLatestBlock()
+	a.PopulateSlashingParams()
 
 	go a.PopulateBlocks()
 	go a.PopulateActiveSet()
@@ -239,6 +262,8 @@ func (a *AppManager) PopulateInBackground() {
 	activeSetTicker := time.NewTicker(60 * time.Second)
 	latestBlockTimer := time.NewTicker(120 * time.Second)
 	trimTimer := time.NewTicker(300 * time.Second)
+	slashingParamsTimer := time.NewTicker(300 * time.Second)
+
 	quit := make(chan struct{})
 
 	for {
@@ -249,6 +274,8 @@ func (a *AppManager) PopulateInBackground() {
 			a.PopulateActiveSet()
 		case <-latestBlockTimer.C:
 			a.PopulateLatestBlock()
+		case <-slashingParamsTimer.C:
+			a.PopulateSlashingParams()
 		case <-trimTimer.C:
 			{
 				if err := a.StateManager.TrimBlocks(); err != nil {

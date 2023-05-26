@@ -37,6 +37,10 @@ func (manager *RPCManager) GetSigningInfo(valcons string) (*slashingTypes.QueryS
 	return manager.rpc.GetSigningInfo(valcons)
 }
 
+func (manager *RPCManager) GetSlashingParams() (*slashingTypes.QueryParamsResponse, error) {
+	return manager.rpc.GetSlashingParams()
+}
+
 func (manager *RPCManager) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 	return manager.rpc.GetActiveSetAtBlock(height)
 }

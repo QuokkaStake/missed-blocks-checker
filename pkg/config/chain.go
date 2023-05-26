@@ -14,6 +14,7 @@ type ChainConfig struct {
 	BlocksWindow         int64     `toml:"blocks-window" default:"10000"`
 	MinSignedPerWindow   float64   `toml:"min-signed-per-window" default:"0.05"`
 	QueryEachSigningInfo null.Bool `toml:"query-each-signing-info" default:"false"`
+	QuerySlashingParams  null.Bool `toml:"query-slashing-params" default:"true"`
 
 	MissedBlocksGroups MissedBlocksGroups `toml:"missed-blocks-groups"`
 	ExplorerConfig     ExplorerConfig     `toml:"explorer"`
@@ -46,10 +47,13 @@ func (c *ChainConfig) Validate() error {
 
 func (c *ChainConfig) SetDefaultMissedBlocksGroups() {
 	if c.MissedBlocksGroups != nil {
-		// GetDefaultLogger().Debug().Msg("MissedBlockGroups is set, not setting the default ones.")
 		return
 	}
 
+	c.RecalculateMissedBlocksGroups()
+}
+
+func (c *ChainConfig) RecalculateMissedBlocksGroups() {
 	totalRange := float64(c.BlocksWindow) + 1 // from 0 till max blocks allowed, including
 
 	percents := []float64{0, 0.5, 1, 5, 10, 25, 50, 75, 90, 100}
