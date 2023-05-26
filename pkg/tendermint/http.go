@@ -168,7 +168,7 @@ func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 			activeSetMap[validator.Address] = true
 		}
 
-		if len(response.Result.Validators) < constants.ActiveSetPagination {
+		if len(response.Result.Validators) <= constants.ActiveSetPagination {
 			break
 		}
 
