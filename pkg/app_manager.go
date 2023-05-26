@@ -130,13 +130,14 @@ func (a *AppManager) ListenForEvents() {
 					Msg("Error inserting new block")
 			}
 
-			blocksCount := a.StateManager.GetBlocksCountSinceLatest(a.Config.StoreBlocks)
+			totalBlocksCount := a.StateManager.GetBlocksCountSinceLatest(a.Config.StoreBlocks)
 			a.Logger.Info().
-				Int64("count", blocksCount).
+				Int64("count", totalBlocksCount).
 				Int64("height", block.Height).
 				Msg("Added new Tendermint block into state")
 
-			historicalValidatorsCount := a.StateManager.GetActiveSetsCountSinceLatest(a.Config.StoreBlocks)
+			blocksCount := a.StateManager.GetActiveSetsCountSinceLatest(a.Config.BlocksWindow)
+			historicalValidatorsCount := a.StateManager.GetActiveSetsCountSinceLatest(a.Config.BlocksWindow)
 
 			hasEnoughBlocks := blocksCount >= a.Config.BlocksWindow
 			hasEnoughHistoricalValidators := historicalValidatorsCount >= a.Config.BlocksWindow
