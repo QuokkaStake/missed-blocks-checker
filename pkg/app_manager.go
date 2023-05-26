@@ -229,6 +229,8 @@ func (a *AppManager) PopulateSlashingParams() {
 			Int64("blocks_window", a.Config.BlocksWindow).
 			Float64("min_signed_per_window", a.Config.MinSignedPerWindow).
 			Msg("Got slashing params")
+
+		a.Config.RecalculateMissedBlocksGroups()
 	}
 }
 

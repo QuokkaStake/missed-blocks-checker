@@ -11,7 +11,7 @@ type MissedBlocksGroup struct {
 	DescEnd    string `toml:"desc-end"`
 }
 
-type MissedBlocksGroups []MissedBlocksGroup
+type MissedBlocksGroups []*MissedBlocksGroup
 
 // Validate checks that MissedBlocksGroup is an array of sorted MissedBlocksGroup
 // covering each interval.
@@ -48,7 +48,7 @@ func (g MissedBlocksGroups) Validate(window int64) error {
 func (g MissedBlocksGroups) GetGroup(missed int64) (*MissedBlocksGroup, error) {
 	for _, group := range g {
 		if missed >= group.Start && missed <= group.End {
-			return &group, nil
+			return group, nil
 		}
 	}
 

@@ -61,13 +61,13 @@ func (c *ChainConfig) RecalculateMissedBlocksGroups() {
 	emojiEnd := []string{"🟢", "🟡", "🟡", "🟡", "🟡", "🟠", "🟠", "🟠", "🟠"}
 
 	groupsCount := len(percents) - 1
-	groups := make([]MissedBlocksGroup, groupsCount)
+	groups := make([]*MissedBlocksGroup, groupsCount)
 
 	for i := 0; i < groupsCount; i++ {
 		start := totalRange * percents[i] / 100
 		end := totalRange*percents[i+1]/100 - 1
 
-		groups[i] = MissedBlocksGroup{
+		groups[i] = &MissedBlocksGroup{
 			Start:      int64(start),
 			End:        int64(end),
 			EmojiStart: emojiStart[i],

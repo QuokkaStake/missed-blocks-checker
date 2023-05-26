@@ -46,8 +46,14 @@ func (snapshot *Snapshot) GetReport(olderSnapshot Snapshot, chainConfig *config.
 		missedBlocksBefore := olderEntry.SignatureInfo.GetNotSigned()
 		missedBlocksAfter := entry.SignatureInfo.GetNotSigned()
 
-		beforeGroup, _ := chainConfig.MissedBlocksGroups.GetGroup(missedBlocksBefore)
-		afterGroup, _ := chainConfig.MissedBlocksGroups.GetGroup(missedBlocksAfter)
+		beforeGroup, err := chainConfig.MissedBlocksGroups.GetGroup(missedBlocksBefore)
+		if err != nil {
+			panic(err)
+		}
+		afterGroup, err := chainConfig.MissedBlocksGroups.GetGroup(missedBlocksAfter)
+		if err != nil {
+			panic(err)
+		}
 
 		missedBlocksGroupsEqual := beforeGroup.Start == afterGroup.Start
 
