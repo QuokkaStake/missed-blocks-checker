@@ -3,5 +3,6 @@ CREATE TABLE IF NOT EXISTS blocks (
     height BIGINT NOT NULL,
     time BIGINT NOT NULL,
     proposer TEXT NOT NULL,
+    signatures TEXT NOT NULL,
     PRIMARY KEY (chain, height)
 );

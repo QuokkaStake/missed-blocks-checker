@@ -1,7 +1,6 @@
 package database
 
 import (
-	"context"
 	"database/sql"
 	"encoding/json"
 	configPkg "main/pkg/config"
@@ -94,54 +93,22 @@ func (d *Database) InsertBlock(chain string, block *types.Block) error {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 
-	ctx := context.Background()
-	tx, err := d.client.BeginTx(ctx, nil)
+	signaturesBytes, err := json.Marshal(block.Signatures)
 	if err != nil {
-		d.logger.Error().Err(err).Msg("Could not create a transaction for saving a block")
+		d.logger.Error().Err(err).Msg("Error marshaling signatures")
 		return err
 	}
 
-	_, err = tx.ExecContext(
-		ctx,
-		"INSERT INTO blocks (chain, height, time, proposer) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING",
+	_, err = d.client.Exec(
+		"INSERT INTO blocks (chain, height, time, proposer, signatures) VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING",
 		chain,
 		block.Height,
 		block.Time.Unix(),
 		block.Proposer,
+		signaturesBytes,
 	)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Error saving block")
-		if err = tx.Rollback(); err != nil {
-			d.logger.Error().Err(err).Msg("Error rolling back transaction")
-			return err
-		}
-
-		return err
-	}
-
-	for key, signature := range block.Signatures {
-		_, err = tx.ExecContext(
-			ctx,
-			"INSERT INTO signatures (chain, height, validator_address, signature) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING",
-			chain,
-			block.Height,
-			key,
-			signature,
-		)
-		if err != nil {
-			d.logger.Error().Err(err).Msg("Error saving signature")
-			if err = tx.Rollback(); err != nil {
-				d.logger.Error().Err(err).Msg("Error rolling back transaction")
-				return err
-			}
-
-			return err
-		}
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		d.logger.Error().Err(err).Msg("Could not commit a transaction")
 		return err
 	}
 
@@ -156,7 +123,7 @@ func (d *Database) GetAllBlocks(chain string) (map[int64]*types.Block, error) {
 
 	// Getting blocks
 	blocksRows, err := d.client.Query(
-		"SELECT height, time, proposer FROM blocks WHERE chain = $1",
+		"SELECT height, time, proposer, signatures FROM blocks WHERE chain = $1",
 		chain,
 	)
 	if err != nil {
@@ -173,58 +140,27 @@ func (d *Database) GetAllBlocks(chain string) (map[int64]*types.Block, error) {
 			blockHeight   int64
 			blockTime     int64
 			blockProposer string
+			signaturesRaw []byte
+			signatures    = map[string]int32{}
 		)
 
-		err = blocksRows.Scan(&blockHeight, &blockTime, &blockProposer)
+		err = blocksRows.Scan(&blockHeight, &blockTime, &blockProposer, &signaturesRaw)
 		if err != nil {
 			d.logger.Error().Err(err).Msg("Error fetching block data")
 			return blocks, err
+		}
+
+		if err := json.Unmarshal(signaturesRaw, &signatures); err != nil {
+			d.logger.Error().Err(err).Msg("Error unmarshalling signatures")
 		}
 
 		block := &types.Block{
 			Height:     blockHeight,
 			Time:       time.Unix(blockTime, 0),
 			Proposer:   blockProposer,
-			Signatures: map[string]int32{},
+			Signatures: signatures,
 		}
 		blocks[block.Height] = block
-	}
-
-	// Fetching signatures
-	signaturesRows, err := d.client.Query(
-		"SELECT height, validator_address, signature FROM signatures WHERE chain = $1",
-		chain,
-	)
-	if err != nil {
-		d.logger.Error().Err(err).Msg("Error getting all blocks")
-		return blocks, err
-	}
-	defer func() {
-		_ = signaturesRows.Close()
-		_ = signaturesRows.Err() // or modify return value
-	}()
-
-	for signaturesRows.Next() {
-		var (
-			signatureHeight int64
-			validatorAddr   []byte
-			signature       int32
-		)
-
-		err = signaturesRows.Scan(&signatureHeight, &validatorAddr, &signature)
-		if err != nil {
-			d.logger.Error().Err(err).Msg("Error fetching signature data")
-			return blocks, err
-		}
-
-		_, ok := blocks[signatureHeight]
-		if !ok {
-			d.logger.Fatal().
-				Int64("height", signatureHeight).
-				Msg("Got signature for block we do not have, which should never happen.")
-		}
-
-		blocks[signatureHeight].Signatures[string(validatorAddr)] = signature
 	}
 
 	return blocks, nil
@@ -234,48 +170,13 @@ func (d *Database) TrimBlocksBefore(chain string, height int64) error {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 
-	ctx := context.Background()
-	tx, err := d.client.BeginTx(ctx, nil)
-	if err != nil {
-		d.logger.Error().Err(err).Msg("Could not create a transaction for trimming blocks")
-		return err
-	}
-
-	_, err = tx.ExecContext(
-		ctx,
+	_, err := d.client.Exec(
 		"DELETE FROM blocks WHERE height <= $1 AND chain = $2",
 		height,
 		chain,
 	)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Error trimming blocks")
-		if err = tx.Rollback(); err != nil {
-			d.logger.Error().Err(err).Msg("Error rolling back transaction")
-			return err
-		}
-
-		return err
-	}
-
-	_, err = tx.ExecContext(
-		ctx,
-		"DELETE FROM signatures WHERE height <= $1 AND chain = $2",
-		height,
-		chain,
-	)
-	if err != nil {
-		d.logger.Error().Err(err).Msg("Error trimming signatures")
-		if err = tx.Rollback(); err != nil {
-			d.logger.Error().Err(err).Msg("Error rolling back transaction")
-			return err
-		}
-
-		return err
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		d.logger.Error().Err(err).Msg("Could not commit a transaction")
 		return err
 	}
 
@@ -381,7 +282,7 @@ func (d *Database) GetAllActiveSets(chain string) (types.HistoricalValidatorsMap
 	activeSets := make(types.HistoricalValidatorsMap, 0)
 
 	rows, err := d.client.Query(
-		"SELECT height, validator_address FROM validators WHERE chain = $1",
+		"SELECT height, validators FROM validators WHERE chain = $1",
 		chain,
 	)
 	if err != nil {
@@ -395,21 +296,23 @@ func (d *Database) GetAllActiveSets(chain string) (types.HistoricalValidatorsMap
 
 	for rows.Next() {
 		var (
-			height           int64
-			validatorAddress string
+			height        int64
+			validatorsRaw []byte
+			validators    types.HistoricalValidators
 		)
 
-		err = rows.Scan(&height, &validatorAddress)
+		err = rows.Scan(&height, &validatorsRaw)
 		if err != nil {
 			d.logger.Error().Err(err).Msg("Error fetching active set data")
-			return activeSets, err
+			return nil, err
 		}
 
-		if _, ok := activeSets[height]; !ok {
-			activeSets[height] = make(map[string]bool, 0)
+		if err := json.Unmarshal(validatorsRaw, &validators); err != nil {
+			d.logger.Error().Err(err).Msg("Error unmarshalling historical validators")
+			return nil, err
 		}
 
-		activeSets[height][validatorAddress] = true
+		activeSets[height] = validators
 	}
 
 	return activeSets, nil
@@ -419,35 +322,20 @@ func (d *Database) InsertActiveSet(chain string, height int64, activeSet map[str
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 
-	ctx := context.Background()
-	tx, err := d.client.BeginTx(ctx, nil)
+	historicalValidatorsRaw, err := json.Marshal(activeSet)
 	if err != nil {
-		d.logger.Error().Err(err).Msg("Could not create a transaction for inserting active set")
-		return err
+		d.logger.Error().Err(err).Msg("Error marshalling historical validators")
+
 	}
 
-	for validator := range activeSet {
-		_, err = tx.ExecContext(
-			ctx,
-			"INSERT INTO validators (chain, validator_address, height) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
-			chain,
-			validator,
-			height,
-		)
-		if err != nil {
-			d.logger.Error().Err(err).Msg("Error adding active set")
-			if err = tx.Rollback(); err != nil {
-				d.logger.Error().Err(err).Msg("Error rolling back transaction")
-				return err
-			}
-
-			return err
-		}
-	}
-
-	err = tx.Commit()
+	_, err = d.client.Exec(
+		"INSERT INTO validators (chain, validators, height) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
+		chain,
+		historicalValidatorsRaw,
+		height,
+	)
 	if err != nil {
-		d.logger.Error().Err(err).Msg("Could not commit a transaction")
+		d.logger.Error().Err(err).Msg("Error adding historical validators")
 		return err
 	}
 
