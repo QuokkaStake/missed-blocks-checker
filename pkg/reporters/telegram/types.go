@@ -24,3 +24,13 @@ func (e missingValidatorsEntry) FormatMissed() string {
 		float64(e.NotSigned)/float64(e.BlocksWindow)*100,
 	)
 }
+
+type notifierRender struct {
+	Config  *config.ChainConfig
+	Entries []notifierEntry
+}
+
+type notifierEntry struct {
+	Link      types.Link
+	Notifiers []string
+}

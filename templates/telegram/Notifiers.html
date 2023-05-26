@@ -1,0 +1,8 @@
+{{- if not .Entries }}
+Nobody is subscribed to any notifications on {{ .Config.GetName }}!
+{{- else }}
+<strong>Validators' notifiers on {{ .Config.GetName }}:</strong>
+{{- end }}
+{{ range .Entries -}}
+- <strong>{{ SerializeLink .Link }}</strong>: {{ SerializeNotifiers .Notifiers }}
+{{ end }}

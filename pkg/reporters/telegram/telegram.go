@@ -86,6 +86,7 @@ func (reporter *Reporter) Init() {
 	bot.Handle("/status", reporter.HandleStatus)
 	bot.Handle("/validators", reporter.HandleListValidators)
 	bot.Handle("/missing", reporter.HandleMissingValidators)
+	bot.Handle("/notifiers", reporter.HandleNotifiers)
 
 	reporter.TelegramBot = bot
 	go reporter.TelegramBot.Start()
@@ -105,7 +106,9 @@ func (reporter *Reporter) GetTemplate(name string) (*template.Template, error) {
 
 	t, err := template.New(name+".html").
 		Funcs(template.FuncMap{
-			"SerializeLink": reporter.SerializeLink,
+			"SerializeLink":      reporter.SerializeLink,
+			"SerializeNotifier":  reporter.SerializeNotifier,
+			"SerializeNotifiers": reporter.SerializeNotifiers,
 		}).
 		ParseFS(templates.TemplatesFs, "telegram/"+name+".html")
 	if err != nil {
@@ -252,13 +255,15 @@ func (reporter *Reporter) SerializeLink(link types.Link) template.HTML {
 }
 
 func (reporter *Reporter) SerializeNotifiers(notifiers []string) string {
-	notifiersNormalized := utils.Map(notifiers, func(notifier string) string {
-		if strings.HasPrefix(notifier, "@") {
-			return notifier
-		}
-
-		return "@" + notifier
-	})
+	notifiersNormalized := utils.Map(notifiers, reporter.SerializeNotifier)
 
 	return strings.Join(notifiersNormalized, " ")
+}
+
+func (reporter *Reporter) SerializeNotifier(notifier string) string {
+	if strings.HasPrefix(notifier, "@") {
+		return notifier
+	}
+
+	return "@" + notifier
 }

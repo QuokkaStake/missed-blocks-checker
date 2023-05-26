@@ -237,7 +237,7 @@ func (d *Database) InsertNotifier(
 	defer d.mutex.Unlock()
 
 	_, err := d.client.Exec(
-		"INSERT INTO notifiers (chain, operator_address, reporter, notifier) VALUES ($1, $2, $3, $2) ON CONFLICT DO NOTHING",
+		"INSERT INTO notifiers (chain, operator_address, reporter, notifier) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING",
 		chain,
 		operatorAddress,
 		reporter,
