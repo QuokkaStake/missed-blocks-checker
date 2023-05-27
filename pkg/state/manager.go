@@ -248,8 +248,12 @@ func (m *Manager) GetValidators() types.ValidatorsMap {
 	return m.state.GetValidators()
 }
 
-func (m *Manager) GetTimeTillJail(missingBlocks int64) (time.Duration, bool) {
+func (m *Manager) GetTimeTillJail(missingBlocks int64) time.Duration {
 	return m.state.GetTimeTillJail(m.config, missingBlocks)
+}
+
+func (m *Manager) GetBlockTime() time.Duration {
+	return m.state.GetBlockTime()
 }
 
 func (m *Manager) GetValidatorMissedBlocks(validator *types.Validator) types.SignatureInto {

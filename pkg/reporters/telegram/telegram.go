@@ -87,6 +87,8 @@ func (reporter *Reporter) Init() {
 	bot.Handle("/validators", reporter.HandleListValidators)
 	bot.Handle("/missing", reporter.HandleMissingValidators)
 	bot.Handle("/notifiers", reporter.HandleNotifiers)
+	bot.Handle("/params", reporter.HandleParams)
+	bot.Handle("/config", reporter.HandleParams)
 
 	reporter.TelegramBot = bot
 	go reporter.TelegramBot.Start()
@@ -143,11 +145,8 @@ func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.Entry) string {
 		timeToJailStr := ""
 
 		if entry.IsIncreasing() {
-			if timeToJail, ok := reporter.Manager.GetTimeTillJail(entry.MissedBlocksAfter); ok {
-				timeToJailStr = fmt.Sprintf(" (%s till jail)", timeToJail.Round(time.Second))
-			} else {
-				reporter.Logger.Warn().Msg("Could not calculate time to jail")
-			}
+			timeToJail := reporter.Manager.GetTimeTillJail(entry.MissedBlocksAfter)
+			timeToJailStr = fmt.Sprintf(" (%s till jail)", utils.FormatDuration(timeToJail))
 		}
 
 		notifiers := reporter.Manager.GetNotifiersForReporter(entry.Validator.OperatorAddress, reporter.Name())

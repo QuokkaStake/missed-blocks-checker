@@ -233,10 +233,10 @@ func (s *State) GetBlockTime() time.Duration {
 func (s *State) GetTimeTillJail(
 	chainConfig *config.ChainConfig,
 	missedBlocks int64,
-) (time.Duration, bool) {
+) time.Duration {
 	needToSign := chainConfig.GetBlocksSignCount()
 	blocksToJail := needToSign - missedBlocks
 	blockTime := s.GetBlockTime()
 	nanoToJail := blockTime.Nanoseconds() * blocksToJail
-	return time.Duration(nanoToJail) * time.Nanosecond, true
+	return time.Duration(nanoToJail) * time.Nanosecond
 }
