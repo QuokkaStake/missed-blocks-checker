@@ -17,11 +17,11 @@ import (
 )
 
 type Manager struct {
-	logger                   zerolog.Logger
-	config                   configPkg.MetricsConfig
-	lastBlockHeightCollector *prometheus.GaugeVec
-	lastBlockTimeCollector   *prometheus.GaugeVec
+	logger zerolog.Logger
+	config configPkg.MetricsConfig
 
+	lastBlockHeightCollector   *prometheus.GaugeVec
+	lastBlockTimeCollector     *prometheus.GaugeVec
 	nodeConnectedCollector     *prometheus.GaugeVec
 	successfulQueriesCollector *prometheus.CounterVec
 	failedQueriesCollector     *prometheus.CounterVec
@@ -42,7 +42,10 @@ type Manager struct {
 	isJailedGauge      *prometheus.GaugeVec
 	isTombstonedGauge  *prometheus.GaugeVec
 
-	appVersionGauge *prometheus.GaugeVec
+	appVersionGauge         *prometheus.GaugeVec
+	chainInfoGauge          *prometheus.GaugeVec
+	signedBlocksWindowGauge *prometheus.GaugeVec
+	minSignedPerWindowGauge *prometheus.GaugeVec
 }
 
 func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager {
@@ -121,6 +124,18 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 			Name: constants.PrometheusMetricsPrefix + "tombstoned",
 			Help: "Whether the validator is tombstoned",
 		}, []string{"chain", "moniker", "address"}),
+		signedBlocksWindowGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
+			Name: constants.PrometheusMetricsPrefix + "window",
+			Help: "A window in which validator needs to sign blocks",
+		}, []string{"chain"}),
+		minSignedPerWindowGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
+			Name: constants.PrometheusMetricsPrefix + "min_signed",
+			Help: "A % of blocks validator needs to sign within window",
+		}, []string{"chain"}),
+		chainInfoGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
+			Name: constants.PrometheusMetricsPrefix + "chain_info",
+			Help: "Chain info, with constant 1 as value and pretty_name and chain as labels",
+		}, []string{"chain", "pretty_name"}),
 	}
 }
 
@@ -306,4 +321,20 @@ func (m *Manager) LogValidatorStats(
 			}).
 			Set(utils.BoolToFloat64(validator.SigningInfo.Tombstoned))
 	}
+}
+
+func (m *Manager) LogSlashingParams(chain string, window int64, minSigned float64) {
+	m.signedBlocksWindowGauge.
+		With(prometheus.Labels{"chain": chain}).
+		Set(float64(window))
+
+	m.minSignedPerWindowGauge.
+		With(prometheus.Labels{"chain": chain}).
+		Set(minSigned)
+}
+
+func (m *Manager) LogChainInfo(chain string, prettyName string) {
+	m.chainInfoGauge.
+		With(prometheus.Labels{"chain": chain, "pretty_name": prettyName}).
+		Set(1)
 }
