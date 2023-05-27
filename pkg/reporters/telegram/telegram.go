@@ -181,6 +181,11 @@ func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.Entry) string {
 			"✅ <strong>%s is now in the active set</strong>",
 			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 		)
+	case events.ValidatorTombstoned:
+		return fmt.Sprintf(
+			"<strong>💀 %s was tombstoned</strong>",
+			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+		)
 	default:
 		return fmt.Sprintf("Unsupported event %+v\n", entry)
 	}

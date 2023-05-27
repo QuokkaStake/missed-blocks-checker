@@ -67,6 +67,16 @@ func (snapshot *Snapshot) GetReport(olderSnapshot Snapshot, chainConfig *config.
 			})
 		}
 
+		if entry.Validator.SigningInfo != nil &&
+			olderEntry.Validator.SigningInfo != nil &&
+			entry.Validator.SigningInfo.Tombstoned &&
+			!olderEntry.Validator.SigningInfo.Tombstoned {
+			entries = append(entries, events.ValidatorTombstoned{
+				Validator: entry.Validator,
+			})
+			continue
+		}
+
 		if entry.Validator.Jailed && !olderEntry.Validator.Jailed {
 			entries = append(entries, events.ValidatorJailed{
 				Validator: entry.Validator,
