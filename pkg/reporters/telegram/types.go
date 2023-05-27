@@ -56,7 +56,6 @@ func (r paramsRender) FormatTimeToJail() string {
 }
 
 func (r paramsRender) FormatGroupPercent(group *config.MissedBlocksGroup) string {
-	fmt.Printf("rendering group %+v\n ", group)
 	return fmt.Sprintf(
 		"%.2f%% - %.2f%%",
 		float64(group.Start)/float64(r.Config.BlocksWindow)*100,

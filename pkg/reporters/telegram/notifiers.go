@@ -1,7 +1,6 @@
 package telegram
 
 import (
-	"fmt"
 	"main/pkg/constants"
 
 	tele "gopkg.in/telebot.v3"
@@ -22,8 +21,6 @@ func (reporter *Reporter) HandleNotifiers(c tele.Context) error {
 		if len(notifiers) == 0 {
 			continue
 		}
-
-		fmt.Printf("notifiers for %s: %+v\n", validator.OperatorAddress, notifiers)
 
 		entries = append(entries, notifierEntry{
 			Link:      link,
