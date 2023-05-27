@@ -12,3 +12,7 @@ type ValidatorActive struct {
 func (e ValidatorActive) Type() constants.EventName {
 	return constants.EventValidatorActive
 }
+
+func (e ValidatorActive) GetValidator() *types.Validator {
+	return e.Validator
+}

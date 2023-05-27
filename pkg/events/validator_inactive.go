@@ -12,3 +12,7 @@ type ValidatorInactive struct {
 func (e ValidatorInactive) Type() constants.EventName {
 	return constants.EventValidatorInactive
 }
+
+func (e ValidatorInactive) GetValidator() *types.Validator {
+	return e.Validator
+}

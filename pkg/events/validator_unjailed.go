@@ -12,3 +12,7 @@ type ValidatorUnjailed struct {
 func (e ValidatorUnjailed) Type() constants.EventName {
 	return constants.EventValidatorUnjailed
 }
+
+func (e ValidatorUnjailed) GetValidator() *types.Validator {
+	return e.Validator
+}

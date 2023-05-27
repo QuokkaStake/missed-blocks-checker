@@ -1,9 +1,13 @@
 package report
 
-import "main/pkg/constants"
+import (
+	"main/pkg/constants"
+	"main/pkg/types"
+)
 
 type Entry interface {
 	Type() constants.EventName
+	GetValidator() *types.Validator
 }
 
 type Report struct {

@@ -140,6 +140,10 @@ func (reporter *Reporter) Render(templateName string, data interface{}) (string,
 }
 
 func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.Entry) string {
+	validator := rawEntry.GetValidator()
+	notifiers := reporter.Manager.GetNotifiersForReporter(validator.OperatorAddress, reporter.Name())
+	notifiersSerialized := " " + reporter.SerializeNotifiers(notifiers)
+
 	switch entry := rawEntry.(type) {
 	case events.ValidatorGroupChanged:
 		timeToJailStr := ""
@@ -148,9 +152,6 @@ func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.Entry) string {
 			timeToJail := reporter.Manager.GetTimeTillJail(entry.MissedBlocksAfter)
 			timeToJailStr = fmt.Sprintf(" (%s till jail)", utils.FormatDuration(timeToJail))
 		}
-
-		notifiers := reporter.Manager.GetNotifiersForReporter(entry.Validator.OperatorAddress, reporter.Name())
-		notifiersSerialized := " " + reporter.SerializeNotifiers(notifiers)
 
 		return fmt.Sprintf(
 			// a string like "🟡 <validator> is skipping blocks (> 1.0%)  (XXX till jail) <notifier> <notifier2>"
@@ -163,28 +164,33 @@ func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.Entry) string {
 		)
 	case events.ValidatorJailed:
 		return fmt.Sprintf(
-			"<strong>❌ %s was jailed</strong>",
+			"<strong>❌ %s was jailed</strong>%s",
 			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			notifiersSerialized,
 		)
 	case events.ValidatorUnjailed:
 		return fmt.Sprintf(
-			"<strong>👌 %s was unjailed</strong>",
+			"<strong>👌 %s was unjailed</strong>%s",
 			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			notifiersSerialized,
 		)
 	case events.ValidatorInactive:
 		return fmt.Sprintf(
-			"😔 <strong>%s is now not in the active set</strong>",
+			"😔 <strong>%s is now not in the active set</strong>%s",
 			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			notifiersSerialized,
 		)
 	case events.ValidatorActive:
 		return fmt.Sprintf(
-			"✅ <strong>%s is now in the active set</strong>",
+			"✅ <strong>%s is now in the active set</strong>%s",
 			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			notifiersSerialized,
 		)
 	case events.ValidatorTombstoned:
 		return fmt.Sprintf(
-			"<strong>💀 %s was tombstoned</strong>",
+			"<strong>💀 %s was tombstoned</strong>%s",
 			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			notifiersSerialized,
 		)
 	default:
 		return fmt.Sprintf("Unsupported event %+v\n", entry)

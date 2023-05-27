@@ -12,3 +12,7 @@ type ValidatorTombstoned struct {
 func (e ValidatorTombstoned) Type() constants.EventName {
 	return constants.EventValidatorTombstoned
 }
+
+func (e ValidatorTombstoned) GetValidator() *types.Validator {
+	return e.Validator
+}

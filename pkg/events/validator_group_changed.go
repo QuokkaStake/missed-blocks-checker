@@ -18,7 +18,7 @@ func (e ValidatorGroupChanged) Type() constants.EventName {
 	return constants.EventValidatorGroupChanged
 }
 
-func (e *ValidatorGroupChanged) GetDescription() string {
+func (e ValidatorGroupChanged) GetDescription() string {
 	// increasing
 	if e.IsIncreasing() {
 		return e.MissedBlocksGroupAfter.DescStart
@@ -28,7 +28,7 @@ func (e *ValidatorGroupChanged) GetDescription() string {
 	return e.MissedBlocksGroupAfter.DescEnd
 }
 
-func (e *ValidatorGroupChanged) GetEmoji() string {
+func (e ValidatorGroupChanged) GetEmoji() string {
 	// increasing
 	if e.IsIncreasing() {
 		return e.MissedBlocksGroupAfter.EmojiStart
@@ -38,6 +38,10 @@ func (e *ValidatorGroupChanged) GetEmoji() string {
 	return e.MissedBlocksGroupAfter.EmojiEnd
 }
 
-func (e *ValidatorGroupChanged) IsIncreasing() bool {
+func (e ValidatorGroupChanged) IsIncreasing() bool {
 	return e.MissedBlocksGroupBefore.Start < e.MissedBlocksGroupAfter.Start
+}
+
+func (e ValidatorGroupChanged) GetValidator() *types.Validator {
+	return e.Validator
 }
