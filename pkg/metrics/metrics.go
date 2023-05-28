@@ -347,9 +347,9 @@ func (m *Manager) LogChainInfo(chain string, prettyName string) {
 func (m *Manager) LogReporterQuery(chain string, reporter constants.ReporterName, query string) {
 	m.reporterQueriesCounter.
 		With(prometheus.Labels{
-			"chain":    chain,
-			"reporter": string(reporter),
-			"query":    query,
+			"chain": chain,
+			"name":  string(reporter),
+			"query": query,
 		}).
 		Inc()
 }

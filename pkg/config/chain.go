@@ -46,10 +46,6 @@ func (c *ChainConfig) Validate() error {
 }
 
 func (c *ChainConfig) SetDefaultMissedBlocksGroups() {
-	if c.MissedBlocksGroups != nil {
-		return
-	}
-
 	c.RecalculateMissedBlocksGroups()
 }
 

@@ -18,6 +18,11 @@ import (
 	rpcTypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
 )
 
+const (
+	StaleTime      = 10 * time.Minute
+	StaleCheckTime = 1 * time.Minute
+)
+
 type WebsocketClient struct {
 	logger         zerolog.Logger
 	config         *configPkg.ChainConfig
@@ -26,6 +31,8 @@ type WebsocketClient struct {
 	client         *tmClient.WSClient
 	active         bool
 	error          error
+	reconnectTimer *time.Ticker
+	lastEventTime  time.Time
 
 	Channel chan types.WebsocketEmittable
 }
@@ -47,6 +54,8 @@ func NewWebsocketClient(
 		metricsManager: metricsManager,
 		active:         false,
 		Channel:        make(chan types.WebsocketEmittable),
+		reconnectTimer: time.NewTicker(StaleCheckTime),
+		lastEventTime:  time.Now(),
 	}
 }
 
@@ -92,7 +101,7 @@ func (t *WebsocketClient) ConnectAndListen() {
 	t.metricsManager.LogNodeConnection(t.config.Name, t.url, false)
 
 	for {
-		if err := t.client.Start(); err != nil {
+		if err := t.client.Start(); err != nil && !strings.Contains(err.Error(), "client already running") {
 			t.error = err
 			t.Channel <- &types.WSError{Error: err}
 			t.logger.Warn().Err(err).Msg("Error connecting to node")
@@ -108,11 +117,22 @@ func (t *WebsocketClient) ConnectAndListen() {
 
 	t.SubscribeToUpdates()
 
-	for result := range t.client.ResponsesCh {
-		t.ProcessEvent(result)
-	}
+	loop := true
+	for loop {
+		select {
+		case <-t.reconnectTimer.C:
+			if time.Since(t.lastEventTime) > StaleTime {
+				t.logger.Warn().Msg("No new blocks, reconnecting")
+				loop = false
+				break
+			}
+		case result := <-t.client.ResponsesCh:
+			t.ProcessEvent(result)
+		}
 
+	}
 	t.logger.Info().Msg("Finished listening")
+	t.Reconnect()
 }
 
 func (t *WebsocketClient) Reconnect() {
@@ -145,15 +165,11 @@ func (t *WebsocketClient) Stop() {
 
 func (t *WebsocketClient) ProcessEvent(event rpcTypes.RPCResponse) {
 	t.metricsManager.LogWSEvent(t.config.Name, t.url)
+	t.lastEventTime = time.Now()
 
 	if event.Error != nil && event.Error.Message != "" {
 		t.logger.Error().Str("msg", event.Error.Error()).Msg("Got error in RPC response")
 		t.Channel <- &types.WSError{Error: event.Error}
-		return
-	}
-
-	if len(event.Result) == 0 {
-		t.Reconnect()
 		return
 	}
 

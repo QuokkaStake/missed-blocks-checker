@@ -1,0 +1,90 @@
+# Log configuration
+[log]
+# Logging level. Set it to "debug" or even "trace" to see more logs, or "warn" or even "error"
+# to reduce the logs amount. Defaults to "info".
+level = "info"
+# If set to true, the app with display logs in JSON, which is handy if you are using
+# a logging solution like Loki or Elastic stack. Defaults to false.
+json = false
+
+# Database configuration
+[database]
+# Where the database will be stored. Will be created if not exists.
+path = "database.sqlite"
+
+# Prometheus metrics configuration
+[metrics]
+# Whether to enable metrics. If yes, a web server will be spawned at listen-addr,
+# and you can query metrics by fetching "<listen-addr>/metrics", or set a Prometheus
+# to scrape it. It's useful and you can build alerts to see if anything is going wrong.
+# Defaults to true
+enabled = true
+# Metrics webserver listen address. Defaults to ":9570".
+listen-addr = ":9570"
+
+# Chains configuration. You need at least 1 chain.
+[[chains]]
+# Chain codename, used in metrics.
+name = "cosmos"
+# Chain pretty name. Used in Telegram commands or other places. The app will use fallback
+# to name if it's not provided.
+pretty-name = "Cosmos Hub"
+# RPC endpoints. Need at least 1. Better to have many, so the app would work in case one is down.
+rpc-endpoints = [
+    "https://rpc.cosmos.quokkastake.io",
+    "https://rpc-cosmoshub.ecostake.com",
+    "https://rpc.cosmos.dragonstake.io"
+]
+# If set to true, the app will query a signing info for each validator separately.
+# There's a bug on Cosmos Hub when some validators do not have signing info address,
+# so it's impossible to map signing infos (containing missed blocks counter and tombstone info)
+# to a validator. Defaults to false. You may set it to true on Cosmos Hub, or other chains
+# if you see errors in logs that the signing info for validator was not found.
+query-each-signing-info = true
+# Telegram reporter configuration. Needs token and chat. See README.md on how to set it up
+telegram = { token = "xxx:yyy", chat = 12345 }
+# Explorer configuration, to generate links to validators.
+# Currently supported explorers are: Mintscan and Ping.pub, but you can use
+# a custom link pattern to generate custom links.
+# This chain configuration uses Mintscan, see below for Ping.pub and custom explorers.
+# If it's omitted, no links will be generated and everything will be in plain text.
+explorer = { mintscan-prefix = "cosmos" }
+# How much blocks to store. This should be more than blocks window, as otherwise
+# the app would never be able to generate reports as there's always not enough blocks
+# to calculate missed blocks counter. Optimal would be to store at least 2x blocks
+# of the blocks window. Defaults to 20000 (2x from 10k blocks window).
+store-blocks = 20000
+# Blocks window to calculate missed blocks counter against. Defaults to 10000.
+blocks-window = 10000
+# How much blocks a validator needs to sign in any specific window. Defaults to 0.05 (5%)
+min-signed-per-window = 0.05
+# Whether to query slashing params from chain. If yes, local store-blocks and min-signed-per-window
+# will be overriden on chain startup with the actual values from chain, and will be periodically updated.
+# Defaults to true
+query-slashing-params = true
+
+# You can specify multiple chain. Each chain should have its own set of reporters
+# and they should not overlap.
+[[chains]]
+name = "sentinel"
+pretty-name = "Sentinel"
+rpc-endpoints = [
+    "https://rpc.sentinel.quokkastake.io",
+]
+telegram = { token = "zzz:aaa", chat = 54321 }
+# Here's how you set up Ping.pub links.
+# If the chain is on ping.pub, you just need to set up the ping-prefix variable.
+# As Ping.pub is open-source and anyone can set it up, you can also use
+# your own version of it, then you also need to specify ping-host variable.
+explorer = { ping-prefix = "sentinel", ping-host = "https://ping.pub" }
+
+[[chains]]
+name = "decentr"
+pretty-name = "Decentr"
+rpc-endpoints = [
+    "https://poseidon.mainnet.decentr.xyz",
+]
+telegram = { token = "bbb:ccc", chat = 23456 }
+# Here's how you specify your custom explorer links.
+# When generating links, "%s" is replaced with validator address.
+explorer = { validator-page-pattern = "https://ping.pub/decentr/staking/%s" }
