@@ -197,7 +197,7 @@ func (m *Manager) GetSnapshot() snapshotPkg.Snapshot {
 		}
 	}
 
-	return snapshotPkg.NewSnapshot(entries)
+	return snapshotPkg.Snapshot{Entries: entries}
 }
 
 func (m *Manager) AddNotifier(

@@ -30,11 +30,10 @@ type Snapshot struct {
 	Entries Entries
 }
 
-func NewSnapshot(entries Entries) Snapshot {
-	return Snapshot{Entries: entries}
-}
-
-func (snapshot *Snapshot) GetReport(olderSnapshot Snapshot, chainConfig *config.ChainConfig) *report.Report {
+func (snapshot *Snapshot) GetReport(
+	olderSnapshot Snapshot,
+	chainConfig *config.ChainConfig,
+) (*report.Report, error) {
 	var entries []report.Entry
 
 	for valoper, entry := range snapshot.Entries {
@@ -48,11 +47,11 @@ func (snapshot *Snapshot) GetReport(olderSnapshot Snapshot, chainConfig *config.
 
 		beforeGroup, err := chainConfig.MissedBlocksGroups.GetGroup(missedBlocksBefore)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 		afterGroup, err := chainConfig.MissedBlocksGroups.GetGroup(missedBlocksAfter)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		missedBlocksGroupsEqual := beforeGroup.Start == afterGroup.Start
@@ -77,7 +76,7 @@ func (snapshot *Snapshot) GetReport(olderSnapshot Snapshot, chainConfig *config.
 			continue
 		}
 
-		if entry.Validator.Jailed && !olderEntry.Validator.Jailed {
+		if entry.Validator.Jailed && !olderEntry.Validator.Jailed && olderEntry.Validator.Active() {
 			entries = append(entries, events.ValidatorJailed{
 				Validator: entry.Validator,
 			})
@@ -102,7 +101,7 @@ func (snapshot *Snapshot) GetReport(olderSnapshot Snapshot, chainConfig *config.
 		}
 	}
 
-	return &report.Report{Entries: entries}
+	return &report.Report{Entries: entries}, nil
 }
 
 type Info struct {

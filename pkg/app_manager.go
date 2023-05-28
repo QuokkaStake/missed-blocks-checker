@@ -188,7 +188,11 @@ func (a *AppManager) ListenForEvents() {
 				Int64("height", block.Height).
 				Msg("Generating snapshot report")
 
-			report := a.SnapshotManager.GetReport()
+			report, err := a.SnapshotManager.GetReport()
+			if err != nil {
+				a.Logger.Error().Err(err).Msg("Could not generate report")
+				continue
+			}
 
 			if report.Empty() {
 				a.Logger.Info().Msg("Report is empty, no events to send.")
