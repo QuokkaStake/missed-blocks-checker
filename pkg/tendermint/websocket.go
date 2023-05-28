@@ -129,7 +129,6 @@ func (t *WebsocketClient) ConnectAndListen() {
 		case result := <-t.client.ResponsesCh:
 			t.ProcessEvent(result)
 		}
-
 	}
 	t.logger.Info().Msg("Finished listening")
 	t.Reconnect()
