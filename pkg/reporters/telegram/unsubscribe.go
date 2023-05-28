@@ -3,16 +3,19 @@ package telegram
 import (
 	"fmt"
 	"html"
+	"main/pkg/constants"
 	"strings"
 
 	tele "gopkg.in/telebot.v3"
 )
 
-func (reporter *Reporter) HandleUnubscribe(c tele.Context) error {
+func (reporter *Reporter) HandleUnsubscribe(c tele.Context) error {
 	reporter.Logger.Info().
 		Str("sender", c.Sender().Username).
 		Str("text", c.Text()).
 		Msg("Got unsubscribe query")
+
+	reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, "unsubscribe")
 
 	args := strings.Split(c.Text(), " ")
 	if len(args) < 2 {

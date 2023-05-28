@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"fmt"
+	"main/pkg/constants"
 	"strings"
 
 	tele "gopkg.in/telebot.v3"
@@ -12,6 +13,8 @@ func (reporter *Reporter) HandleStatus(c tele.Context) error {
 		Str("sender", c.Sender().Username).
 		Str("text", c.Text()).
 		Msg("Got status query")
+
+	reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, "status")
 
 	operatorAddresses := reporter.Manager.GetValidatorsForNotifier(reporter.Name(), c.Sender().Username)
 	if len(operatorAddresses) == 0 {

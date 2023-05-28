@@ -79,10 +79,25 @@ func (reporter *Reporter) Init() {
 		bot.Use(middleware.Whitelist(reporter.Admins...))
 	}
 
+	queries := []string{
+		"help",
+		"missing",
+		"notifiers",
+		"params",
+		"status",
+		"subscribe",
+		"unsubscribe",
+		"validators",
+	}
+
+	for _, query := range queries {
+		reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, query)
+	}
+
 	bot.Handle("/start", reporter.HandleHelp)
 	bot.Handle("/help", reporter.HandleHelp)
 	bot.Handle("/subscribe", reporter.HandleSubscribe)
-	bot.Handle("/unsubscribe", reporter.HandleUnubscribe)
+	bot.Handle("/unsubscribe", reporter.HandleUnsubscribe)
 	bot.Handle("/status", reporter.HandleStatus)
 	bot.Handle("/validators", reporter.HandleListValidators)
 	bot.Handle("/missing", reporter.HandleMissingValidators)

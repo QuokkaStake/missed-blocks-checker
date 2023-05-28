@@ -34,7 +34,8 @@ type Manager struct {
 	totalBlocksGauge               *prometheus.GaugeVec
 	totalHistoricalValidatorsGauge *prometheus.GaugeVec
 
-	reporterEnabledGauge *prometheus.GaugeVec
+	reporterEnabledGauge   *prometheus.GaugeVec
+	reporterQueriesCounter *prometheus.CounterVec
 
 	missingBlocksGauge *prometheus.GaugeVec
 	activeBlocksGauge  *prometheus.GaugeVec
@@ -92,6 +93,10 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 			Name: constants.PrometheusMetricsPrefix + "reporter_enabled",
 			Help: "Whether the reporter is enabled (1 if yes, 0 if no)",
 		}, []string{"chain", "name"}),
+		reporterQueriesCounter: promauto.NewCounterVec(prometheus.CounterOpts{
+			Name: constants.PrometheusMetricsPrefix + "reporter_queries",
+			Help: "Reporters' queries count ",
+		}, []string{"chain", "name", "query"}),
 		appVersionGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
 			Name: constants.PrometheusMetricsPrefix + "version",
 			Help: "App version",
@@ -337,4 +342,14 @@ func (m *Manager) LogChainInfo(chain string, prettyName string) {
 	m.chainInfoGauge.
 		With(prometheus.Labels{"chain": chain, "pretty_name": prettyName}).
 		Set(1)
+}
+
+func (m *Manager) LogReporterQuery(chain string, reporter constants.ReporterName, query string) {
+	m.reporterQueriesCounter.
+		With(prometheus.Labels{
+			"chain":    chain,
+			"reporter": string(reporter),
+			"query":    query,
+		}).
+		Inc()
 }

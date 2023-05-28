@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"fmt"
+	"main/pkg/constants"
 	"main/pkg/snapshot"
 	"main/pkg/utils"
 	"sort"
@@ -14,6 +15,8 @@ func (reporter *Reporter) HandleMissingValidators(c tele.Context) error {
 		Str("sender", c.Sender().Username).
 		Str("text", c.Text()).
 		Msg("Got missing validators query")
+
+	reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, "missing")
 
 	validatorEntries := reporter.Manager.GetSnapshot().Entries.ToSlice()
 	activeValidatorsEntries := utils.Filter(validatorEntries, func(v snapshot.Entry) bool {

@@ -3,6 +3,7 @@ package telegram
 import (
 	"fmt"
 	"html"
+	"main/pkg/constants"
 	"strings"
 
 	tele "gopkg.in/telebot.v3"
@@ -13,6 +14,8 @@ func (reporter *Reporter) HandleSubscribe(c tele.Context) error {
 		Str("sender", c.Sender().Username).
 		Str("text", c.Text()).
 		Msg("Got subscribe query")
+
+	reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, "subscribe")
 
 	args := strings.Split(c.Text(), " ")
 	if len(args) < 2 {

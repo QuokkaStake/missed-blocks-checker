@@ -12,6 +12,8 @@ func (reporter *Reporter) HandleNotifiers(c tele.Context) error {
 		Str("text", c.Text()).
 		Msg("Got notifiers query")
 
+	reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, "notifiers")
+
 	validators := reporter.Manager.GetValidators().ToSlice()
 	entries := make([]notifierEntry, 0)
 
