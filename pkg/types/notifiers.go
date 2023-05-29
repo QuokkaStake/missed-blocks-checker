@@ -19,6 +19,10 @@ func (n Notifier) Equals(another *Notifier) bool {
 
 type Notifiers []*Notifier
 
+func (n Notifiers) Length() int {
+	return len(n)
+}
+
 func (n Notifiers) AddNotifier(
 	operatorAddress string,
 	reporter constants.ReporterName,
@@ -87,6 +91,6 @@ func (n Notifiers) RemoveNotifier(
 		return !notifier.Equals(deletedNotifier)
 	})
 
-	var newNNotifiers Notifiers = newN
-	return &newNNotifiers, true
+	var newNotifiers Notifiers = newN
+	return &newNotifiers, true
 }

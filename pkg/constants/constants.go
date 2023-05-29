@@ -27,6 +27,7 @@ const (
 	EventValidatorTombstoned   EventName = "ValidatorTombstoned"
 
 	TelegramReporterName ReporterName = "telegram"
+	TestReporterName     ReporterName = "test"
 )
 
 func GetEventNames() []EventName {

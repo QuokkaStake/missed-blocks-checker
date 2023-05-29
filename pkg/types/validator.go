@@ -27,12 +27,3 @@ type Validator struct {
 func (v *Validator) Active() bool {
 	return v.Status == constants.ValidatorBonded
 }
-
-func (v *Validator) DetailsChanged(another *Validator) bool {
-	return v.Moniker != another.Moniker ||
-		v.Description != another.Description ||
-		v.Identity != another.Identity ||
-		v.SecurityContact != another.SecurityContact ||
-		v.Website != another.Website ||
-		v.Commission != another.Commission
-}
