@@ -45,10 +45,6 @@ func (c *ChainConfig) Validate() error {
 	return nil
 }
 
-func (c *ChainConfig) SetDefaultMissedBlocksGroups() {
-	c.RecalculateMissedBlocksGroups()
-}
-
 func (c *ChainConfig) RecalculateMissedBlocksGroups() {
 	totalRange := float64(c.BlocksWindow) + 1 // from 0 till max blocks allowed, including
 

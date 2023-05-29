@@ -25,7 +25,7 @@ func NewApp(configPath string, version string) *App {
 		loggerPkg.GetDefaultLogger().Fatal().Err(err).Msg("Could not load config")
 	}
 	for _, chainConfig := range config.ChainConfigs {
-		chainConfig.SetDefaultMissedBlocksGroups()
+		chainConfig.RecalculateMissedBlocksGroups()
 	}
 
 	if err = config.Validate(); err != nil {

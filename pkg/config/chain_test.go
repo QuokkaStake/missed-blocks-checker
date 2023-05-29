@@ -6,16 +6,47 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetNameWithoutPrettyName(t *testing.T) {
+func TestGetChainNameWithoutPrettyName(t *testing.T) {
 	t.Parallel()
 
 	config := &ChainConfig{Name: "test"}
 	assert.Equal(t, config.GetName(), "test", "Names do not match!")
 }
 
-func TestGetNameWithPrettyName(t *testing.T) {
+func TestGetChainNameWithPrettyName(t *testing.T) {
 	t.Parallel()
 
 	config := &ChainConfig{Name: "test", PrettyName: "Test"}
 	assert.Equal(t, config.GetName(), "Test", "Names do not match!")
+}
+
+func TestGetChainBlocksSignCount(t *testing.T) {
+	t.Parallel()
+
+	config := &ChainConfig{BlocksWindow: 10000, MinSignedPerWindow: 0.05}
+	assert.Equal(t, config.GetBlocksSignCount(), int64(9500), "Blocks sign count does not match!")
+}
+
+func TestValidateChainWithoutName(t *testing.T) {
+	t.Parallel()
+
+	config := &ChainConfig{}
+	err := config.Validate()
+	assert.NotNil(t, err, "Error should be present!")
+}
+
+func TestValidateChainWithoutRPCEndpoints(t *testing.T) {
+	t.Parallel()
+
+	config := &ChainConfig{Name: "chain"}
+	err := config.Validate()
+	assert.NotNil(t, err, "Error should be present!")
+}
+
+func TestValidateChainValid(t *testing.T) {
+	t.Parallel()
+
+	config := &ChainConfig{Name: "chain", RPCEndpoints: []string{"endpoint"}}
+	err := config.Validate()
+	assert.Nil(t, err, "Error should not be present!")
 }
