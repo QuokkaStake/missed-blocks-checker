@@ -10,5 +10,5 @@ func TestBlockHash(t *testing.T) {
 	t.Parallel()
 
 	block := Block{Height: 123}
-	assert.Equal(t, block.Hash(), "block_123", "Wrong block height!")
+	assert.Equal(t, block.Hash(), "block_123", "Wrong block hash!")
 }
