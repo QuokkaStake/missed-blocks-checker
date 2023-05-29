@@ -74,7 +74,12 @@ func NewAppManager(
 func (a *AppManager) Start() {
 	a.StateManager.Init()
 
-	a.MetricsManager.LogSlashingParams(a.Config.Name, a.Config.BlocksWindow, a.Config.MinSignedPerWindow)
+	a.MetricsManager.LogSlashingParams(
+		a.Config.Name,
+		a.Config.BlocksWindow,
+		a.Config.MinSignedPerWindow,
+		a.Config.StoreBlocks,
+	)
 	a.MetricsManager.LogChainInfo(a.Config.Name, a.Config.GetName())
 
 	for _, reporter := range a.Reporters {
@@ -237,7 +242,12 @@ func (a *AppManager) PopulateSlashingParams() {
 			Float64("min_signed_per_window", a.Config.MinSignedPerWindow).
 			Msg("Got slashing params")
 
-		a.MetricsManager.LogSlashingParams(a.Config.Name, a.Config.BlocksWindow, a.Config.MinSignedPerWindow)
+		a.MetricsManager.LogSlashingParams(
+			a.Config.Name,
+			a.Config.BlocksWindow,
+			a.Config.MinSignedPerWindow,
+			a.Config.StoreBlocks,
+		)
 		a.Config.RecalculateMissedBlocksGroups()
 	}
 }

@@ -47,6 +47,7 @@ type Manager struct {
 	chainInfoGauge          *prometheus.GaugeVec
 	signedBlocksWindowGauge *prometheus.GaugeVec
 	minSignedPerWindowGauge *prometheus.GaugeVec
+	storeBlocksGauge        *prometheus.GaugeVec
 }
 
 func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager {
@@ -132,6 +133,10 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 		signedBlocksWindowGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
 			Name: constants.PrometheusMetricsPrefix + "window",
 			Help: "A window in which validator needs to sign blocks",
+		}, []string{"chain"}),
+		storeBlocksGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
+			Name: constants.PrometheusMetricsPrefix + "store_blocks",
+			Help: "How much blocks at max should be stored in a database",
 		}, []string{"chain"}),
 		minSignedPerWindowGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
 			Name: constants.PrometheusMetricsPrefix + "min_signed",
@@ -328,7 +333,12 @@ func (m *Manager) LogValidatorStats(
 	}
 }
 
-func (m *Manager) LogSlashingParams(chain string, window int64, minSigned float64) {
+func (m *Manager) LogSlashingParams(
+	chain string,
+	window int64,
+	minSigned float64,
+	storeBlocks int64,
+) {
 	m.signedBlocksWindowGauge.
 		With(prometheus.Labels{"chain": chain}).
 		Set(float64(window))
@@ -336,6 +346,10 @@ func (m *Manager) LogSlashingParams(chain string, window int64, minSigned float6
 	m.minSignedPerWindowGauge.
 		With(prometheus.Labels{"chain": chain}).
 		Set(minSigned)
+
+	m.storeBlocksGauge.
+		With(prometheus.Labels{"chain": chain}).
+		Set(float64(storeBlocks))
 }
 
 func (m *Manager) LogChainInfo(chain string, prettyName string) {
