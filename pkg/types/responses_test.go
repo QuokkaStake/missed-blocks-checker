@@ -1,11 +1,14 @@
 package types
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestToBlockInvalid(t *testing.T) {
+	t.Parallel()
+
 	blockRaw := &TendermintBlock{
 		Header: BlockHeader{Height: "invalid"},
 	}
@@ -16,6 +19,8 @@ func TestToBlockInvalid(t *testing.T) {
 }
 
 func TestToBlockValid(t *testing.T) {
+	t.Parallel()
+
 	blockRaw := &TendermintBlock{
 		Header: BlockHeader{Height: "100"},
 		LastCommit: BlockLastCommit{

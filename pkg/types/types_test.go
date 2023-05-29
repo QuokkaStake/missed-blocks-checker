@@ -1,11 +1,14 @@
 package types
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestValidatorsToMap(t *testing.T) {
+	t.Parallel()
+
 	validators := Validators{
 		{Moniker: "first", OperatorAddress: "firstaddr"},
 		{Moniker: "second", OperatorAddress: "secondaddr"},
@@ -15,10 +18,11 @@ func TestValidatorsToMap(t *testing.T) {
 	assert.Len(t, validatorsMap, 2, "Map should have 2 entries!")
 	assert.Equal(t, validatorsMap["firstaddr"].Moniker, "first", "Validator mismatch!")
 	assert.Equal(t, validatorsMap["secondaddr"].Moniker, "second", "Validator mismatch!")
-
 }
 
 func TestValidatorsToSlice(t *testing.T) {
+	t.Parallel()
+
 	validatorsMap := ValidatorsMap{
 		"firstaddr":  {Moniker: "first", OperatorAddress: "firstaddr"},
 		"secondaddr": {Moniker: "second", OperatorAddress: "secondaddr"},
