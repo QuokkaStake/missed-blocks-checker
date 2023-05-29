@@ -56,7 +56,7 @@ func SplitStringIntoChunks(msg string, maxLineLength int) []string {
 	var sb strings.Builder
 
 	for _, line := range msgsByNewline {
-		if sb.Len()+len(line) >= maxLineLength {
+		if sb.Len()+len(line) > maxLineLength {
 			outMessages = append(outMessages, sb.String())
 			sb.Reset()
 		}
@@ -78,7 +78,7 @@ func BoolToFloat64(value bool) float64 {
 
 func SplitIntoChunks[T any](items []T, chunkSize int) [][]T {
 	if len(items) == 0 {
-		return nil
+		return make([][]T, 0)
 	}
 
 	divided := make([][]T, (len(items)+chunkSize-1)/chunkSize)
