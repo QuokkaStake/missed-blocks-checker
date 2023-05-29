@@ -234,8 +234,16 @@ func (a *AppManager) PopulateSlashingParams() {
 
 		return
 	} else {
+		minSignedPerWindow, err := params.Params.MinSignedPerWindow.Float64()
+		if err != nil {
+			a.Logger.Warn().
+				Err(err).
+				Msg("Got malformed slashing params from node")
+			return
+		}
+
 		a.Config.BlocksWindow = params.Params.SignedBlocksWindow
-		a.Config.MinSignedPerWindow = params.Params.MinSignedPerWindow.MustFloat64()
+		a.Config.MinSignedPerWindow = minSignedPerWindow
 
 		a.Logger.Info().
 			Int64("blocks_window", a.Config.BlocksWindow).
