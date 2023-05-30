@@ -162,6 +162,15 @@ func (t *WebsocketClient) Stop() {
 	}
 }
 
+func (t *WebsocketClient) Resubscribe() {
+	if err := t.client.UnsubscribeAll(context.Background()); err != nil {
+		t.logger.Error().Err(err).Msg("Error unsubscribing from updates")
+	}
+
+	time.Sleep(5 * time.Second)
+	t.SubscribeToUpdates()
+}
+
 func (t *WebsocketClient) ProcessEvent(event rpcTypes.RPCResponse) {
 	t.metricsManager.LogWSEvent(t.config.Name, t.url)
 	t.lastEventTime = time.Now()
@@ -169,6 +178,11 @@ func (t *WebsocketClient) ProcessEvent(event rpcTypes.RPCResponse) {
 	if event.Error != nil && event.Error.Message != "" {
 		t.logger.Error().Str("msg", event.Error.Error()).Msg("Got error in RPC response")
 		t.Channel <- &types.WSError{Error: event.Error}
+		return
+	}
+
+	if len(event.Result) == 0 {
+		t.Resubscribe()
 		return
 	}
 
