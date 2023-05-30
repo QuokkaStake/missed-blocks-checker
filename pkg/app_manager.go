@@ -119,7 +119,7 @@ func (a *AppManager) ListenForEvents() {
 				continue
 			}
 
-			if err := a.UpdateValidators(); err != nil {
+			if err := a.UpdateValidators(block.Height); err != nil {
 				a.Logger.Error().
 					Err(err).
 					Msg("Error updating validators")
@@ -227,7 +227,7 @@ func (a *AppManager) PopulateSlashingParams() {
 		return
 	}
 
-	if params, err := a.RPCManager.GetSlashingParams(); err != nil {
+	if params, err := a.RPCManager.GetSlashingParams(a.StateManager.GetLatestBlock()); err != nil {
 		a.Logger.Warn().
 			Err(err).
 			Msg("Error updating slashing params")
@@ -260,8 +260,8 @@ func (a *AppManager) PopulateSlashingParams() {
 	}
 }
 
-func (a *AppManager) UpdateValidators() error {
-	validators, err := a.DataManager.GetValidators()
+func (a *AppManager) UpdateValidators(height int64) error {
+	validators, err := a.DataManager.GetValidators(height)
 	if err != nil {
 		return err
 	}

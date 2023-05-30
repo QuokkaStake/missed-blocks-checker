@@ -33,9 +33,9 @@ func NewManager(
 	}
 }
 
-func (m *Manager) GetValidators() (types.Validators, error) {
+func (m *Manager) GetValidators(height int64) (types.Validators, error) {
 	if m.config.QueryEachSigningInfo.Bool {
-		return m.GetValidatorsAndEachSigningInfo()
+		return m.GetValidatorsAndEachSigningInfo(height)
 	}
 
 	var (
@@ -48,12 +48,12 @@ func (m *Manager) GetValidators() (types.Validators, error) {
 
 	wg.Add(2)
 	go func() {
-		validatorsResponse, validatorsError = m.httpManager.GetValidators()
+		validatorsResponse, validatorsError = m.httpManager.GetValidators(height)
 		wg.Done()
 	}()
 
 	go func() {
-		signingInfoResponse, signingInfoErr = m.httpManager.GetSigningInfos()
+		signingInfoResponse, signingInfoErr = m.httpManager.GetSigningInfos(height)
 		wg.Done()
 	}()
 
@@ -99,8 +99,8 @@ func (m *Manager) GetValidators() (types.Validators, error) {
 	return validators, nil
 }
 
-func (m *Manager) GetValidatorsAndEachSigningInfo() (types.Validators, error) {
-	validatorsResponse, validatorsError := m.httpManager.GetValidators()
+func (m *Manager) GetValidatorsAndEachSigningInfo(height int64) (types.Validators, error) {
+	validatorsResponse, validatorsError := m.httpManager.GetValidators(height)
 	if validatorsError != nil {
 		return nil, validatorsError
 	}
@@ -115,7 +115,7 @@ func (m *Manager) GetValidatorsAndEachSigningInfo() (types.Validators, error) {
 			defer wg.Done()
 
 			consensusAddr := m.converter.GetConsensusAddress(validatorRaw)
-			signingInfoResponse, signingInfoErr := m.httpManager.GetSigningInfo(consensusAddr)
+			signingInfoResponse, signingInfoErr := m.httpManager.GetSigningInfo(consensusAddr, height)
 			if signingInfoErr != nil {
 				m.logger.Warn().
 					Str("operator_address", validatorRaw.OperatorAddress).

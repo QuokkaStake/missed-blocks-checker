@@ -25,20 +25,20 @@ func (manager *RPCManager) GetBlock(height int64) (*types.SingleBlockResponse, e
 	return manager.rpc.GetBlock(height)
 }
 
-func (manager *RPCManager) GetValidators() (*stakingTypes.QueryValidatorsResponse, error) {
-	return manager.rpc.GetValidators()
+func (manager *RPCManager) GetValidators(height int64) (*stakingTypes.QueryValidatorsResponse, error) {
+	return manager.rpc.GetValidators(height)
 }
 
-func (manager *RPCManager) GetSigningInfos() (*slashingTypes.QuerySigningInfosResponse, error) {
-	return manager.rpc.GetSigningInfos()
+func (manager *RPCManager) GetSigningInfos(height int64) (*slashingTypes.QuerySigningInfosResponse, error) {
+	return manager.rpc.GetSigningInfos(height)
 }
 
-func (manager *RPCManager) GetSigningInfo(valcons string) (*slashingTypes.QuerySigningInfoResponse, error) {
-	return manager.rpc.GetSigningInfo(valcons)
+func (manager *RPCManager) GetSigningInfo(valcons string, height int64) (*slashingTypes.QuerySigningInfoResponse, error) {
+	return manager.rpc.GetSigningInfo(valcons, height)
 }
 
-func (manager *RPCManager) GetSlashingParams() (*slashingTypes.QueryParamsResponse, error) {
-	return manager.rpc.GetSlashingParams()
+func (manager *RPCManager) GetSlashingParams(height int64) (*slashingTypes.QueryParamsResponse, error) {
+	return manager.rpc.GetSlashingParams(height)
 }
 
 func (manager *RPCManager) GetActiveSetAtBlock(height int64) (map[string]bool, error) {

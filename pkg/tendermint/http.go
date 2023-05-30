@@ -73,6 +73,7 @@ func (rpc *RPC) GetBlock(height int64) (*types.SingleBlockResponse, error) {
 func (rpc *RPC) AbciQuery(
 	method string,
 	message codec.ProtoMarshaler,
+	height int64,
 	queryType string,
 	output codec.ProtoMarshaler,
 ) error {
@@ -83,20 +84,32 @@ func (rpc *RPC) AbciQuery(
 
 	methodName := fmt.Sprintf("\"%s\"", method)
 	queryURL := fmt.Sprintf(
-		"/abci_query?path=%s&data=0x%x",
+		"/abci_query?path=%s&data=0x%x&height=%d",
 		url.QueryEscape(methodName),
 		dataBytes,
+		height,
 	)
 
 	var response types.AbciQueryResponse
-	if err := rpc.Get(queryURL, "abci_"+queryType, &response, AlwaysNoError); err != nil {
+	if err := rpc.Get(queryURL, "abci_"+queryType, &response, func(v interface{}) error {
+		response, ok := v.(*types.AbciQueryResponse)
+		if !ok {
+			return fmt.Errorf("error converting ABCI response")
+		}
+
+		if response.Result.Response.Code != 0 {
+			return fmt.Errorf("error in Tendermint response: expected code 0, but got %d", response.Result.Response.Code)
+		}
+
+		return nil
+	}); err != nil {
 		return err
 	}
 
 	return output.Unmarshal(response.Result.Response.Value)
 }
 
-func (rpc *RPC) GetValidators() (*stakingTypes.QueryValidatorsResponse, error) {
+func (rpc *RPC) GetValidators(height int64) (*stakingTypes.QueryValidatorsResponse, error) {
 	query := stakingTypes.QueryValidatorsRequest{
 		Pagination: &queryTypes.PageRequest{
 			Limit: constants.ValidatorsQueryPagination,
@@ -104,14 +117,14 @@ func (rpc *RPC) GetValidators() (*stakingTypes.QueryValidatorsResponse, error) {
 	}
 
 	var validatorsResponse stakingTypes.QueryValidatorsResponse
-	if err := rpc.AbciQuery("/cosmos.staking.v1beta1.Query/Validators", &query, "validators", &validatorsResponse); err != nil {
+	if err := rpc.AbciQuery("/cosmos.staking.v1beta1.Query/Validators", &query, height, "validators", &validatorsResponse); err != nil {
 		return nil, err
 	}
 
 	return &validatorsResponse, nil
 }
 
-func (rpc *RPC) GetSigningInfos() (*slashingTypes.QuerySigningInfosResponse, error) {
+func (rpc *RPC) GetSigningInfos(height int64) (*slashingTypes.QuerySigningInfosResponse, error) {
 	query := slashingTypes.QuerySigningInfosRequest{
 		Pagination: &queryTypes.PageRequest{
 			Limit: constants.SigningInfosQueryPagination,
@@ -119,31 +132,32 @@ func (rpc *RPC) GetSigningInfos() (*slashingTypes.QuerySigningInfosResponse, err
 	}
 
 	var response slashingTypes.QuerySigningInfosResponse
-	if err := rpc.AbciQuery("/cosmos.slashing.v1beta1.Query/SigningInfos", &query, "signing_infos", &response); err != nil {
+	if err := rpc.AbciQuery("/cosmos.slashing.v1beta1.Query/SigningInfos", &query, height, "signing_infos", &response); err != nil {
 		return nil, err
 	}
 
 	return &response, nil
 }
 
-func (rpc *RPC) GetSigningInfo(valcons string) (*slashingTypes.QuerySigningInfoResponse, error) {
+func (rpc *RPC) GetSigningInfo(valcons string, height int64) (*slashingTypes.QuerySigningInfoResponse, error) {
 	query := slashingTypes.QuerySigningInfoRequest{
 		ConsAddress: valcons,
 	}
 
 	var response slashingTypes.QuerySigningInfoResponse
-	if err := rpc.AbciQuery("/cosmos.slashing.v1beta1.Query/SigningInfo", &query, "signing_info", &response); err != nil {
+	if err := rpc.AbciQuery("/cosmos.slashing.v1beta1.Query/SigningInfo", &query, height, "signing_info", &response); err != nil {
 		return nil, err
 	}
 
 	return &response, nil
 }
 
-func (rpc *RPC) GetSlashingParams() (*slashingTypes.QueryParamsResponse, error) {
+func (rpc *RPC) GetSlashingParams(height int64) (*slashingTypes.QueryParamsResponse, error) {
 	var response slashingTypes.QueryParamsResponse
 	if err := rpc.AbciQuery(
 		"/cosmos.slashing.v1beta1.Query/Params",
 		&slashingTypes.QueryParamsRequest{},
+		height,
 		"slashing_params",
 		&response,
 	); err != nil {
