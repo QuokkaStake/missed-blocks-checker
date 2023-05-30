@@ -207,6 +207,11 @@ func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.Entry) string {
 			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 			notifiersSerialized,
 		)
+	case events.ValidatorCreated:
+		return fmt.Sprintf(
+			"<strong>💡New validator created: %s</strong>",
+			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+		)
 	default:
 		return fmt.Sprintf("Unsupported event %+v\n", entry)
 	}

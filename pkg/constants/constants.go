@@ -26,6 +26,7 @@ const (
 	EventValidatorJailed       EventName = "ValidatorJailed"
 	EventValidatorUnjailed     EventName = "ValidatorUnjailed"
 	EventValidatorTombstoned   EventName = "ValidatorTombstoned"
+	EventValidatorCreated      EventName = "ValidatorCreated"
 
 	TelegramReporterName ReporterName = "telegram"
 	TestReporterName     ReporterName = "test"
@@ -46,5 +47,6 @@ func GetEventNames() []EventName {
 		EventValidatorJailed,
 		EventValidatorUnjailed,
 		EventValidatorTombstoned,
+		EventValidatorCreated,
 	}
 }

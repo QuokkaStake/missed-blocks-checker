@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNoPreviousValidator(t *testing.T) {
+func TestValidatorCreated(t *testing.T) {
 	t.Parallel()
 
 	olderSnapshot := Snapshot{Entries: map[string]Entry{}}
@@ -20,7 +20,8 @@ func TestNoPreviousValidator(t *testing.T) {
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, nil)
 	assert.Nil(t, err, "Error should not be present!")
-	assert.Empty(t, report.Entries, "Report should be empty!")
+	assert.Len(t, report.Entries, 1, "Report should have 1 entry!")
+	assert.Equal(t, report.Entries[0].Type(), constants.EventValidatorCreated, 1, "Entry type mismatch!")
 }
 
 func TestValidatorGroupChanged(t *testing.T) {

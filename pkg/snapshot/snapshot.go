@@ -39,6 +39,9 @@ func (snapshot *Snapshot) GetReport(
 	for valoper, entry := range snapshot.Entries {
 		olderEntry, ok := olderSnapshot.Entries[valoper]
 		if !ok {
+			entries = append(entries, events.ValidatorCreated{
+				Validator: entry.Validator,
+			})
 			continue
 		}
 
