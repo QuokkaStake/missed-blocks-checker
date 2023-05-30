@@ -222,14 +222,14 @@ func (m *Manager) LogTendermintQuery(chain string, query types.QueryInfo) {
 			With(prometheus.Labels{
 				"chain": chain,
 				"node":  query.Node,
-				"type":  query.QueryType,
+				"type":  string(query.QueryType),
 			}).Inc()
 	} else {
 		m.failedQueriesCollector.
 			With(prometheus.Labels{
 				"chain": chain,
 				"node":  query.Node,
-				"type":  query.QueryType,
+				"type":  string(query.QueryType),
 			}).Inc()
 	}
 }

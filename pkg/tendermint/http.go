@@ -44,7 +44,7 @@ func (rpc *RPC) GetBlock(height int64) (*types.SingleBlockResponse, error) {
 	}
 
 	var response types.SingleBlockResponse
-	if err := rpc.Get(queryURL, "block", &response, func(v interface{}) error {
+	if err := rpc.Get(queryURL, constants.QueryTypeBlock, &response, func(v interface{}) error {
 		response, ok := v.(*types.SingleBlockResponse)
 		if !ok {
 			return fmt.Errorf("error converting block")
@@ -87,7 +87,7 @@ func (rpc *RPC) AbciQuery(
 	)
 
 	var response types.AbciQueryResponse
-	if err := rpc.Get(queryURL, "abci_"+string(queryType), &response, func(v interface{}) error {
+	if err := rpc.Get(queryURL, constants.QueryType("abci_"+string(queryType)), &response, func(v interface{}) error {
 		response, ok := v.(*types.AbciQueryResponse)
 		if !ok {
 			return fmt.Errorf("error converting ABCI response")
@@ -204,7 +204,7 @@ func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 		)
 
 		var response types.ValidatorsResponse
-		if err := rpc.Get(queryURL, "historical_validators", &response, func(v interface{}) error {
+		if err := rpc.Get(queryURL, constants.QueryTypeHistoricalValidators, &response, func(v interface{}) error {
 			response, ok := v.(*types.ValidatorsResponse)
 			if !ok {
 				return fmt.Errorf("error converting validators")
@@ -239,7 +239,7 @@ func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 
 func (rpc *RPC) Get(
 	url string,
-	queryType string,
+	queryType constants.QueryType,
 	target interface{},
 	predicate func(interface{}) error,
 ) error {
@@ -289,7 +289,7 @@ func (rpc *RPC) Get(
 
 func (rpc *RPC) GetFull(
 	host, url string,
-	queryType string,
+	queryType constants.QueryType,
 	target interface{},
 ) error {
 	client := &http.Client{Timeout: 60 * 1000000000}

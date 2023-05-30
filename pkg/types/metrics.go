@@ -1,7 +1,9 @@
 package types
 
+import "main/pkg/constants"
+
 type QueryInfo struct {
 	Success   bool
-	QueryType string
+	QueryType constants.QueryType
 	Node      string
 }

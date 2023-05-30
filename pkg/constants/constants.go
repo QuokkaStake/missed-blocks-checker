@@ -30,10 +30,12 @@ const (
 	TelegramReporterName ReporterName = "telegram"
 	TestReporterName     ReporterName = "test"
 
-	QueryTypeValidators     QueryType = "validators"
-	QueryTypeSigningInfos   QueryType = "signing_infos"
-	QueryTypeSigningInfo    QueryType = "signing_info"
-	QueryTypeSlashingParams QueryType = "slashing_params"
+	QueryTypeValidators           QueryType = "validators"
+	QueryTypeSigningInfos         QueryType = "signing_infos"
+	QueryTypeSigningInfo          QueryType = "signing_info"
+	QueryTypeSlashingParams       QueryType = "slashing_params"
+	QueryTypeHistoricalValidators QueryType = "historical_validators"
+	QueryTypeBlock                QueryType = "block"
 )
 
 func GetEventNames() []EventName {
