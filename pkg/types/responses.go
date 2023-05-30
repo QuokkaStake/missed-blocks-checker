@@ -78,6 +78,7 @@ type AbciQueryResult struct {
 
 type AbciResponse struct {
 	Code  int    `json:"code"`
+	Log   string `json:"log"`
 	Value []byte `json:"value"`
 }
 

@@ -98,7 +98,11 @@ func (rpc *RPC) AbciQuery(
 		}
 
 		if response.Result.Response.Code != 0 {
-			return fmt.Errorf("error in Tendermint response: expected code 0, but got %d", response.Result.Response.Code)
+			return fmt.Errorf(
+				"error in Tendermint response: expected code 0, but got %d, error: %s",
+				response.Result.Response.Code,
+				response.Result.Response.Log,
+			)
 		}
 
 		return nil
