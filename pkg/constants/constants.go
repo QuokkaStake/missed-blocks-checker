@@ -2,6 +2,7 @@ package constants
 
 type EventName string
 type ReporterName string
+type QueryType string
 
 const (
 	BlockSearchPagination       int64  = 100
@@ -28,6 +29,11 @@ const (
 
 	TelegramReporterName ReporterName = "telegram"
 	TestReporterName     ReporterName = "test"
+
+	QueryTypeValidators     QueryType = "validators"
+	QueryTypeSigningInfos   QueryType = "signing_infos"
+	QueryTypeSigningInfo    QueryType = "signing_info"
+	QueryTypeSlashingParams QueryType = "slashing_params"
 )
 
 func GetEventNames() []EventName {

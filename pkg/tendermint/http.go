@@ -29,10 +29,6 @@ type RPC struct {
 	logger         zerolog.Logger
 }
 
-func AlwaysNoError(interface{}) error {
-	return nil
-}
-
 func NewRPC(config *configPkg.ChainConfig, logger zerolog.Logger, metricsManager *metrics.Manager) *RPC {
 	return &RPC{
 		config:         config,
@@ -74,7 +70,7 @@ func (rpc *RPC) AbciQuery(
 	method string,
 	message codec.ProtoMarshaler,
 	height int64,
-	queryType string,
+	queryType constants.QueryType,
 	output codec.ProtoMarshaler,
 ) error {
 	dataBytes, err := message.Marshal()
@@ -91,10 +87,15 @@ func (rpc *RPC) AbciQuery(
 	)
 
 	var response types.AbciQueryResponse
-	if err := rpc.Get(queryURL, "abci_"+queryType, &response, func(v interface{}) error {
+	if err := rpc.Get(queryURL, "abci_"+string(queryType), &response, func(v interface{}) error {
 		response, ok := v.(*types.AbciQueryResponse)
 		if !ok {
 			return fmt.Errorf("error converting ABCI response")
+		}
+
+		// code = NotFound desc = SigningInfo not found for validator xxx: key not found
+		if queryType == constants.QueryTypeSigningInfo && response.Result.Response.Code == 22 {
+			return nil
 		}
 
 		if response.Result.Response.Code != 0 {
@@ -121,7 +122,13 @@ func (rpc *RPC) GetValidators(height int64) (*stakingTypes.QueryValidatorsRespon
 	}
 
 	var validatorsResponse stakingTypes.QueryValidatorsResponse
-	if err := rpc.AbciQuery("/cosmos.staking.v1beta1.Query/Validators", &query, height, "validators", &validatorsResponse); err != nil {
+	if err := rpc.AbciQuery(
+		"/cosmos.staking.v1beta1.Query/Validators",
+		&query,
+		height,
+		constants.QueryTypeValidators,
+		&validatorsResponse,
+	); err != nil {
 		return nil, err
 	}
 
@@ -136,7 +143,13 @@ func (rpc *RPC) GetSigningInfos(height int64) (*slashingTypes.QuerySigningInfosR
 	}
 
 	var response slashingTypes.QuerySigningInfosResponse
-	if err := rpc.AbciQuery("/cosmos.slashing.v1beta1.Query/SigningInfos", &query, height, "signing_infos", &response); err != nil {
+	if err := rpc.AbciQuery(
+		"/cosmos.slashing.v1beta1.Query/SigningInfos",
+		&query,
+		height,
+		constants.QueryTypeSigningInfos,
+		&response,
+	); err != nil {
 		return nil, err
 	}
 
@@ -149,7 +162,13 @@ func (rpc *RPC) GetSigningInfo(valcons string, height int64) (*slashingTypes.Que
 	}
 
 	var response slashingTypes.QuerySigningInfoResponse
-	if err := rpc.AbciQuery("/cosmos.slashing.v1beta1.Query/SigningInfo", &query, height, "signing_info", &response); err != nil {
+	if err := rpc.AbciQuery(
+		"/cosmos.slashing.v1beta1.Query/SigningInfo",
+		&query,
+		height,
+		constants.QueryTypeSigningInfo,
+		&response,
+	); err != nil {
 		return nil, err
 	}
 
@@ -162,7 +181,7 @@ func (rpc *RPC) GetSlashingParams(height int64) (*slashingTypes.QueryParamsRespo
 		"/cosmos.slashing.v1beta1.Query/Params",
 		&slashingTypes.QueryParamsRequest{},
 		height,
-		"slashing_params",
+		constants.QueryTypeSlashingParams,
 		&response,
 	); err != nil {
 		return nil, err
