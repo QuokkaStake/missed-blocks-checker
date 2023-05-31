@@ -42,6 +42,14 @@ func (h *HistoricalValidators) SetValidators(height int64, validators types.Hist
 	}
 }
 
+func (h *HistoricalValidators) HasValidatorsAtHeight(height int64) bool {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+
+	_, ok := h.validators[height]
+	return ok
+}
+
 func (h *HistoricalValidators) TrimBefore(trimHeight int64) {
 	h.mutex.Lock()
 	defer h.mutex.Unlock()
