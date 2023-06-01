@@ -324,11 +324,10 @@ func (rpc *RPC) GetFull(
 
 	rpc.logger.Debug().Str("url", url).Dur("duration", time.Since(start)).Msg("Query is finished")
 
-	jsonErr := json.NewDecoder(res.Body).Decode(target)
-	if jsonErr != nil {
+	if jsonErr := json.NewDecoder(res.Body).Decode(target); jsonErr != nil {
 		rpc.logger.Warn().Str("url", fullURL).Err(jsonErr).Msg("Error decoding JSON from response")
 		rpc.metricsManager.LogTendermintQuery(rpc.config.Name, queryInfo)
-		return err
+		return jsonErr
 	}
 
 	queryInfo.Success = true
