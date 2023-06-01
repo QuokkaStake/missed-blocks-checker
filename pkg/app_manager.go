@@ -227,7 +227,7 @@ func (a *AppManager) PopulateSlashingParams() {
 		return
 	}
 
-	if params, err := a.RPCManager.GetSlashingParams(a.StateManager.GetLatestBlock() - 1); err != nil {
+	if params, err := a.RPCManager.GetSlashingParams(a.StateManager.GetLastBlockHeight() - 1); err != nil {
 		a.Logger.Warn().
 			Err(err).
 			Msg("Error updating slashing params")

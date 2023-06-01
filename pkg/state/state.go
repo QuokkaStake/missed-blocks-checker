@@ -36,10 +36,6 @@ func NewState() *State {
 	}
 }
 
-func (s *State) GetLatestBlock() int64 {
-	return s.blocks.lastHeight
-}
-
 func (s *State) AddBlock(block *types.Block) {
 	s.blocks.AddBlock(block)
 }
@@ -145,10 +141,6 @@ func (s *State) GetValidatorsForNotifier(
 }
 
 func (s *State) GetLastBlockHeight() int64 {
-	return s.blocks.lastHeight
-}
-
-func (s *State) GetLastActiveSetHeight() int64 {
 	return s.blocks.lastHeight
 }
 

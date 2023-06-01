@@ -10,83 +10,73 @@ import (
 func TestHistoricalValidatorsSetValidator(t *testing.T) {
 	t.Parallel()
 
-	validators := NewHistoricalValidators()
-	assert.Len(t, validators.validators, 0, "Validators should have 0 entries!")
+	state := NewState()
+	assert.Len(t, state.historicalValidators.validators, 0, "Validators should have 0 entries!")
 
-	validators.SetValidators(10, types.HistoricalValidators{})
-	assert.Len(t, validators.validators, 1, "Validators should have 1 entry!")
+	state.AddActiveSet(10, types.HistoricalValidators{})
+	assert.Len(t, state.historicalValidators.validators, 1, "Validators should have 1 entry!")
 }
 
 func TestHistoricalValidatorsSetAllValidators(t *testing.T) {
 	t.Parallel()
 
-	validators := NewHistoricalValidators()
-	validators.SetAllValidators(types.HistoricalValidatorsMap{
+	state := NewState()
+	state.SetActiveSet(types.HistoricalValidatorsMap{
 		1: {},
 		2: {},
 	})
-	assert.Len(t, validators.validators, 2, "Validators should have 2 entries!")
-	assert.True(t, validators.HasValidatorsAtHeight(1), "Validators mismatch!")
-	assert.True(t, validators.HasValidatorsAtHeight(2), "Validators mismatch!")
+
+	assert.Len(t, state.historicalValidators.validators, 2, "Validators should have 2 entries!")
+	assert.True(t, state.historicalValidators.HasValidatorsAtHeight(1), "Validators mismatch!")
+	assert.True(t, state.historicalValidators.HasValidatorsAtHeight(2), "Validators mismatch!")
 }
 
 func TestHistoricalValidatorsGetCountSinceLatest(t *testing.T) {
 	t.Parallel()
 
-	validators := NewHistoricalValidators()
-	validators.SetValidators(1, types.HistoricalValidators{})
-	validators.SetValidators(3, types.HistoricalValidators{})
-	validators.SetValidators(5, types.HistoricalValidators{})
+	state := NewState()
+	state.AddActiveSet(1, types.HistoricalValidators{})
+	state.AddActiveSet(3, types.HistoricalValidators{})
+	state.AddActiveSet(5, types.HistoricalValidators{})
+	state.AddBlock(&types.Block{Height: 5})
 
-	count := validators.GetCountSinceLatest(5, 5)
+	count := state.GetActiveSetsCountSinceLatest(5)
 	assert.Equal(t, count, int64(3), "There should be 3 validators!")
 }
 
 func TestHistoricalValidatorsGetMissingSinceLatest(t *testing.T) {
 	t.Parallel()
 
-	validators := NewHistoricalValidators()
-	validators.SetValidators(1, types.HistoricalValidators{})
-	validators.SetValidators(3, types.HistoricalValidators{})
-	validators.SetValidators(5, types.HistoricalValidators{})
+	state := NewState()
+	state.AddActiveSet(1, types.HistoricalValidators{})
+	state.AddActiveSet(3, types.HistoricalValidators{})
+	state.AddActiveSet(5, types.HistoricalValidators{})
+	state.AddBlock(&types.Block{Height: 5})
 
-	missing := validators.GetMissingSinceLatest(5, 5)
+	missing := state.GetMissingActiveSetsSinceLatest(5)
 	assert.Len(t, missing, 2, "There should be 3 validators!")
 	assert.Contains(t, missing, int64(2), "Validators mismatch!")
 	assert.Contains(t, missing, int64(4), "Validators mismatch!")
 }
 
-func TestHistoricalValidatorsSetBlocks(t *testing.T) {
-	t.Parallel()
-
-	blocks := NewBlocks()
-	blocks.SetBlocks(map[int64]*types.Block{
-		1: {Height: 1},
-		2: {Height: 2},
-	})
-
-	assert.True(t, blocks.HasBlockAtHeight(1), "Blocks mismatch!")
-	assert.True(t, blocks.HasBlockAtHeight(2), "Blocks mismatch!")
-}
-
 func TestHistoricalValidatorsTrimBlocksBefore(t *testing.T) {
 	t.Parallel()
 
-	validators := NewHistoricalValidators()
-	validators.SetValidators(1, types.HistoricalValidators{})
-	validators.SetValidators(2, types.HistoricalValidators{})
-	validators.SetValidators(3, types.HistoricalValidators{})
+	state := NewState()
+	state.AddActiveSet(1, types.HistoricalValidators{})
+	state.AddActiveSet(2, types.HistoricalValidators{})
+	state.AddActiveSet(3, types.HistoricalValidators{})
 
-	validators.SetValidators(4, types.HistoricalValidators{})
-	validators.SetValidators(5, types.HistoricalValidators{})
+	state.AddActiveSet(4, types.HistoricalValidators{})
+	state.AddActiveSet(5, types.HistoricalValidators{})
 
-	validators.TrimBefore(3)
+	state.TrimActiveSetsBefore(3)
 
-	assert.False(t, validators.HasValidatorsAtHeight(1), "Validators mismatch!")
-	assert.False(t, validators.HasValidatorsAtHeight(2), "Validators mismatch!")
-	assert.False(t, validators.HasValidatorsAtHeight(3), "Validators mismatch!")
-	assert.True(t, validators.HasValidatorsAtHeight(4), "Validators mismatch!")
-	assert.True(t, validators.HasValidatorsAtHeight(5), "Validators mismatch!")
+	assert.False(t, state.historicalValidators.HasValidatorsAtHeight(1), "Validators mismatch!")
+	assert.False(t, state.historicalValidators.HasValidatorsAtHeight(2), "Validators mismatch!")
+	assert.False(t, state.historicalValidators.HasValidatorsAtHeight(3), "Validators mismatch!")
+	assert.True(t, state.historicalValidators.HasValidatorsAtHeight(4), "Validators mismatch!")
+	assert.True(t, state.historicalValidators.HasValidatorsAtHeight(5), "Validators mismatch!")
 }
 
 func TestNewHistoricalValidatorsIsValidatorActiveAtBlock(t *testing.T) {

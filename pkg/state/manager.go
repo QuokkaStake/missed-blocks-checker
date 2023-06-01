@@ -93,8 +93,8 @@ func (m *Manager) Init() {
 	}
 }
 
-func (m *Manager) GetLatestBlock() int64 {
-	return m.state.GetLatestBlock()
+func (m *Manager) GetLastBlockHeight() int64 {
+	return m.state.GetLastBlockHeight()
 }
 
 func (m *Manager) AddBlock(block *types.Block) error {
@@ -103,7 +103,7 @@ func (m *Manager) AddBlock(block *types.Block) error {
 
 	m.state.AddBlock(block)
 
-	if lastBlock := m.state.GetLatestBlock(); lastBlock == block.Height {
+	if lastBlock := m.state.GetLastBlockHeight(); lastBlock == block.Height {
 		m.metricsManager.LogLastHeight(m.config.Name, block.Height, block.Time)
 	}
 

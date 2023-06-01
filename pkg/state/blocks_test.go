@@ -10,22 +10,22 @@ import (
 func TestBlocksAddBlock(t *testing.T) {
 	t.Parallel()
 
-	blocks := NewBlocks()
-	assert.Len(t, blocks.blocks, 0, "Blocks should have 0 entries!")
+	state := NewState()
+	assert.Len(t, state.blocks.blocks, 0, "Blocks should have 0 entries!")
 
-	blocks.AddBlock(&types.Block{Height: 10})
-	assert.Len(t, blocks.blocks, 1, "Blocks should have 1 entry!")
+	state.AddBlock(&types.Block{Height: 10})
+	assert.Len(t, state.blocks.blocks, 1, "Blocks should have 1 entry!")
 }
 
 func TestBlocksGetLatestBlock(t *testing.T) {
 	t.Parallel()
 
-	blocks := NewBlocks()
-	blocks.AddBlock(&types.Block{Height: 20})
-	blocks.AddBlock(&types.Block{Height: 10})
-	blocks.AddBlock(&types.Block{Height: 30})
+	state := NewState()
+	state.AddBlock(&types.Block{Height: 20})
+	state.AddBlock(&types.Block{Height: 10})
+	state.AddBlock(&types.Block{Height: 30})
 
-	latest := blocks.GetLatestBlock()
+	latest := state.blocks.GetLatestBlock()
 
 	assert.Equal(t, latest.Height, int64(30), "Height mismatch!")
 }
@@ -33,12 +33,12 @@ func TestBlocksGetLatestBlock(t *testing.T) {
 func TestBlocksGetEarliestBlock(t *testing.T) {
 	t.Parallel()
 
-	blocks := NewBlocks()
-	blocks.AddBlock(&types.Block{Height: 20})
-	blocks.AddBlock(&types.Block{Height: 10})
-	blocks.AddBlock(&types.Block{Height: 30})
+	state := NewState()
+	state.AddBlock(&types.Block{Height: 20})
+	state.AddBlock(&types.Block{Height: 10})
+	state.AddBlock(&types.Block{Height: 30})
 
-	latest := blocks.GetEarliestBlock()
+	latest := state.GetEarliestBlock()
 
 	assert.Equal(t, latest.Height, int64(10), "Height mismatch!")
 }
@@ -61,37 +61,37 @@ func TestBlocksGetBlock(t *testing.T) {
 func TestBlocksHasBlock(t *testing.T) {
 	t.Parallel()
 
-	blocks := NewBlocks()
-	blocks.AddBlock(&types.Block{Height: 10})
+	state := NewState()
+	state.AddBlock(&types.Block{Height: 10})
 
-	found := blocks.HasBlockAtHeight(10)
+	found := state.HasBlockAtHeight(10)
 	assert.True(t, found, "Block should be found!")
 
-	anotherFound := blocks.HasBlockAtHeight(20)
+	anotherFound := state.HasBlockAtHeight(20)
 	assert.False(t, anotherFound, "Block should not be found!")
 }
 
 func TestBlocksGetCountSinceLatest(t *testing.T) {
 	t.Parallel()
 
-	blocks := NewBlocks()
-	blocks.AddBlock(&types.Block{Height: 1})
-	blocks.AddBlock(&types.Block{Height: 3})
-	blocks.AddBlock(&types.Block{Height: 5})
+	state := NewState()
+	state.AddBlock(&types.Block{Height: 1})
+	state.AddBlock(&types.Block{Height: 3})
+	state.AddBlock(&types.Block{Height: 5})
 
-	count := blocks.GetCountSinceLatest(5)
+	count := state.GetBlocksCountSinceLatest(5)
 	assert.Equal(t, count, int64(3), "There should be 3 blocks!")
 }
 
 func TestBlocksGetMissingSinceLatest(t *testing.T) {
 	t.Parallel()
 
-	blocks := NewBlocks()
-	blocks.AddBlock(&types.Block{Height: 1})
-	blocks.AddBlock(&types.Block{Height: 3})
-	blocks.AddBlock(&types.Block{Height: 5})
+	state := NewState()
+	state.AddBlock(&types.Block{Height: 1})
+	state.AddBlock(&types.Block{Height: 3})
+	state.AddBlock(&types.Block{Height: 5})
 
-	missing := blocks.GetMissingSinceLatest(5)
+	missing := state.GetMissingBlocksSinceLatest(5)
 	assert.Len(t, missing, 2, "There should be 3 blocks!")
 	assert.Contains(t, missing, int64(2), "Blocks mismatch!")
 	assert.Contains(t, missing, int64(4), "Blocks mismatch!")
@@ -100,31 +100,31 @@ func TestBlocksGetMissingSinceLatest(t *testing.T) {
 func TestBlocksSetBlocks(t *testing.T) {
 	t.Parallel()
 
-	blocks := NewBlocks()
-	blocks.SetBlocks(map[int64]*types.Block{
+	state := NewState()
+	state.SetBlocks(map[int64]*types.Block{
 		1: {Height: 1},
 		2: {Height: 2},
 	})
 
-	assert.True(t, blocks.HasBlockAtHeight(1), "Blocks mismatch!")
-	assert.True(t, blocks.HasBlockAtHeight(2), "Blocks mismatch!")
+	assert.True(t, state.HasBlockAtHeight(1), "Blocks mismatch!")
+	assert.True(t, state.HasBlockAtHeight(2), "Blocks mismatch!")
 }
 
 func TestBlocksTrimBlocksBefore(t *testing.T) {
 	t.Parallel()
 
-	blocks := NewBlocks()
-	blocks.AddBlock(&types.Block{Height: 1})
-	blocks.AddBlock(&types.Block{Height: 2})
-	blocks.AddBlock(&types.Block{Height: 3})
-	blocks.AddBlock(&types.Block{Height: 4})
-	blocks.AddBlock(&types.Block{Height: 5})
+	state := NewState()
+	state.AddBlock(&types.Block{Height: 1})
+	state.AddBlock(&types.Block{Height: 2})
+	state.AddBlock(&types.Block{Height: 3})
+	state.AddBlock(&types.Block{Height: 4})
+	state.AddBlock(&types.Block{Height: 5})
 
-	blocks.TrimBefore(3)
+	state.TrimBlocksBefore(3)
 
-	assert.False(t, blocks.HasBlockAtHeight(1), "Blocks mismatch!")
-	assert.False(t, blocks.HasBlockAtHeight(2), "Blocks mismatch!")
-	assert.False(t, blocks.HasBlockAtHeight(3), "Blocks mismatch!")
-	assert.True(t, blocks.HasBlockAtHeight(4), "Blocks mismatch!")
-	assert.True(t, blocks.HasBlockAtHeight(5), "Blocks mismatch!")
+	assert.False(t, state.HasBlockAtHeight(1), "Blocks mismatch!")
+	assert.False(t, state.HasBlockAtHeight(2), "Blocks mismatch!")
+	assert.False(t, state.HasBlockAtHeight(3), "Blocks mismatch!")
+	assert.True(t, state.HasBlockAtHeight(4), "Blocks mismatch!")
+	assert.True(t, state.HasBlockAtHeight(5), "Blocks mismatch!")
 }
