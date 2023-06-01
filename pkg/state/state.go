@@ -28,6 +28,7 @@ func NewState() *State {
 		blocks:               NewBlocks(),
 		validators:           make(types.ValidatorsMap),
 		historicalValidators: NewHistoricalValidators(),
+		notifiers:            &types.Notifiers{},
 		lastBlockHeight: &LastBlockHeight{
 			signingInfos: 0,
 			validators:   0,

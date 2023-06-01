@@ -82,15 +82,15 @@ func TestHistoricalValidatorsTrimBlocksBefore(t *testing.T) {
 func TestNewHistoricalValidatorsIsValidatorActiveAtBlock(t *testing.T) {
 	t.Parallel()
 
-	validators := NewHistoricalValidators()
-	validators.SetAllValidators(types.HistoricalValidatorsMap{
+	state := NewState()
+	state.SetActiveSet(types.HistoricalValidatorsMap{
 		1: {"address": true},
 		2: {},
 	})
 
 	validator := &types.Validator{ConsensusAddressHex: "address"}
 
-	assert.True(t, validators.IsValidatorActiveAtBlock(validator, 1), "Validators mismatch!")
-	assert.False(t, validators.IsValidatorActiveAtBlock(validator, 2), "Validators mismatch!")
-	assert.False(t, validators.IsValidatorActiveAtBlock(validator, 3), "Validators mismatch!")
+	assert.True(t, state.IsValidatorActiveAtBlock(validator, 1), "Validators mismatch!")
+	assert.False(t, state.IsValidatorActiveAtBlock(validator, 2), "Validators mismatch!")
+	assert.False(t, state.IsValidatorActiveAtBlock(validator, 3), "Validators mismatch!")
 }
