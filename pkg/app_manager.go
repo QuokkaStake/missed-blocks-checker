@@ -8,6 +8,7 @@ import (
 	databasePkg "main/pkg/database"
 	"main/pkg/metrics"
 	reportersPkg "main/pkg/reporters"
+	"main/pkg/reporters/discord"
 	"main/pkg/reporters/telegram"
 	snapshotPkg "main/pkg/snapshot"
 	statePkg "main/pkg/state"
@@ -53,6 +54,7 @@ func NewAppManager(
 
 	reporters := []reportersPkg.Reporter{
 		telegram.NewReporter(config, managerLogger, stateManager, metricsManager),
+		discord.NewReporter(config, managerLogger, stateManager, metricsManager),
 	}
 
 	return &AppManager{
@@ -88,9 +90,9 @@ func (a *AppManager) Start() {
 		a.MetricsManager.LogReporterEnabled(a.Config.Name, reporter.Name(), reporter.Enabled())
 
 		if reporter.Enabled() {
-			a.Logger.Debug().Str("name", string(reporter.Name())).Msg("Reporter is enabled")
+			a.Logger.Info().Str("name", string(reporter.Name())).Msg("Reporter is enabled")
 		} else {
-			a.Logger.Debug().Str("name", string(reporter.Name())).Msg("Reporter is disabled")
+			a.Logger.Info().Str("name", string(reporter.Name())).Msg("Reporter is disabled")
 		}
 	}
 

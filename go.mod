@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/BurntSushi/toml v1.2.1
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
+	github.com/bwmarrin/discordgo v0.27.1
 	github.com/cosmos/cosmos-sdk v0.47.1
 	github.com/creasty/defaults v1.7.0
 	github.com/google/uuid v1.3.0
@@ -12,6 +13,7 @@ require (
 	github.com/prometheus/client_golang v1.14.0
 	github.com/rs/zerolog v1.29.0
 	github.com/spf13/cobra v1.6.1
+	github.com/stretchr/testify v1.8.2
 	github.com/tendermint/tendermint v0.35.9
 	gopkg.in/guregu/null.v4 v4.0.0
 	gopkg.in/telebot.v3 v3.1.3
@@ -100,7 +102,6 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.14.0 // indirect
-	github.com/stretchr/testify v1.8.2 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect

@@ -19,6 +19,7 @@ type ChainConfig struct {
 	MissedBlocksGroups MissedBlocksGroups `toml:"missed-blocks-groups"`
 	ExplorerConfig     ExplorerConfig     `toml:"explorer"`
 	TelegramConfig     TelegramConfig     `toml:"telegram"`
+	DiscordConfig      DiscordConfig      `toml:"discord"`
 }
 
 func (c *ChainConfig) GetName() string {

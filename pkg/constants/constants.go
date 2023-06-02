@@ -29,6 +29,7 @@ const (
 	EventValidatorCreated      EventName = "ValidatorCreated"
 
 	TelegramReporterName ReporterName = "telegram"
+	DiscordReporterName  ReporterName = "discord"
 	TestReporterName     ReporterName = "test"
 
 	QueryTypeValidators           QueryType = "validators"
