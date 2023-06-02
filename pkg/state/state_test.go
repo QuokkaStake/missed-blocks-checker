@@ -197,3 +197,122 @@ func TestGetTimeToJail(t *testing.T) {
 	// 40 * 1.5 = 60s
 	assert.Equal(t, blockTime, 60*time.Second, "Wrong jail time!")
 }
+
+func TestValidatorsMissedBlocksNoBlocks(t *testing.T) {
+	t.Parallel()
+	state := NewState()
+	validator := &types.Validator{}
+	signature := state.GetValidatorMissedBlocks(validator, 5)
+
+	assert.Equal(t, signature.Signed, int64(0), "Argument mismatch!")
+	assert.Equal(t, signature.NoSignature, int64(0), "Argument mismatch!")
+	assert.Equal(t, signature.NotSigned, int64(0), "Argument mismatch!")
+	assert.Equal(t, signature.NotActive, int64(0), "Argument mismatch!")
+}
+
+func TestValidatorsMissedBlocksAllSigned(t *testing.T) {
+	t.Parallel()
+
+	validator := &types.Validator{ConsensusAddressHex: "address"}
+	state := NewState()
+	state.AddActiveSet(1, types.HistoricalValidators{"address": true})
+	state.AddActiveSet(2, types.HistoricalValidators{"address": true})
+	state.AddActiveSet(3, types.HistoricalValidators{"address": true})
+	state.AddActiveSet(4, types.HistoricalValidators{"address": true})
+	state.AddActiveSet(5, types.HistoricalValidators{"address": true})
+
+	state.AddBlock(&types.Block{Height: 1, Signatures: map[string]int32{"address": 3}, Proposer: "address"})
+	state.AddBlock(&types.Block{Height: 2, Signatures: map[string]int32{"address": 3}})
+	state.AddBlock(&types.Block{Height: 3, Signatures: map[string]int32{"address": 3}})
+	state.AddBlock(&types.Block{Height: 4, Signatures: map[string]int32{"address": 3}})
+	state.AddBlock(&types.Block{Height: 5, Signatures: map[string]int32{"address": 3}})
+
+	signature := state.GetValidatorMissedBlocks(validator, 5)
+
+	assert.Equal(t, signature.Signed, int64(5), "Argument mismatch!")
+	assert.Equal(t, signature.NoSignature, int64(0), "Argument mismatch!")
+	assert.Equal(t, signature.NotSigned, int64(0), "Argument mismatch!")
+	assert.Equal(t, signature.NotActive, int64(0), "Argument mismatch!")
+	assert.Equal(t, signature.Proposed, int64(1), "Argument mismatch!")
+}
+
+func TestValidatorsMissedBlocksAllMissed(t *testing.T) {
+	t.Parallel()
+
+	validator := &types.Validator{ConsensusAddressHex: "address"}
+	state := NewState()
+	state.AddActiveSet(1, types.HistoricalValidators{"address": true})
+	state.AddActiveSet(2, types.HistoricalValidators{"address": true})
+	state.AddActiveSet(3, types.HistoricalValidators{"address": true})
+	state.AddActiveSet(4, types.HistoricalValidators{"address": true})
+	state.AddActiveSet(5, types.HistoricalValidators{"address": true})
+
+	state.AddBlock(&types.Block{Height: 1, Signatures: map[string]int32{}})
+	state.AddBlock(&types.Block{Height: 2, Signatures: map[string]int32{}})
+	state.AddBlock(&types.Block{Height: 3, Signatures: map[string]int32{}})
+	state.AddBlock(&types.Block{Height: 4, Signatures: map[string]int32{"address": 1}})
+	state.AddBlock(&types.Block{Height: 5, Signatures: map[string]int32{"address": 1}})
+
+	signature := state.GetValidatorMissedBlocks(validator, 5)
+
+	assert.Equal(t, signature.Signed, int64(0), "Argument mismatch!")
+	assert.Equal(t, signature.NoSignature, int64(3), "Argument mismatch!")
+	assert.Equal(t, signature.NotSigned, int64(2), "Argument mismatch!")
+	assert.Equal(t, signature.NotActive, int64(0), "Argument mismatch!")
+	assert.Equal(t, signature.Proposed, int64(0), "Argument mismatch!")
+}
+
+func TestValidatorsMissedBlocksAllInactive(t *testing.T) {
+	t.Parallel()
+
+	validator := &types.Validator{ConsensusAddressHex: "address"}
+	state := NewState()
+	state.AddActiveSet(1, types.HistoricalValidators{})
+	state.AddActiveSet(2, types.HistoricalValidators{})
+	state.AddActiveSet(3, types.HistoricalValidators{})
+	state.AddActiveSet(4, types.HistoricalValidators{})
+	state.AddActiveSet(5, types.HistoricalValidators{})
+
+	state.AddBlock(&types.Block{Height: 1, Signatures: map[string]int32{}})
+	state.AddBlock(&types.Block{Height: 2, Signatures: map[string]int32{}})
+	state.AddBlock(&types.Block{Height: 3, Signatures: map[string]int32{}})
+	state.AddBlock(&types.Block{Height: 4, Signatures: map[string]int32{}})
+	state.AddBlock(&types.Block{Height: 5, Signatures: map[string]int32{}})
+
+	signature := state.GetValidatorMissedBlocks(validator, 5)
+
+	assert.Equal(t, signature.Signed, int64(0), "Argument mismatch!")
+	assert.Equal(t, signature.NoSignature, int64(0), "Argument mismatch!")
+	assert.Equal(t, signature.NotSigned, int64(0), "Argument mismatch!")
+	assert.Equal(t, signature.NotActive, int64(5), "Argument mismatch!")
+	assert.Equal(t, signature.Proposed, int64(0), "Argument mismatch!")
+}
+
+func TestValidatorsMissedBlocksSomeSkipped(t *testing.T) {
+	t.Parallel()
+
+	validator := &types.Validator{
+		ConsensusAddressHex: "address",
+		SigningInfo:         &types.SigningInfo{MissedBlocksCounter: 1},
+	}
+	state := NewState()
+	state.AddActiveSet(1, types.HistoricalValidators{"address": true})
+	state.AddActiveSet(2, types.HistoricalValidators{"address": true})
+	state.AddActiveSet(3, types.HistoricalValidators{"address": true})
+	state.AddActiveSet(4, types.HistoricalValidators{"address": true})
+	state.AddActiveSet(5, types.HistoricalValidators{})
+
+	state.AddBlock(&types.Block{Height: 1, Signatures: map[string]int32{}})
+	state.AddBlock(&types.Block{Height: 2, Signatures: map[string]int32{}})
+	state.AddBlock(&types.Block{Height: 3, Signatures: map[string]int32{}})
+	state.AddBlock(&types.Block{Height: 4, Signatures: map[string]int32{}})
+	state.AddBlock(&types.Block{Height: 5, Signatures: map[string]int32{}})
+
+	signature := state.GetValidatorMissedBlocks(validator, 5)
+
+	assert.Equal(t, signature.Signed, int64(4), "Argument mismatch!")
+	assert.Equal(t, signature.NoSignature, int64(0), "Argument mismatch!")
+	assert.Equal(t, signature.NotSigned, int64(1), "Argument mismatch!")
+	assert.Equal(t, signature.NotActive, int64(1), "Argument mismatch!")
+	assert.Equal(t, signature.Proposed, int64(0), "Argument mismatch!")
+}
