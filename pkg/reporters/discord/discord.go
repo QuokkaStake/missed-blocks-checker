@@ -190,7 +190,7 @@ func (reporter *Reporter) Send(report *reportPkg.Report) error {
 func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.Entry) string {
 	// validator := rawEntry.GetValidator()
 	// notifiers := reporter.Manager.GetNotifiersForReporter(validator.OperatorAddress, reporter.Name())
-	//notifiersSerialized := " " + reporter.SerializeNotifiers(notifiers)
+	// notifiersSerialized := " " + reporter.SerializeNotifiers(notifiers)
 	notifiersSerialized := " "
 
 	switch entry := rawEntry.(type) {

@@ -17,11 +17,11 @@ func (reporter *Reporter) HandleParams(c tele.Context) error {
 	blockTime := reporter.Manager.GetBlockTime()
 	maxTimeToJail := reporter.Manager.GetTimeTillJail(0)
 
-	template, err := reporter.Render("Params", paramsRender{
+	template, err := reporter.TemplatesManager.Render("Params", paramsRender{
 		Config:        reporter.Config,
 		BlockTime:     blockTime,
 		MaxTimeToJail: maxTimeToJail,
-	})
+	}, constants.FormatTypeHTML)
 	if err != nil {
 		return err
 	}

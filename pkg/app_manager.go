@@ -12,6 +12,7 @@ import (
 	"main/pkg/reporters/telegram"
 	snapshotPkg "main/pkg/snapshot"
 	statePkg "main/pkg/state"
+	templatesPkg "main/pkg/templates"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"main/pkg/utils"
@@ -52,8 +53,9 @@ func NewAppManager(
 	stateManager := statePkg.NewManager(managerLogger, config, metricsManager, snapshotManager, database)
 	websocketManager := tendermint.NewWebsocketManager(managerLogger, config, metricsManager)
 
+	templatesManager := templatesPkg.NewManager(logger)
 	reporters := []reportersPkg.Reporter{
-		telegram.NewReporter(config, managerLogger, stateManager, metricsManager),
+		telegram.NewReporter(config, managerLogger, stateManager, metricsManager, templatesManager),
 		discord.NewReporter(config, managerLogger, stateManager, metricsManager),
 	}
 

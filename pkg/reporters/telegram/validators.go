@@ -46,7 +46,7 @@ func (reporter *Reporter) HandleListValidators(c tele.Context) error {
 		}),
 	}
 
-	template, err := reporter.Render("Missing", render)
+	template, err := reporter.TemplatesManager.Render("Missing", render, constants.FormatTypeHTML)
 	if err != nil {
 		return err
 	}

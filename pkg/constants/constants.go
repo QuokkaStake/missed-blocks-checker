@@ -3,6 +3,7 @@ package constants
 type EventName string
 type ReporterName string
 type QueryType string
+type FormatType string
 
 const (
 	BlockSearchPagination       int64  = 100
@@ -38,6 +39,8 @@ const (
 	QueryTypeSlashingParams       QueryType = "slashing_params"
 	QueryTypeHistoricalValidators QueryType = "historical_validators"
 	QueryTypeBlock                QueryType = "block"
+
+	FormatTypeHTML FormatType = "html"
 )
 
 func GetEventNames() []EventName {
