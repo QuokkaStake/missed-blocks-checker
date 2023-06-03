@@ -3,15 +3,15 @@ package templates
 import (
 	"bytes"
 	"fmt"
-	"html/template"
 	"main/pkg/types"
-	"main/pkg/utils"
 	"main/templates"
-	"strings"
-	"time"
+	"text/template"
 )
 
-func (m *Manager) GetHTMLTemplate(name string, serializers map[string]any) (*template.Template, error) {
+func (m *Manager) GetMarkdownTemplate(
+	name string,
+	serializers map[string]any,
+) (*template.Template, error) {
 	if cachedTemplate, ok := m.Templates[name]; ok {
 		m.Logger.Trace().Str("type", name).Msg("Using cached template")
 		if convertedTemplate, ok := cachedTemplate.(*template.Template); !ok {
@@ -20,8 +20,6 @@ func (m *Manager) GetHTMLTemplate(name string, serializers map[string]any) (*tem
 			return convertedTemplate, nil
 		}
 	}
-
-	m.Logger.Trace().Str("type", name).Msg("Loading template")
 
 	allSerializers := map[string]any{
 		"SerializeLink":      m.SerializeLink,
@@ -34,9 +32,11 @@ func (m *Manager) GetHTMLTemplate(name string, serializers map[string]any) (*tem
 		allSerializers[key] = serializer
 	}
 
-	t, err := template.New(name+".html").
+	m.Logger.Trace().Str("type", name).Msg("Loading template")
+
+	t, err := template.New(name+".md").
 		Funcs(allSerializers).
-		ParseFS(templates.TemplatesFs, "telegram/"+name+".html")
+		ParseFS(templates.TemplatesFs, "discord/"+name+".md")
 	if err != nil {
 		return nil, err
 	}
@@ -46,12 +46,12 @@ func (m *Manager) GetHTMLTemplate(name string, serializers map[string]any) (*tem
 	return t, nil
 }
 
-func (m *Manager) RenderHTML(
+func (m *Manager) RenderMarkdown(
 	templateName string,
 	data interface{},
 	serializers map[string]any,
 ) (string, error) {
-	templateToRender, err := m.GetHTMLTemplate(templateName, serializers)
+	templateToRender, err := m.GetMarkdownTemplate(templateName, serializers)
 	if err != nil {
 		m.Logger.Error().Err(err).Str("type", templateName).Msg("Error loading template")
 		return "", err
@@ -67,28 +67,10 @@ func (m *Manager) RenderHTML(
 	return buffer.String(), err
 }
 
-func (m *Manager) SerializeDate(date time.Time) string {
-	return date.Format(time.RFC822)
-}
-
-func (m *Manager) SerializeLink(link types.Link) template.HTML {
+func (m *Manager) SerializeMarkdownLink(link types.Link) string {
 	if link.Href == "" {
-		return template.HTML(link.Text)
+		return link.Text
 	}
 
-	return template.HTML(fmt.Sprintf("<a href='%s'>%s</a>", link.Href, link.Text))
-}
-
-func (m *Manager) SerializeNotifiers(notifiers []string) string {
-	notifiersNormalized := utils.Map(notifiers, m.SerializeNotifier)
-
-	return strings.Join(notifiersNormalized, " ")
-}
-
-func (m *Manager) SerializeNotifier(notifier string) string {
-	if strings.HasPrefix(notifier, "@") {
-		return notifier
-	}
-
-	return "@" + notifier
+	return fmt.Sprintf("[%s](%s)", link.Text, link.Href)
 }

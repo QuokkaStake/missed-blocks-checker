@@ -2,7 +2,6 @@ package templates
 
 import (
 	"fmt"
-	"html/template"
 	"main/pkg/constants"
 
 	"github.com/rs/zerolog"
@@ -10,13 +9,13 @@ import (
 
 type Manager struct {
 	Logger    zerolog.Logger
-	Templates map[string]*template.Template
+	Templates map[string]interface{}
 }
 
 func NewManager(logger zerolog.Logger) *Manager {
 	return &Manager{
 		Logger:    logger.With().Str("component", "templates_manager").Logger(),
-		Templates: make(map[string]*template.Template, 0),
+		Templates: make(map[string]interface{}, 0),
 	}
 }
 
@@ -37,6 +36,8 @@ func (m *Manager) RenderWithSerializers(
 	switch formatType {
 	case constants.FormatTypeHTML:
 		return m.RenderHTML(templateName, data, serializers)
+	case constants.FormatTypeMarkdown:
+		return m.RenderMarkdown(templateName, data, serializers)
 	default:
 		return "", fmt.Errorf("unknown format type: %s", formatType)
 	}

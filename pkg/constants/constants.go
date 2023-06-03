@@ -40,7 +40,8 @@ const (
 	QueryTypeHistoricalValidators QueryType = "historical_validators"
 	QueryTypeBlock                QueryType = "block"
 
-	FormatTypeHTML FormatType = "html"
+	FormatTypeHTML     FormatType = "html"
+	FormatTypeMarkdown FormatType = "markdown"
 )
 
 func GetEventNames() []EventName {

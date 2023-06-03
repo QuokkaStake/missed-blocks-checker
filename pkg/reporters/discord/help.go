@@ -15,7 +15,7 @@ func (reporter *Reporter) GetHelpCommand() *Command {
 		Handler: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.DiscordReporterName, "help")
 
-			template, err := reporter.Render("Help", reporter.Commands)
+			template, err := reporter.TemplatesManager.Render("Help", reporter.Commands, constants.FormatTypeMarkdown)
 			if err != nil {
 				reporter.Logger.Error().Err(err).Str("template", "help").Msg("Error rendering template")
 				return

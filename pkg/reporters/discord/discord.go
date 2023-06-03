@@ -1,7 +1,6 @@
 package discord
 
 import (
-	"bytes"
 	"fmt"
 	"main/pkg/config"
 	"main/pkg/constants"
@@ -9,11 +8,10 @@ import (
 	"main/pkg/metrics"
 	reportPkg "main/pkg/report"
 	statePkg "main/pkg/state"
+	templatesPkg "main/pkg/templates"
 	"main/pkg/types"
 	"main/pkg/utils"
-	"main/templates"
 	"strings"
-	"text/template"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
@@ -24,13 +22,13 @@ type Reporter struct {
 	Guild   string
 	Channel string
 
-	DiscordSession *discordgo.Session
-	Logger         zerolog.Logger
-	Config         *config.ChainConfig
-	Manager        *statePkg.Manager
-	MetricsManager *metrics.Manager
-	Templates      map[string]*template.Template
-	Commands       map[string]*Command
+	DiscordSession   *discordgo.Session
+	Logger           zerolog.Logger
+	Config           *config.ChainConfig
+	Manager          *statePkg.Manager
+	MetricsManager   *metrics.Manager
+	TemplatesManager *templatesPkg.Manager
+	Commands         map[string]*Command
 }
 
 func NewReporter(
@@ -38,17 +36,18 @@ func NewReporter(
 	logger zerolog.Logger,
 	manager *statePkg.Manager,
 	metricsManager *metrics.Manager,
+	templatesManager *templatesPkg.Manager,
 ) *Reporter {
 	return &Reporter{
-		Token:          chainConfig.DiscordConfig.Token,
-		Guild:          chainConfig.DiscordConfig.Guild,
-		Channel:        chainConfig.DiscordConfig.Channel,
-		Config:         chainConfig,
-		Logger:         logger.With().Str("component", "discord_reporter").Logger(),
-		Manager:        manager,
-		MetricsManager: metricsManager,
-		Templates:      make(map[string]*template.Template, 0),
-		Commands:       make(map[string]*Command, 0),
+		Token:            chainConfig.DiscordConfig.Token,
+		Guild:            chainConfig.DiscordConfig.Guild,
+		Channel:          chainConfig.DiscordConfig.Channel,
+		Config:           chainConfig,
+		Logger:           logger.With().Str("component", "discord_reporter").Logger(),
+		Manager:          manager,
+		MetricsManager:   metricsManager,
+		TemplatesManager: templatesManager,
+		Commands:         make(map[string]*Command, 0),
 	}
 }
 
@@ -75,20 +74,15 @@ func (reporter *Reporter) Init() {
 		return
 	}
 
-	// Wait here until CTRL-C or other term signal is received.
-
 	reporter.Logger.Info().Err(err).Msg("Discord bot listening")
 
-	queries := []string{
-		"help",
-	}
-
-	for _, query := range queries {
-		reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.DiscordReporterName, query)
-	}
-
 	reporter.Commands = map[string]*Command{
-		"help": reporter.GetHelpCommand(),
+		"help":   reporter.GetHelpCommand(),
+		"params": reporter.GetParamsCommand(),
+	}
+
+	for query := range reporter.Commands {
+		reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.DiscordReporterName, query)
 	}
 
 	session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -123,43 +117,6 @@ func (reporter *Reporter) Init() {
 		reporter.Logger.Info().Str("command", cmd.Name).Msg("Created command")
 		reporter.Commands[key].Info = cmd
 	}
-}
-
-func (reporter *Reporter) GetTemplate(name string) (*template.Template, error) {
-	if cachedTemplate, ok := reporter.Templates[name]; ok {
-		reporter.Logger.Trace().Str("type", name).Msg("Using cached template")
-		return cachedTemplate, nil
-	}
-
-	reporter.Logger.Trace().Str("type", name).Msg("Loading template")
-
-	t, err := template.New(name+".md").
-		Funcs(template.FuncMap{}).
-		ParseFS(templates.TemplatesFs, "discord/"+name+".md")
-	if err != nil {
-		return nil, err
-	}
-
-	reporter.Templates[name] = t
-
-	return t, nil
-}
-
-func (reporter *Reporter) Render(templateName string, data interface{}) (string, error) {
-	templateToRender, err := reporter.GetTemplate(templateName)
-	if err != nil {
-		reporter.Logger.Error().Err(err).Str("type", templateName).Msg("Error loading template")
-		return "", err
-	}
-
-	var buffer bytes.Buffer
-	err = templateToRender.Execute(&buffer, data)
-	if err != nil {
-		reporter.Logger.Error().Err(err).Str("type", templateName).Msg("Error rendering template")
-		return "", err
-	}
-
-	return buffer.String(), err
 }
 
 func (reporter *Reporter) Enabled() bool {

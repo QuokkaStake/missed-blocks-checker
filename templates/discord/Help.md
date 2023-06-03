@@ -1,4 +1,4 @@
-[missed-blocks-checker](https://github.com/QuokkaStake/missed-blocks-checker">missed-blocks-checker)
+[missed-blocks-checker](https://github.com/QuokkaStake/missed-blocks-checker)
 
 This bot can monitor missing blocks for validators on multiple Cosmos chains,
 subscribing to the notifications on multiple validators, and many more.
@@ -12,4 +12,4 @@ The bot can understand the following commands:
 - /status - see the notification on validators you are subscribed to
 - /missing - see the missed blocks counter of validators missing blocks
 - /validators - see the missed blocks counter of all validators
-- /config, or /params - see the app config and chain params
+- </params:{{ .params.Info.ID }}> - see the app config and chain params

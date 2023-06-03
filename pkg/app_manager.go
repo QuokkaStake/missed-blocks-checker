@@ -56,7 +56,7 @@ func NewAppManager(
 	templatesManager := templatesPkg.NewManager(logger)
 	reporters := []reportersPkg.Reporter{
 		telegram.NewReporter(config, managerLogger, stateManager, metricsManager, templatesManager),
-		discord.NewReporter(config, managerLogger, stateManager, metricsManager),
+		discord.NewReporter(config, managerLogger, stateManager, metricsManager, templatesManager),
 	}
 
 	return &AppManager{
