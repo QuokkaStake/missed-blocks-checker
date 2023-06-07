@@ -69,7 +69,11 @@ func (t *WebsocketClient) Listen() {
 	client, err := tmClient.NewWSWithOptions(
 		t.url,
 		"/websocket",
-		tmClient.WSOptions{PingPeriod: 1 * time.Second},
+		tmClient.WSOptions{
+			PingPeriod: 1 * time.Second,
+			ReadWait:   10 * time.Second,
+			WriteWait:  10 * time.Second,
+		},
 	)
 
 	client.OnReconnect(func() {
