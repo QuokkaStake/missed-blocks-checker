@@ -372,7 +372,7 @@ func (d *Database) SetValueByKey(chain string, key string, data []byte) error {
 	defer d.mutex.Unlock()
 
 	_, err := d.client.Exec(
-		"INSERT INTO data (chain, key, value) VALUES ($1, $2, $3) ON CONFLICT DO UPDATE SET value = $3",
+		"INSERT INTO data (chain, key, value) VALUES ($1, $2, $3) ON CONFLICT (chain, key) DO UPDATE SET value = $3",
 		chain,
 		key,
 		data,
