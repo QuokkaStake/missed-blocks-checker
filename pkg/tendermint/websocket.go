@@ -104,6 +104,8 @@ func (t *WebsocketClient) ConnectAndListen() {
 	t.active = false
 	t.metricsManager.LogNodeConnection(t.config.Name, t.url, false)
 
+	t.logger.Info().Msg("Connecting to node...")
+
 	for {
 		if err := t.client.Start(); err != nil && !strings.Contains(err.Error(), "client already running") {
 			t.error = err
@@ -112,19 +114,24 @@ func (t *WebsocketClient) ConnectAndListen() {
 
 			time.Sleep(time.Minute)
 		} else {
-			t.logger.Debug().Msg("Connected to a node")
+			t.logger.Info().Msg("Connected to a node")
 			t.active = true
 			t.metricsManager.LogNodeConnection(t.config.Name, t.url, true)
 			break
 		}
 	}
 
+	t.logger.Info().Msg("Subscribing to updates...")
+
 	t.SubscribeToUpdates()
+
+	t.logger.Info().Msg("Listening for events...")
 
 	loop := true
 	for loop {
 		select {
 		case <-t.reconnectTimer.C:
+			t.logger.Debug().Float64("seconds", time.Since(t.lastEventTime).Seconds()).Msg("Last block info")
 			if time.Since(t.lastEventTime) > StaleTime {
 				t.logger.Warn().Msg("No new blocks, reconnecting")
 				loop = false
@@ -134,16 +141,18 @@ func (t *WebsocketClient) ConnectAndListen() {
 			t.ProcessEvent(result)
 		}
 	}
-	t.logger.Info().Msg("Finished listening")
+
+	t.logger.Debug().Msg("Finished listening")
 	t.Reconnect()
 }
 
 func (t *WebsocketClient) Reconnect() {
 	if t.client == nil {
+		t.logger.Debug().Msg("No client, return")
 		return
 	}
 
-	t.logger.Info().Msg("Reconnecting manually...")
+	t.logger.Debug().Msg("Reconnecting manually...")
 
 	t.metricsManager.LogNodeReconnect(t.config.Name, t.url)
 
@@ -151,6 +160,8 @@ func (t *WebsocketClient) Reconnect() {
 		t.logger.Warn().Err(err).Msg("Error stopping the node")
 		t.Channel <- &types.WSError{Error: err}
 	}
+
+	t.logger.Debug().Msg("Node disconnected, reconnecting...")
 
 	time.Sleep(time.Second)
 	t.ConnectAndListen()
@@ -166,29 +177,19 @@ func (t *WebsocketClient) Stop() {
 	}
 }
 
-func (t *WebsocketClient) Resubscribe() {
-	if err := t.client.UnsubscribeAll(context.Background()); err != nil {
-		t.logger.Error().Err(err).Msg("Error unsubscribing from updates")
-	}
-
-	time.Sleep(5 * time.Second)
-	t.SubscribeToUpdates()
-}
-
 func (t *WebsocketClient) ProcessEvent(event rpcTypes.RPCResponse) {
-	t.metricsManager.LogWSEvent(t.config.Name, t.url)
-	t.lastEventTime = time.Now()
-
 	if event.Error != nil && event.Error.Message != "" {
 		t.logger.Error().Str("msg", event.Error.Error()).Msg("Got error in RPC response")
-		t.Channel <- &types.WSError{Error: event.Error}
+		// t.Channel <- &types.WSError{Error: event.Error}
 		return
 	}
 
 	if len(event.Result) == 0 {
-		t.Resubscribe()
 		return
 	}
+
+	t.metricsManager.LogWSEvent(t.config.Name, t.url)
+	t.lastEventTime = time.Now()
 
 	var resultEvent types.EventResult
 	if err := json.Unmarshal(event.Result, &resultEvent); err != nil {
@@ -228,17 +229,22 @@ func (t *WebsocketClient) ProcessEvent(event rpcTypes.RPCResponse) {
 }
 
 func (t *WebsocketClient) SubscribeToUpdates() {
-	t.logger.Trace().Msg("Subscribing to updates...")
+	t.logger.Info().Msg("Subscribing to updates...")
 
 	queries := []string{
 		constants.NewBlocksQuery,
 	}
 
+	ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
 	for _, query := range queries {
-		if err := t.client.Subscribe(context.Background(), query); err != nil {
+		if err := t.client.Subscribe(ctxTimeout, query); err != nil {
 			t.logger.Error().Err(err).Str("query", query).Msg("Failed to subscribe to query")
 		} else {
 			t.logger.Info().Str("query", query).Msg("Listening for incoming transactions")
 		}
 	}
+
+	t.logger.Info().Msg("Subscribed to all updates")
 }

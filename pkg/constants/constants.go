@@ -42,6 +42,9 @@ const (
 
 	FormatTypeHTML     FormatType = "html"
 	FormatTypeMarkdown FormatType = "markdown"
+
+	DatabaseTypeSqlite   string = "sqlite"
+	DatabaseTypePostgres string = "postgres"
 )
 
 func GetEventNames() []EventName {
@@ -53,5 +56,12 @@ func GetEventNames() []EventName {
 		EventValidatorUnjailed,
 		EventValidatorTombstoned,
 		EventValidatorCreated,
+	}
+}
+
+func GetDatabaseTypes() []string {
+	return []string{
+		DatabaseTypeSqlite,
+		DatabaseTypePostgres,
 	}
 }

@@ -3,6 +3,6 @@ package config
 import "gopkg.in/guregu/null.v4"
 
 type MetricsConfig struct {
-	Enabled    null.Bool `toml:"enabled" default:"true"`
-	ListenAddr string    `toml:"listen-addr" default:":9570"`
+	Enabled    null.Bool `default:"true"  toml:"enabled"`
+	ListenAddr string    `default:":9570" toml:"listen-addr"`
 }

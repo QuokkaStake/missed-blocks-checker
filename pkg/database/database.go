@@ -33,23 +33,16 @@ func NewDatabase(
 }
 
 func (d *Database) Init() {
-	db, err := sql.Open("sqlite3", d.config.Path)
+	var db *sql.DB
 
-	if err != nil {
-		d.logger.Fatal().Err(err).Msg("Could not open sqlite database")
+	switch d.config.Type {
+	case constants.DatabaseTypeSqlite:
+		db = d.InitSqliteDatabase()
+	case constants.DatabaseTypePostgres:
+		db = d.InitPostgresDatabase()
+	default:
+		d.logger.Fatal().Str("type", d.config.Type).Msg("Unsupported database type")
 	}
-
-	var version string
-	err = db.QueryRow("SELECT SQLITE_VERSION()").Scan(&version)
-
-	if err != nil {
-		d.logger.Fatal().Err(err).Msg("Could not query sqlite database")
-	}
-
-	d.logger.Info().
-		Str("version", version).
-		Str("path", d.config.Path).
-		Msg("sqlite database connected")
 
 	entries, err := migrations.FS.ReadDir(".")
 	if err != nil {

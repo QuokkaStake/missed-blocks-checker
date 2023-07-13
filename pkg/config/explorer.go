@@ -8,7 +8,7 @@ import (
 type ExplorerConfig struct {
 	ValidatorLinkPattern string `toml:"validator-link-pattern"`
 	PingPubPrefix        string `toml:"ping-prefix"`
-	PingPubHost          string `toml:"ping-host" default:"https://ping.pub"`
+	PingPubHost          string `default:"https://ping.pub"    toml:"ping-host"`
 	MintscanPrefix       string `toml:"mintscan-prefix"`
 }
 

@@ -9,6 +9,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.47.1
 	github.com/creasty/defaults v1.7.0
 	github.com/google/uuid v1.3.0
+	github.com/lib/pq v1.10.7
 	github.com/mattn/go-sqlite3 v1.14.9
 	github.com/prometheus/client_golang v1.14.0
 	github.com/rs/zerolog v1.29.0

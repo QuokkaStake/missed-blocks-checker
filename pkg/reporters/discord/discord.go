@@ -77,8 +77,9 @@ func (reporter *Reporter) Init() {
 	reporter.Logger.Info().Err(err).Msg("Discord bot listening")
 
 	reporter.Commands = map[string]*Command{
-		"help":   reporter.GetHelpCommand(),
-		"params": reporter.GetParamsCommand(),
+		"help":    reporter.GetHelpCommand(),
+		"params":  reporter.GetParamsCommand(),
+		"missing": reporter.GetMissingCommand(),
 	}
 
 	for query := range reporter.Commands {

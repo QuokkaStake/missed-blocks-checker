@@ -1,6 +1,6 @@
 package config
 
 type LogConfig struct {
-	LogLevel   string `toml:"level" default:"info"`
-	JSONOutput bool   `toml:"json" default:"false"`
+	LogLevel   string `default:"info"  toml:"level"`
+	JSONOutput bool   `default:"false" toml:"json"`
 }

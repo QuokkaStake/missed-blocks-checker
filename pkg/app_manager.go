@@ -166,7 +166,7 @@ func (a *AppManager) ListenForEvents() {
 			snapshot := a.StateManager.GetSnapshot()
 
 			for _, entry := range snapshot.Entries {
-				a.Logger.Debug().
+				a.Logger.Trace().
 					Str("valoper", entry.Validator.OperatorAddress).
 					Str("moniker", entry.Validator.Moniker).
 					Int64("signed", entry.SignatureInfo.Signed).

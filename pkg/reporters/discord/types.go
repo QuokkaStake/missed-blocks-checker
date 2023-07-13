@@ -34,16 +34,6 @@ func (e missingValidatorsEntry) FormatMissed() string {
 	)
 }
 
-type notifierRender struct {
-	Config  *config.ChainConfig
-	Entries []notifierEntry
-}
-
-type notifierEntry struct {
-	Link      types.Link
-	Notifiers []string
-}
-
 type paramsRender struct {
 	Config        *config.ChainConfig
 	BlockTime     time.Duration

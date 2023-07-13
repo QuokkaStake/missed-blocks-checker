@@ -10,11 +10,11 @@ type ChainConfig struct {
 	Name                 string    `toml:"name"`
 	PrettyName           string    `toml:"pretty-name"`
 	RPCEndpoints         []string  `toml:"rpc-endpoints"`
-	StoreBlocks          int64     `toml:"store-blocks" default:"20000"`
-	BlocksWindow         int64     `toml:"blocks-window" default:"10000"`
-	MinSignedPerWindow   float64   `toml:"min-signed-per-window" default:"0.05"`
-	QueryEachSigningInfo null.Bool `toml:"query-each-signing-info" default:"false"`
-	QuerySlashingParams  null.Bool `toml:"query-slashing-params" default:"true"`
+	StoreBlocks          int64     `default:"20000"      toml:"store-blocks"`
+	BlocksWindow         int64     `default:"10000"      toml:"blocks-window"`
+	MinSignedPerWindow   float64   `default:"0.05"       toml:"min-signed-per-window"`
+	QueryEachSigningInfo null.Bool `default:"false"      toml:"query-each-signing-info"`
+	QuerySlashingParams  null.Bool `default:"true"       toml:"query-slashing-params"`
 
 	MissedBlocksGroups MissedBlocksGroups `toml:"missed-blocks-groups"`
 	ExplorerConfig     ExplorerConfig     `toml:"explorer"`

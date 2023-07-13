@@ -22,10 +22,8 @@ func (m *Manager) GetMarkdownTemplate(
 	}
 
 	allSerializers := map[string]any{
-		"SerializeLink":      m.SerializeLink,
-		"SerializeDate":      m.SerializeDate,
-		"SerializeNotifier":  m.SerializeNotifier,
-		"SerializeNotifiers": m.SerializeNotifiers,
+		"SerializeLink": m.SerializeMarkdownLink,
+		"SerializeDate": m.SerializeDate,
 	}
 
 	for key, serializer := range serializers {
