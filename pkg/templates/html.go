@@ -79,7 +79,7 @@ func (m *Manager) SerializeLink(link types.Link) template.HTML {
 	return template.HTML(fmt.Sprintf("<a href='%s'>%s</a>", link.Href, link.Text))
 }
 
-func (m *Manager) SerializeNotifiers(notifiers []*types.Notifiers) string {
+func (m *Manager) SerializeNotifiers(notifiers types.Notifiers) string {
 	notifiersNormalized := utils.Map(notifiers, m.SerializeNotifier)
 
 	return strings.Join(notifiersNormalized, " ")
