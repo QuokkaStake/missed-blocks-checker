@@ -242,16 +242,16 @@ func (reporter *Reporter) SerializeLink(link types.Link) template.HTML {
 	return template.HTML(fmt.Sprintf("<a href='%s'>%s</a>", link.Href, link.Text))
 }
 
-func (reporter *Reporter) SerializeNotifiers(notifiers []string) string {
+func (reporter *Reporter) SerializeNotifiers(notifiers []*types.Notifier) string {
 	notifiersNormalized := utils.Map(notifiers, reporter.SerializeNotifier)
 
 	return strings.Join(notifiersNormalized, " ")
 }
 
-func (reporter *Reporter) SerializeNotifier(notifier string) string {
-	if strings.HasPrefix(notifier, "@") {
-		return notifier
+func (reporter *Reporter) SerializeNotifier(notifier *types.Notifier) string {
+	if strings.HasPrefix(notifier.UserName, "@") {
+		return notifier.UserName
 	}
 
-	return "@" + notifier
+	return "@" + notifier.UserName
 }

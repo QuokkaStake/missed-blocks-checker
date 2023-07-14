@@ -8,13 +8,14 @@ import (
 type Notifier struct {
 	OperatorAddress string
 	Reporter        constants.ReporterName
-	Notifier        string
+	UserID          string
+	UserName        string
 }
 
 func (n Notifier) Equals(another *Notifier) bool {
 	return n.OperatorAddress == another.OperatorAddress &&
 		n.Reporter == another.Reporter &&
-		n.Notifier == another.Notifier
+		n.UserID == another.UserID
 }
 
 type Notifiers []*Notifier
@@ -26,12 +27,14 @@ func (n Notifiers) Length() int {
 func (n Notifiers) AddNotifier(
 	operatorAddress string,
 	reporter constants.ReporterName,
-	notifier string,
+	userId string,
+	userName string,
 ) (*Notifiers, bool) {
 	newNotifier := &Notifier{
 		OperatorAddress: operatorAddress,
 		Reporter:        reporter,
-		Notifier:        notifier,
+		UserID:          userId,
+		UserName:        userName,
 	}
 
 	if _, found := utils.Find(n, func(notifier *Notifier) bool {
@@ -47,22 +50,20 @@ func (n Notifiers) AddNotifier(
 func (n Notifiers) GetNotifiersForReporter(
 	operatorAddress string,
 	reporter constants.ReporterName,
-) []string {
+) []*Notifier {
 	notifiers := utils.Filter(n, func(notifier *Notifier) bool {
 		return notifier.OperatorAddress == operatorAddress && notifier.Reporter == reporter
 	})
 
-	return utils.Map(notifiers, func(notifier *Notifier) string {
-		return notifier.Notifier
-	})
+	return notifiers
 }
 
 func (n Notifiers) GetValidatorsForNotifier(
 	reporter constants.ReporterName,
-	notifier string,
+	userId string,
 ) []string {
 	notifiers := utils.Filter(n, func(notifierInternal *Notifier) bool {
-		return notifierInternal.Notifier == notifier && notifierInternal.Reporter == reporter
+		return notifierInternal.UserID == userId && notifierInternal.Reporter == reporter
 	})
 
 	return utils.Map(notifiers, func(notifier *Notifier) string {
@@ -73,12 +74,12 @@ func (n Notifiers) GetValidatorsForNotifier(
 func (n Notifiers) RemoveNotifier(
 	operatorAddress string,
 	reporter constants.ReporterName,
-	notifier string,
+	userID string,
 ) (*Notifiers, bool) {
 	deletedNotifier := &Notifier{
 		OperatorAddress: operatorAddress,
 		Reporter:        reporter,
-		Notifier:        notifier,
+		UserID:          userID,
 	}
 
 	if _, found := utils.Find(n, func(notifier *Notifier) bool {

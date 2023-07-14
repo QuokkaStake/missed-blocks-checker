@@ -203,13 +203,14 @@ func (m *Manager) GetSnapshot() snapshotPkg.Snapshot {
 func (m *Manager) AddNotifier(
 	operatorAddress string,
 	reporter constants.ReporterName,
-	notifier string,
+	userId string,
+	userName string,
 ) bool {
-	if added := m.state.AddNotifier(operatorAddress, reporter, notifier); !added {
+	if added := m.state.AddNotifier(operatorAddress, reporter, userId, userName); !added {
 		return false
 	}
 
-	err := m.database.InsertNotifier(m.config.Name, operatorAddress, reporter, notifier)
+	err := m.database.InsertNotifier(m.config.Name, operatorAddress, reporter, userId, userName)
 	return err == nil
 }
 
@@ -229,7 +230,7 @@ func (m *Manager) RemoveNotifier(
 func (m *Manager) GetNotifiersForReporter(
 	operatorAddress string,
 	reporter constants.ReporterName,
-) []string {
+) []*types.Notifier {
 	return m.state.GetNotifiersForReporter(operatorAddress, reporter)
 }
 
