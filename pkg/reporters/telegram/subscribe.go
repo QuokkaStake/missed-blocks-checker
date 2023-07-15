@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html"
 	"main/pkg/constants"
+	"strconv"
 	"strings"
 
 	tele "gopkg.in/telebot.v3"
@@ -36,7 +37,12 @@ func (reporter *Reporter) HandleSubscribe(c tele.Context) error {
 		))
 	}
 
-	added := reporter.Manager.AddNotifier(address, reporter.Name(), c.Sender().Username)
+	added := reporter.Manager.AddNotifier(
+		address,
+		reporter.Name(),
+		strconv.FormatInt(c.Sender().ID, 10),
+		c.Sender().Username,
+	)
 
 	if !added {
 		return reporter.BotReply(c, "You are already subscribed to this validator's notifications")

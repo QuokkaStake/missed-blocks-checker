@@ -79,16 +79,16 @@ func (m *Manager) SerializeLink(link types.Link) template.HTML {
 	return template.HTML(fmt.Sprintf("<a href='%s'>%s</a>", link.Href, link.Text))
 }
 
-func (m *Manager) SerializeNotifiers(notifiers []string) string {
+func (m *Manager) SerializeNotifiers(notifiers types.Notifiers) string {
 	notifiersNormalized := utils.Map(notifiers, m.SerializeNotifier)
 
 	return strings.Join(notifiersNormalized, " ")
 }
 
-func (m *Manager) SerializeNotifier(notifier string) string {
-	if strings.HasPrefix(notifier, "@") {
-		return notifier
+func (m *Manager) SerializeNotifier(notifier *types.Notifier) string {
+	if strings.HasPrefix(notifier.UserName, "@") {
+		return notifier.UserName
 	}
 
-	return "@" + notifier
+	return "@" + notifier.UserName
 }

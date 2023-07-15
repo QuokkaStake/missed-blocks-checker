@@ -34,7 +34,7 @@ type notifierRender struct {
 
 type notifierEntry struct {
 	Link      types.Link
-	Notifiers []string
+	Notifiers []*types.Notifier
 }
 
 type paramsRender struct {

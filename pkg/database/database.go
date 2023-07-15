@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
-	"main/pkg/snapshot"
+	snapshotPkg "main/pkg/snapshot"
 	"main/pkg/types"
 	migrations "main/sql"
 	"sync"
@@ -183,7 +183,7 @@ func (d *Database) GetAllNotifiers(chain string) (*types.Notifiers, error) {
 	notifiers := make(types.Notifiers, 0)
 
 	rows, err := d.client.Query(
-		"SELECT operator_address, reporter, notifier FROM notifiers WHERE chain = $1",
+		"SELECT operator_address, reporter, user_id, user_name FROM notifiers WHERE chain = $1",
 		chain,
 	)
 	if err != nil {
@@ -199,10 +199,11 @@ func (d *Database) GetAllNotifiers(chain string) (*types.Notifiers, error) {
 		var (
 			operatorAddress string
 			reporter        constants.ReporterName
-			notifier        string
+			userID          string
+			userName        string
 		)
 
-		err = rows.Scan(&operatorAddress, &reporter, &notifier)
+		err = rows.Scan(&operatorAddress, &reporter, &userID, &userName)
 		if err != nil {
 			d.logger.Error().Err(err).Msg("Error fetching notifier data")
 			return &notifiers, err
@@ -211,7 +212,8 @@ func (d *Database) GetAllNotifiers(chain string) (*types.Notifiers, error) {
 		newNotifier := &types.Notifier{
 			OperatorAddress: operatorAddress,
 			Reporter:        reporter,
-			Notifier:        notifier,
+			UserID:          userID,
+			UserName:        userName,
 		}
 
 		notifiers = append(notifiers, newNotifier)
@@ -224,17 +226,19 @@ func (d *Database) InsertNotifier(
 	chain string,
 	operatorAddress string,
 	reporter constants.ReporterName,
-	notifier string,
+	userID string,
+	userName string,
 ) error {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 
 	_, err := d.client.Exec(
-		"INSERT INTO notifiers (chain, operator_address, reporter, notifier) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING",
+		"INSERT INTO notifiers (chain, operator_address, reporter, user_id, user_name) VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING",
 		chain,
 		operatorAddress,
 		reporter,
-		notifier,
+		userID,
+		userName,
 	)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Could not insert notifier")
@@ -385,14 +389,14 @@ func (d *Database) SetValueByKey(chain string, key string, data []byte) error {
 	return nil
 }
 
-func (d *Database) GetLastSnapshot(chain string) (*snapshot.Info, error) {
+func (d *Database) GetLastSnapshot(chain string) (*snapshotPkg.Info, error) {
 	rawData, err := d.GetValueByKey(chain, "snapshot")
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Could not get snapshot")
 		return nil, err
 	}
 
-	var snapshot snapshot.Info
+	var snapshot snapshotPkg.Info
 	if err := json.Unmarshal(rawData, &snapshot); err != nil {
 		d.logger.Error().Err(err).Msg("Could not unmarshal snapshot")
 		return nil, err
@@ -401,7 +405,7 @@ func (d *Database) GetLastSnapshot(chain string) (*snapshot.Info, error) {
 	return &snapshot, nil
 }
 
-func (d *Database) SetSnapshot(chain string, snapshot *snapshot.Info) error {
+func (d *Database) SetSnapshot(chain string, snapshot *snapshotPkg.Info) error {
 	rawData, err := json.Marshal(snapshot)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Could not marshal snapshot")
