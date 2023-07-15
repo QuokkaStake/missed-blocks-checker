@@ -9,7 +9,11 @@ json = false
 
 # Database configuration
 [database]
-# Where the database will be stored. Will be created if not exists.
+# Type of the database. Currently supported DB types are: postgres, sqlite.
+type = "sqlite"
+# Where the database will be stored.
+# If it's a PostgreSQL database, a connection string is expected (like postgres://user:password@host:port/database)
+# If it a SQLite database, a path to the file storing a database is expected.
 path = "database.sqlite"
 
 # Prometheus metrics configuration
