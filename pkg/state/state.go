@@ -98,13 +98,13 @@ func (s *State) SetActiveSet(activeSet types.HistoricalValidatorsMap) {
 func (s *State) AddNotifier(
 	operatorAddress string,
 	reporter constants.ReporterName,
-	userId string,
+	userID string,
 	userName string,
 ) bool {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	notifiers, added := s.notifiers.AddNotifier(operatorAddress, reporter, userId, userName)
+	notifiers, added := s.notifiers.AddNotifier(operatorAddress, reporter, userID, userName)
 	if added {
 		s.notifiers = notifiers
 	}

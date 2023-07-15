@@ -27,13 +27,13 @@ func (n Notifiers) Length() int {
 func (n Notifiers) AddNotifier(
 	operatorAddress string,
 	reporter constants.ReporterName,
-	userId string,
+	userID string,
 	userName string,
 ) (*Notifiers, bool) {
 	newNotifier := &Notifier{
 		OperatorAddress: operatorAddress,
 		Reporter:        reporter,
-		UserID:          userId,
+		UserID:          userID,
 		UserName:        userName,
 	}
 
@@ -60,10 +60,10 @@ func (n Notifiers) GetNotifiersForReporter(
 
 func (n Notifiers) GetValidatorsForNotifier(
 	reporter constants.ReporterName,
-	userId string,
+	userID string,
 ) []string {
 	notifiers := utils.Filter(n, func(notifierInternal *Notifier) bool {
-		return notifierInternal.UserID == userId && notifierInternal.Reporter == reporter
+		return notifierInternal.UserID == userID && notifierInternal.Reporter == reporter
 	})
 
 	return utils.Map(notifiers, func(notifier *Notifier) string {

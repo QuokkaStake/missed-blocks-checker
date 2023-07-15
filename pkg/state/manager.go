@@ -203,14 +203,14 @@ func (m *Manager) GetSnapshot() snapshotPkg.Snapshot {
 func (m *Manager) AddNotifier(
 	operatorAddress string,
 	reporter constants.ReporterName,
-	userId string,
+	userID string,
 	userName string,
 ) bool {
-	if added := m.state.AddNotifier(operatorAddress, reporter, userId, userName); !added {
+	if added := m.state.AddNotifier(operatorAddress, reporter, userID, userName); !added {
 		return false
 	}
 
-	err := m.database.InsertNotifier(m.config.Name, operatorAddress, reporter, userId, userName)
+	err := m.database.InsertNotifier(m.config.Name, operatorAddress, reporter, userID, userName)
 	return err == nil
 }
 

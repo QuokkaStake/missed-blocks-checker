@@ -199,11 +199,11 @@ func (d *Database) GetAllNotifiers(chain string) (*types.Notifiers, error) {
 		var (
 			operatorAddress string
 			reporter        constants.ReporterName
-			userId          string
+			userID          string
 			userName        string
 		)
 
-		err = rows.Scan(&operatorAddress, &reporter, &userId, &userName)
+		err = rows.Scan(&operatorAddress, &reporter, &userID, &userName)
 		if err != nil {
 			d.logger.Error().Err(err).Msg("Error fetching notifier data")
 			return &notifiers, err
@@ -212,7 +212,7 @@ func (d *Database) GetAllNotifiers(chain string) (*types.Notifiers, error) {
 		newNotifier := &types.Notifier{
 			OperatorAddress: operatorAddress,
 			Reporter:        reporter,
-			UserID:          userId,
+			UserID:          userID,
 			UserName:        userName,
 		}
 
@@ -226,7 +226,7 @@ func (d *Database) InsertNotifier(
 	chain string,
 	operatorAddress string,
 	reporter constants.ReporterName,
-	userId string,
+	userID string,
 	userName string,
 ) error {
 	d.mutex.Lock()
@@ -237,7 +237,7 @@ func (d *Database) InsertNotifier(
 		chain,
 		operatorAddress,
 		reporter,
-		userId,
+		userID,
 		userName,
 	)
 	if err != nil {
