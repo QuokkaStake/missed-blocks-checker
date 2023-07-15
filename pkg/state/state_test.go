@@ -47,11 +47,13 @@ func TestAddNotifierIfExists(t *testing.T) {
 		&types.Notifier{
 			OperatorAddress: "address",
 			Reporter:        constants.TelegramReporterName,
-			Notifier:        "notifier",
+			UserName:        "notifier",
+			UserID:          "id",
 		},
 	})
 
-	added := state.AddNotifier("address", constants.TelegramReporterName, "notifier")
+	added := state.AddNotifier("address", constants.TelegramReporterName, "id", "notifier")
+
 	assert.False(t, added, "Notifiers should not be added")
 	assert.Equal(t, state.notifiers.Length(), 1, "New notifier should not be added!")
 }
@@ -64,11 +66,12 @@ func TestAddNotifierIfNotExists(t *testing.T) {
 		&types.Notifier{
 			OperatorAddress: "address",
 			Reporter:        constants.TelegramReporterName,
-			Notifier:        "notifier",
+			UserName:        "notifier",
+			UserID:          "id",
 		},
 	})
 
-	added := state.AddNotifier("address", constants.TelegramReporterName, "newnotifier")
+	added := state.AddNotifier("address", constants.TelegramReporterName, "id2", "newnotifier")
 	assert.True(t, added, "Notifiers should be added")
 	assert.Equal(t, state.notifiers.Length(), 2, "New notifier should be added!")
 }
@@ -81,18 +84,20 @@ func TestGetNotifiersForReporter(t *testing.T) {
 		&types.Notifier{
 			OperatorAddress: "address",
 			Reporter:        constants.TelegramReporterName,
-			Notifier:        "notifier1",
+			UserName:        "notifier1",
+			UserID:          "id1",
 		},
 		&types.Notifier{
 			OperatorAddress: "address",
 			Reporter:        constants.TestReporterName,
-			Notifier:        "notifier2",
+			UserName:        "notifier2",
+			UserID:          "id2",
 		},
 	})
 
 	reporterNotifiers := state.GetNotifiersForReporter("address", constants.TestReporterName)
 	assert.Equal(t, len(reporterNotifiers), 1, "Should have 1 notifier")
-	assert.Equal(t, reporterNotifiers[0], "notifier2", "Should have 1 notifier")
+	assert.Equal(t, reporterNotifiers[0].UserName, "notifier2", "Should have 1 notifier")
 }
 
 func TestGetValidatorsForNotifier(t *testing.T) {
@@ -103,16 +108,18 @@ func TestGetValidatorsForNotifier(t *testing.T) {
 		&types.Notifier{
 			OperatorAddress: "address1",
 			Reporter:        constants.TestReporterName,
-			Notifier:        "notifier1",
+			UserName:        "notifier1",
+			UserID:          "id1",
 		},
 		&types.Notifier{
 			OperatorAddress: "address2",
 			Reporter:        constants.TestReporterName,
-			Notifier:        "notifier2",
+			UserName:        "notifier2",
+			UserID:          "id2",
 		},
 	})
 
-	validatorNotifiers := state.GetValidatorsForNotifier(constants.TestReporterName, "notifier1")
+	validatorNotifiers := state.GetValidatorsForNotifier(constants.TestReporterName, "id1")
 	assert.Len(t, validatorNotifiers, 1, "Should have 1 notifier")
 	assert.Equal(t, validatorNotifiers[0], "address1", "Should have 1 notifier")
 }
@@ -125,11 +132,12 @@ func TestRemoveNotifierIfNotExists(t *testing.T) {
 		&types.Notifier{
 			OperatorAddress: "another_address",
 			Reporter:        constants.TelegramReporterName,
-			Notifier:        "notifier",
+			UserName:        "notifier",
+			UserID:          "id",
 		},
 	})
 
-	removed := state.RemoveNotifier("address", constants.TelegramReporterName, "notifier")
+	removed := state.RemoveNotifier("address", constants.TelegramReporterName, "id")
 	assert.False(t, removed, "Notifiers should not be removed")
 	assert.Equal(t, state.notifiers.Length(), 1, "New notifier should not be removed!")
 }
@@ -142,11 +150,12 @@ func TestRemoveNotifierIfExists(t *testing.T) {
 		&types.Notifier{
 			OperatorAddress: "address",
 			Reporter:        constants.TelegramReporterName,
-			Notifier:        "notifier",
+			UserName:        "notifier",
+			UserID:          "id",
 		},
 	})
 
-	removed := state.RemoveNotifier("address", constants.TelegramReporterName, "notifier")
+	removed := state.RemoveNotifier("address", constants.TelegramReporterName, "id")
 	assert.True(t, removed, "Notifiers should be removed")
 	assert.Equal(t, state.notifiers.Length(), 0, "New notifier should be removed!")
 }

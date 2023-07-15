@@ -13,13 +13,15 @@ func TestNotifiersEquals(t *testing.T) {
 	first := &Notifier{
 		OperatorAddress: "address",
 		Reporter:        constants.TelegramReporterName,
-		Notifier:        "notifier",
+		UserName:        "notifier",
+		UserID:          "id",
 	}
 
 	second := &Notifier{
 		OperatorAddress: "address",
 		Reporter:        constants.TelegramReporterName,
-		Notifier:        "notifier",
+		UserName:        "notifier",
+		UserID:          "id",
 	}
 
 	assert.True(t, first.Equals(second), "Notifiers should be equal")
