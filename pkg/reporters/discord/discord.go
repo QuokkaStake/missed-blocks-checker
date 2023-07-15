@@ -141,7 +141,10 @@ func (reporter *Reporter) Send(report *reportPkg.Report) error {
 
 	reporter.Logger.Trace().Str("report", reportString).Msg("Sending a report")
 
-	_, err := reporter.DiscordSession.ChannelMessageSend(reporter.Channel, reportString)
+	_, err := reporter.DiscordSession.ChannelMessageSend(
+		reporter.Channel,
+		reportString,
+	)
 	return err
 }
 
