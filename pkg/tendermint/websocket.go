@@ -66,21 +66,18 @@ func SetUnexportedField(field reflect.Value, value interface{}) {
 }
 
 func (t *WebsocketClient) Listen() {
-	client, err := tmClient.NewWSWithOptions(
+	client, err := tmClient.NewWS(
 		t.url,
 		"/websocket",
-		tmClient.WSOptions{
-			PingPeriod: 1 * time.Second,
-			ReadWait:   10 * time.Second,
-			WriteWait:  10 * time.Second,
-		},
+		tmClient.PingPeriod(1*time.Second),
+		tmClient.ReadWait(10*time.Second),
+		tmClient.WriteWait(10*time.Second),
+		tmClient.OnReconnect(func() {
+			t.metricsManager.LogNodeReconnect(t.config.Name, t.url)
+			t.logger.Info().Msg("Reconnecting...")
+			t.SubscribeToUpdates()
+		}),
 	)
-
-	client.OnReconnect(func() {
-		t.metricsManager.LogNodeReconnect(t.config.Name, t.url)
-		t.logger.Info().Msg("Reconnecting...")
-		t.SubscribeToUpdates()
-	})
 
 	if err != nil {
 		t.logger.Error().Err(err).Msg("Failed to create a client")
