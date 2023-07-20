@@ -227,11 +227,13 @@ func (a *AppManager) ProcessEvent(emittable types.WebsocketEmittable) {
 	}
 
 	for _, reporter := range a.Reporters {
-		if err := reporter.Send(report); err != nil {
-			a.Logger.Error().
-				Err(err).
-				Str("name", string(reporter.Name())).
-				Msg("Error sending report")
+		if reporter.Enabled() {
+			if err := reporter.Send(report); err != nil {
+				a.Logger.Error().
+					Err(err).
+					Str("name", string(reporter.Name())).
+					Msg("Error sending report")
+			}
 		}
 	}
 }
