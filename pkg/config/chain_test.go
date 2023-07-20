@@ -1,6 +1,7 @@
 package config
 
 import (
+	"gopkg.in/guregu/null.v4"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -39,6 +40,18 @@ func TestValidateChainWithoutRPCEndpoints(t *testing.T) {
 	t.Parallel()
 
 	config := &ChainConfig{Name: "chain"}
+	err := config.Validate()
+	assert.NotNil(t, err, "Error should be present!")
+}
+
+func TestValidateConsumerChainWithoutProviderEndpoints(t *testing.T) {
+	t.Parallel()
+
+	config := &ChainConfig{
+		Name:         "chain",
+		RPCEndpoints: []string{"endpoint"},
+		IsConsumer:   null.BoolFrom(true),
+	}
 	err := config.Validate()
 	assert.NotNil(t, err, "Error should be present!")
 }
