@@ -90,7 +90,7 @@ func (m *Manager) GetValidators(height int64) (types.Validators, error) {
 		})
 
 		if !ok {
-			m.logger.Warn().
+			m.logger.Debug().
 				Str("operator_address", validatorRaw.OperatorAddress).
 				Msg("Could not find signing info for validator")
 		}
@@ -224,7 +224,7 @@ func (m *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64) (typ
 			})
 
 			if !ok {
-				m.logger.Warn().
+				m.logger.Debug().
 					Str("operator_address", validatorRaw.OperatorAddress).
 					Msg("Could not find signing info for validator")
 			}
