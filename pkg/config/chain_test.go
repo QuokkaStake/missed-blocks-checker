@@ -63,3 +63,16 @@ func TestValidateChainValid(t *testing.T) {
 	err := config.Validate()
 	assert.Nil(t, err, "Error should not be present!")
 }
+
+func TestValidateConsumerChainValid(t *testing.T) {
+	t.Parallel()
+
+	config := &ChainConfig{
+		Name:                 "chain",
+		RPCEndpoints:         []string{"endpoint"},
+		IsConsumer:           null.BoolFrom(true),
+		ProviderRPCEndpoints: []string{"endpoint"},
+	}
+	err := config.Validate()
+	assert.Nil(t, err, "Error should not be present!")
+}

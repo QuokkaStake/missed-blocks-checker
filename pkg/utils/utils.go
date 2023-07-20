@@ -123,6 +123,20 @@ func CompareTwoBech32(first, second string) (bool, error) {
 	return bytes.Equal(firstBytes, secondBytes), nil
 }
 
+func ConvertBech32Prefix(address, newPrefix string) (string, error) {
+	_, addressRaw, err := bech32.Decode(address)
+	if err != nil {
+		return "", err
+	}
+
+	result, err := bech32.Encode(newPrefix, addressRaw)
+	if err != nil {
+		return "", err
+	}
+
+	return result, nil
+}
+
 func FormatDuration(duration time.Duration) string {
 	days := int64(duration.Hours() / 24)
 	hours := int64(math.Mod(duration.Hours(), 24))

@@ -1,6 +1,7 @@
 package tendermint
 
 import (
+	providerTypes "github.com/cosmos/interchain-security/x/ccv/provider/types"
 	configPkg "main/pkg/config"
 	"main/pkg/metrics"
 	"main/pkg/types"
@@ -27,6 +28,13 @@ func (manager *RPCManager) GetBlock(height int64) (*types.SingleBlockResponse, e
 
 func (manager *RPCManager) GetValidators(height int64) (*stakingTypes.QueryValidatorsResponse, error) {
 	return manager.rpc.GetValidators(height)
+}
+
+func (manager *RPCManager) GetValidatorAssignedConsumerKey(
+	providerValcons string,
+	height int64,
+) (*providerTypes.QueryValidatorConsumerAddrResponse, error) {
+	return manager.rpc.GetValidatorAssignedConsumerKey(providerValcons, height)
 }
 
 func (manager *RPCManager) GetSigningInfos(height int64) (*slashingTypes.QuerySigningInfosResponse, error) {

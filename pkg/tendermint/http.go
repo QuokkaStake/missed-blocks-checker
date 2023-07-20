@@ -20,6 +20,7 @@ import (
 
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	providerTypes "github.com/cosmos/interchain-security/x/ccv/provider/types"
 	"github.com/rs/zerolog"
 )
 
@@ -37,6 +38,14 @@ func NewRPC(config *configPkg.ChainConfig, logger zerolog.Logger, metricsManager
 	}
 }
 
+func (rpc *RPC) GetConsumerOrProviderHosts() []string {
+	if rpc.config.IsConsumer.Bool {
+		return rpc.config.ProviderRPCEndpoints
+	}
+
+	return rpc.config.RPCEndpoints
+}
+
 func (rpc *RPC) GetBlock(height int64) (*types.SingleBlockResponse, error) {
 	queryURL := "/block"
 	if height != 0 {
@@ -44,7 +53,7 @@ func (rpc *RPC) GetBlock(height int64) (*types.SingleBlockResponse, error) {
 	}
 
 	var response types.SingleBlockResponse
-	if err := rpc.Get(queryURL, constants.QueryTypeBlock, &response, func(v interface{}) error {
+	if err := rpc.Get(queryURL, constants.QueryTypeBlock, &response, rpc.config.RPCEndpoints, func(v interface{}) error {
 		response, ok := v.(*types.SingleBlockResponse)
 		if !ok {
 			return fmt.Errorf("error converting block")
@@ -72,6 +81,7 @@ func (rpc *RPC) AbciQuery(
 	height int64,
 	queryType constants.QueryType,
 	output codec.ProtoMarshaler,
+	hosts []string,
 ) error {
 	dataBytes, err := message.Marshal()
 	if err != nil {
@@ -80,14 +90,17 @@ func (rpc *RPC) AbciQuery(
 
 	methodName := fmt.Sprintf("\"%s\"", method)
 	queryURL := fmt.Sprintf(
-		"/abci_query?path=%s&data=0x%x&height=%d",
+		"/abci_query?path=%s&data=0x%x",
 		url.QueryEscape(methodName),
 		dataBytes,
-		height,
 	)
 
+	if height != 0 {
+		queryURL += fmt.Sprintf("&height=%d", height)
+	}
+
 	var response types.AbciQueryResponse
-	if err := rpc.Get(queryURL, constants.QueryType("abci_"+string(queryType)), &response, func(v interface{}) error {
+	if err := rpc.Get(queryURL, constants.QueryType("abci_"+string(queryType)), &response, hosts, func(v interface{}) error {
 		response, ok := v.(*types.AbciQueryResponse)
 		if !ok {
 			return fmt.Errorf("error converting ABCI response")
@@ -128,6 +141,7 @@ func (rpc *RPC) GetValidators(height int64) (*stakingTypes.QueryValidatorsRespon
 		height,
 		constants.QueryTypeValidators,
 		&validatorsResponse,
+		rpc.GetConsumerOrProviderHosts(),
 	); err != nil {
 		return nil, err
 	}
@@ -149,6 +163,7 @@ func (rpc *RPC) GetSigningInfos(height int64) (*slashingTypes.QuerySigningInfosR
 		height,
 		constants.QueryTypeSigningInfos,
 		&response,
+		rpc.config.RPCEndpoints,
 	); err != nil {
 		return nil, err
 	}
@@ -168,6 +183,31 @@ func (rpc *RPC) GetSigningInfo(valcons string, height int64) (*slashingTypes.Que
 		height,
 		constants.QueryTypeSigningInfo,
 		&response,
+		rpc.config.RPCEndpoints,
+	); err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+func (rpc *RPC) GetValidatorAssignedConsumerKey(
+	providerValcons string,
+	height int64,
+) (*providerTypes.QueryValidatorConsumerAddrResponse, error) {
+	query := providerTypes.QueryValidatorConsumerAddrRequest{
+		ChainId:         "neutron-1",
+		ProviderAddress: providerValcons,
+	}
+
+	var response providerTypes.QueryValidatorConsumerAddrResponse
+	if err := rpc.AbciQuery(
+		"/interchain_security.ccv.provider.v1.Query/QueryValidatorConsumerAddr",
+		&query,
+		height,
+		constants.QueryTypeConsumerAddr,
+		&response,
+		rpc.config.ProviderRPCEndpoints,
 	); err != nil {
 		return nil, err
 	}
@@ -183,6 +223,7 @@ func (rpc *RPC) GetSlashingParams(height int64) (*slashingTypes.QueryParamsRespo
 		height,
 		constants.QueryTypeSlashingParams,
 		&response,
+		rpc.config.RPCEndpoints,
 	); err != nil {
 		return nil, err
 	}
@@ -204,7 +245,7 @@ func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 		)
 
 		var response types.ValidatorsResponse
-		if err := rpc.Get(queryURL, constants.QueryTypeHistoricalValidators, &response, func(v interface{}) error {
+		if err := rpc.Get(queryURL, constants.QueryTypeHistoricalValidators, &response, rpc.config.RPCEndpoints, func(v interface{}) error {
 			response, ok := v.(*types.ValidatorsResponse)
 			if !ok {
 				return fmt.Errorf("error converting validators")
@@ -241,14 +282,15 @@ func (rpc *RPC) Get(
 	url string,
 	queryType constants.QueryType,
 	target interface{},
+	hosts []string,
 	predicate func(interface{}) error,
 ) error {
-	errors := make([]error, len(rpc.config.RPCEndpoints))
+	errors := make([]error, len(hosts))
 
-	indexes := utils.MakeShuffledArray(len(rpc.config.RPCEndpoints))
+	indexes := utils.MakeShuffledArray(len(hosts))
 
 	for _, index := range indexes {
-		lcd := rpc.config.RPCEndpoints[index]
+		lcd := hosts[index]
 
 		fullURL := lcd + url
 		rpc.logger.Trace().Str("url", fullURL).Msg("Trying making request to LCD")
@@ -280,7 +322,7 @@ func (rpc *RPC) Get(
 	var sb strings.Builder
 
 	sb.WriteString("All LCD requests failed:\n")
-	for index, nodeURL := range rpc.config.RPCEndpoints {
+	for index, nodeURL := range hosts {
 		sb.WriteString(fmt.Sprintf("#%d: %s -> %s\n", index+1, nodeURL, errors[index]))
 	}
 
@@ -322,7 +364,10 @@ func (rpc *RPC) GetFull(
 	}
 	defer res.Body.Close()
 
-	rpc.logger.Debug().Str("url", url).Dur("duration", time.Since(start)).Msg("Query is finished")
+	rpc.logger.Debug().
+		Str("url", fullURL).
+		Dur("duration", time.Since(start)).
+		Msg("Query is finished")
 
 	if jsonErr := json.NewDecoder(res.Body).Decode(target); jsonErr != nil {
 		rpc.logger.Warn().Str("url", fullURL).Err(jsonErr).Msg("Error decoding JSON from response")
