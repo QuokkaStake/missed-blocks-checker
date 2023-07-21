@@ -5,6 +5,7 @@ import (
 	"main/pkg/events"
 	"main/pkg/report"
 	"main/pkg/types"
+	"math"
 )
 
 type Entry struct {
@@ -85,13 +86,18 @@ func (snapshot *Snapshot) GetReport(
 		missedBlocksBefore := olderEntry.SignatureInfo.GetNotSigned()
 		missedBlocksAfter := entry.SignatureInfo.GetNotSigned()
 
-		beforeGroup, err := chainConfig.MissedBlocksGroups.GetGroup(missedBlocksBefore)
+		beforeGroup, beforeIndex, err := chainConfig.MissedBlocksGroups.GetGroup(missedBlocksBefore)
 		if err != nil {
 			return nil, err
 		}
-		afterGroup, err := chainConfig.MissedBlocksGroups.GetGroup(missedBlocksAfter)
+		afterGroup, afterIndex, err := chainConfig.MissedBlocksGroups.GetGroup(missedBlocksAfter)
 		if err != nil {
 			return nil, err
+		}
+
+		// To fix anomalies, like a validator jumping from 0 to 9500 missed blocks
+		if math.Abs(float64(beforeIndex-afterIndex)) > 1 {
+			continue
 		}
 
 		missedBlocksGroupsEqual := beforeGroup.Start == afterGroup.Start

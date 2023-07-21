@@ -416,8 +416,7 @@ func (a *AppManager) PopulateBlocks() {
 				a.Logger.Error().
 					Int64("height", height).
 					Msg("Could not find block at height, which should never happen.")
-				a.IsPopulatingBlocks = false
-				return
+				continue
 			}
 
 			validators, found := allValidators[height]
@@ -425,8 +424,7 @@ func (a *AppManager) PopulateBlocks() {
 				a.Logger.Error().
 					Int64("height", height).
 					Msg("Could not find historical validators at height, which should never happen.")
-				a.IsPopulatingBlocks = false
-				return
+				continue
 			}
 
 			block, err := blockRaw.Result.Block.ToBlock(validators)
@@ -434,8 +432,7 @@ func (a *AppManager) PopulateBlocks() {
 				a.Logger.Error().
 					Err(err).
 					Msg("Error getting older block")
-				a.IsPopulatingBlocks = false
-				return
+				continue
 			}
 
 			a.mutex.Lock()

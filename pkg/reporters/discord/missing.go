@@ -25,7 +25,7 @@ func (reporter *Reporter) GetMissingCommand() *Command {
 					return false
 				}
 
-				group, _ := reporter.Config.MissedBlocksGroups.GetGroup(v.SignatureInfo.GetNotSigned())
+				group, _, _ := reporter.Config.MissedBlocksGroups.GetGroup(v.SignatureInfo.GetNotSigned())
 				return group.Start > 0
 			})
 
@@ -40,7 +40,7 @@ func (reporter *Reporter) GetMissingCommand() *Command {
 				Config: reporter.Config,
 				Validators: utils.Map(activeValidatorsEntries, func(v snapshot.Entry) missingValidatorsEntry {
 					link := reporter.Config.ExplorerConfig.GetValidatorLink(v.Validator)
-					group, _ := reporter.Config.MissedBlocksGroups.GetGroup(v.SignatureInfo.GetNotSigned())
+					group, _, _ := reporter.Config.MissedBlocksGroups.GetGroup(v.SignatureInfo.GetNotSigned())
 					link.Text = fmt.Sprintf("%s %s", group.EmojiEnd, v.Validator.Moniker)
 
 					return missingValidatorsEntry{

@@ -45,12 +45,12 @@ func (g MissedBlocksGroups) Validate(window int64) error {
 	return nil
 }
 
-func (g MissedBlocksGroups) GetGroup(missed int64) (*MissedBlocksGroup, error) {
-	for _, group := range g {
+func (g MissedBlocksGroups) GetGroup(missed int64) (*MissedBlocksGroup, int, error) {
+	for index, group := range g {
 		if missed >= group.Start && missed <= group.End {
-			return group, nil
+			return group, index, nil
 		}
 	}
 
-	return nil, fmt.Errorf("could not find a group for missed blocks counter = %d", missed)
+	return nil, 0, fmt.Errorf("could not find a group for missed blocks counter = %d", missed)
 }
