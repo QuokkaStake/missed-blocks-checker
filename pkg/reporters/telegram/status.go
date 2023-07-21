@@ -3,6 +3,7 @@ package telegram
 import (
 	"fmt"
 	"main/pkg/constants"
+	"strconv"
 	"strings"
 
 	tele "gopkg.in/telebot.v3"
@@ -16,7 +17,7 @@ func (reporter *Reporter) HandleStatus(c tele.Context) error {
 
 	reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, "status")
 
-	operatorAddresses := reporter.Manager.GetValidatorsForNotifier(reporter.Name(), c.Sender().Username)
+	operatorAddresses := reporter.Manager.GetValidatorsForNotifier(reporter.Name(), strconv.FormatInt(c.Sender().ID, 10))
 	if len(operatorAddresses) == 0 {
 		return reporter.BotReply(c, fmt.Sprintf(
 			"You are not subscribed to any validator's notifications on %s.",
