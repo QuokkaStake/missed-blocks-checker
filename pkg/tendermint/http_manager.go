@@ -54,36 +54,13 @@ func (manager *RPCManager) GetActiveSetAtBlock(height int64) (map[string]bool, e
 	return manager.rpc.GetActiveSetAtBlock(height)
 }
 
-func (manager *RPCManager) GetActiveSetAtBlocks(blocks []int64) (map[int64]map[string]bool, []error) {
-	activeSetsMap := make(map[int64]map[string]bool)
-	errors := make([]error, 0)
-
-	var wg sync.WaitGroup
-	var mutex sync.Mutex
-
-	for _, height := range blocks {
-		wg.Add(1)
-		go func(height int64) {
-			activeSet, err := manager.rpc.GetActiveSetAtBlock(height)
-			mutex.Lock()
-			defer mutex.Unlock()
-
-			if err != nil {
-				errors = append(errors, err)
-			} else {
-				activeSetsMap[height] = activeSet
-			}
-
-			wg.Done()
-		}(height)
-	}
-
-	wg.Wait()
-	return activeSetsMap, nil
-}
-
-func (manager *RPCManager) GetBlocksAtHeights(heights []int64) (map[int64]*types.SingleBlockResponse, []error) {
+func (manager *RPCManager) GetBlocksAndValidatorsAtHeights(heights []int64) (
+	map[int64]*types.SingleBlockResponse,
+	map[int64]map[string]bool,
+	[]error,
+) {
 	blocksMap := make(map[int64]*types.SingleBlockResponse)
+	activeSetsMap := make(map[int64]map[string]bool)
 	errors := make([]error, 0)
 
 	var wg sync.WaitGroup
@@ -104,8 +81,23 @@ func (manager *RPCManager) GetBlocksAtHeights(heights []int64) (map[int64]*types
 
 			wg.Done()
 		}(height)
+
+		wg.Add(1)
+		go func(height int64) {
+			activeSet, err := manager.rpc.GetActiveSetAtBlock(height)
+			mutex.Lock()
+			defer mutex.Unlock()
+
+			if err != nil {
+				errors = append(errors, err)
+			} else {
+				activeSetsMap[height] = activeSet
+			}
+
+			wg.Done()
+		}(height)
 	}
 
 	wg.Wait()
-	return blocksMap, nil
+	return blocksMap, activeSetsMap, nil
 }

@@ -104,13 +104,20 @@ func (d *Database) InsertBlock(chain string, block *types.Block) error {
 		return err
 	}
 
+	validatorsBytes, err := json.Marshal(block.Validators)
+	if err != nil {
+		d.logger.Error().Err(err).Msg("Error marshaling validators")
+		return err
+	}
+
 	_, err = d.client.Exec(
-		"INSERT INTO blocks (chain, height, time, proposer, signatures) VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING",
+		"INSERT INTO blocks (chain, height, time, proposer, signatures, validators) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING",
 		chain,
 		block.Height,
 		block.Time.Unix(),
 		block.Proposer,
 		signaturesBytes,
+		validatorsBytes,
 	)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Error saving block")
@@ -128,7 +135,7 @@ func (d *Database) GetAllBlocks(chain string) (map[int64]*types.Block, error) {
 
 	// Getting blocks
 	blocksRows, err := d.client.Query(
-		"SELECT height, time, proposer, signatures FROM blocks WHERE chain = $1",
+		"SELECT height, time, proposer, signatures, validators FROM blocks WHERE chain = $1",
 		chain,
 	)
 	if err != nil {
@@ -146,10 +153,12 @@ func (d *Database) GetAllBlocks(chain string) (map[int64]*types.Block, error) {
 			blockTime     int64
 			blockProposer string
 			signaturesRaw []byte
+			validatorsRaw []byte
 			signatures    = map[string]int32{}
+			validators    = map[string]bool{}
 		)
 
-		err = blocksRows.Scan(&blockHeight, &blockTime, &blockProposer, &signaturesRaw)
+		err = blocksRows.Scan(&blockHeight, &blockTime, &blockProposer, &signaturesRaw, &validatorsRaw)
 		if err != nil {
 			d.logger.Error().Err(err).Msg("Error fetching block data")
 			return blocks, err
@@ -159,11 +168,16 @@ func (d *Database) GetAllBlocks(chain string) (map[int64]*types.Block, error) {
 			d.logger.Error().Err(err).Msg("Error unmarshalling signatures")
 		}
 
+		if err := json.Unmarshal(validatorsRaw, &validators); err != nil {
+			d.logger.Error().Err(err).Msg("Error unmarshalling validators")
+		}
+
 		block := &types.Block{
 			Height:     blockHeight,
 			Time:       time.Unix(blockTime, 0),
 			Proposer:   blockProposer,
 			Signatures: signatures,
+			Validators: validators,
 		}
 		blocks[block.Height] = block
 	}
@@ -283,88 +297,6 @@ func (d *Database) RemoveNotifier(
 
 	return nil
 }
-
-func (d *Database) GetAllActiveSets(chain string) (types.HistoricalValidatorsMap, error) {
-	d.MaybeMutexLock()
-	defer d.MaybeMutexUnlock()
-
-	activeSets := make(types.HistoricalValidatorsMap, 0)
-
-	rows, err := d.client.Query(
-		"SELECT height, validators FROM validators WHERE chain = $1",
-		chain,
-	)
-	if err != nil {
-		d.logger.Error().Err(err).Msg("Error getting all blocks")
-		return types.HistoricalValidatorsMap{}, err
-	}
-	defer func() {
-		_ = rows.Close()
-		_ = rows.Err() // or modify return value
-	}()
-
-	for rows.Next() {
-		var (
-			height        int64
-			validatorsRaw []byte
-			validators    types.HistoricalValidators
-		)
-
-		err = rows.Scan(&height, &validatorsRaw)
-		if err != nil {
-			d.logger.Error().Err(err).Msg("Error fetching active set data")
-			return nil, err
-		}
-
-		if err := json.Unmarshal(validatorsRaw, &validators); err != nil {
-			d.logger.Error().Err(err).Msg("Error unmarshalling historical validators")
-			return nil, err
-		}
-
-		activeSets[height] = validators
-	}
-
-	return activeSets, nil
-}
-
-func (d *Database) InsertActiveSet(chain string, height int64, activeSet map[string]bool) error {
-	d.MaybeMutexLock()
-	defer d.MaybeMutexUnlock()
-
-	historicalValidatorsRaw, err := json.Marshal(activeSet)
-	if err != nil {
-		d.logger.Error().Err(err).Msg("Error marshalling historical validators")
-		return err
-	}
-
-	_, err = d.client.Exec(
-		"INSERT INTO validators (chain, validators, height) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
-		chain,
-		historicalValidatorsRaw,
-		height,
-	)
-	if err != nil {
-		d.logger.Error().Err(err).Msg("Error adding historical validators")
-		return err
-	}
-
-	return nil
-}
-
-func (d *Database) TrimActiveSetsBefore(chain string, height int64) error {
-	_, err := d.client.Exec(
-		"DELETE FROM validators WHERE chain = $1 AND height <= $2",
-		chain,
-		height,
-	)
-	if err != nil {
-		d.logger.Error().Err(err).Msg("Could not trim active set")
-		return err
-	}
-
-	return nil
-}
-
 func (d *Database) GetValueByKey(chain string, key string) ([]byte, error) {
 	d.MaybeMutexLock()
 	defer d.MaybeMutexUnlock()

@@ -105,7 +105,6 @@ func (snapshot *Snapshot) GetReport(
 				MissedBlocksGroupAfter:  afterGroup,
 			})
 		}
-
 	}
 
 	return &report.Report{Entries: entries}, nil

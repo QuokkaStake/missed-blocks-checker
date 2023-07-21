@@ -10,6 +10,7 @@ type Block struct {
 	Time       time.Time
 	Proposer   string
 	Signatures map[string]int32
+	Validators map[string]bool
 }
 
 func (b *Block) Hash() string {
