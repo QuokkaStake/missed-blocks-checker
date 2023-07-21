@@ -82,9 +82,21 @@ func (d *Database) Init() {
 	d.client = db
 }
 
+func (d *Database) MaybeMutexLock() {
+	if d.config.Type == constants.DatabaseTypeSqlite {
+		d.mutex.Lock()
+	}
+}
+
+func (d *Database) MaybeMutexUnlock() {
+	if d.config.Type == constants.DatabaseTypeSqlite {
+		d.mutex.Unlock()
+	}
+}
+
 func (d *Database) InsertBlock(chain string, block *types.Block) error {
-	d.mutex.Lock()
-	defer d.mutex.Unlock()
+	d.MaybeMutexLock()
+	defer d.MaybeMutexUnlock()
 
 	signaturesBytes, err := json.Marshal(block.Signatures)
 	if err != nil {
@@ -109,8 +121,8 @@ func (d *Database) InsertBlock(chain string, block *types.Block) error {
 }
 
 func (d *Database) GetAllBlocks(chain string) (map[int64]*types.Block, error) {
-	d.mutex.Lock()
-	defer d.mutex.Unlock()
+	d.MaybeMutexLock()
+	defer d.MaybeMutexUnlock()
 
 	blocks := map[int64]*types.Block{}
 
@@ -160,8 +172,8 @@ func (d *Database) GetAllBlocks(chain string) (map[int64]*types.Block, error) {
 }
 
 func (d *Database) TrimBlocksBefore(chain string, height int64) error {
-	d.mutex.Lock()
-	defer d.mutex.Unlock()
+	d.MaybeMutexLock()
+	defer d.MaybeMutexUnlock()
 
 	_, err := d.client.Exec(
 		"DELETE FROM blocks WHERE height <= $1 AND chain = $2",
@@ -177,8 +189,8 @@ func (d *Database) TrimBlocksBefore(chain string, height int64) error {
 }
 
 func (d *Database) GetAllNotifiers(chain string) (*types.Notifiers, error) {
-	d.mutex.Lock()
-	defer d.mutex.Unlock()
+	d.MaybeMutexLock()
+	defer d.MaybeMutexUnlock()
 
 	notifiers := make(types.Notifiers, 0)
 
@@ -229,8 +241,8 @@ func (d *Database) InsertNotifier(
 	userID string,
 	userName string,
 ) error {
-	d.mutex.Lock()
-	defer d.mutex.Unlock()
+	d.MaybeMutexLock()
+	defer d.MaybeMutexUnlock()
 
 	_, err := d.client.Exec(
 		"INSERT INTO notifiers (chain, operator_address, reporter, user_id, user_name) VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING",
@@ -254,8 +266,8 @@ func (d *Database) RemoveNotifier(
 	reporter constants.ReporterName,
 	notifier string,
 ) error {
-	d.mutex.Lock()
-	defer d.mutex.Unlock()
+	d.MaybeMutexLock()
+	defer d.MaybeMutexUnlock()
 
 	_, err := d.client.Exec(
 		"DELETE FROM notifiers WHERE operator_address = $1 AND reporter = $2 AND notifier = $3 AND chain = $4",
@@ -273,8 +285,8 @@ func (d *Database) RemoveNotifier(
 }
 
 func (d *Database) GetAllActiveSets(chain string) (types.HistoricalValidatorsMap, error) {
-	d.mutex.Lock()
-	defer d.mutex.Unlock()
+	d.MaybeMutexLock()
+	defer d.MaybeMutexUnlock()
 
 	activeSets := make(types.HistoricalValidatorsMap, 0)
 
@@ -316,8 +328,8 @@ func (d *Database) GetAllActiveSets(chain string) (types.HistoricalValidatorsMap
 }
 
 func (d *Database) InsertActiveSet(chain string, height int64, activeSet map[string]bool) error {
-	d.mutex.Lock()
-	defer d.mutex.Unlock()
+	d.MaybeMutexLock()
+	defer d.MaybeMutexUnlock()
 
 	historicalValidatorsRaw, err := json.Marshal(activeSet)
 	if err != nil {
@@ -354,8 +366,8 @@ func (d *Database) TrimActiveSetsBefore(chain string, height int64) error {
 }
 
 func (d *Database) GetValueByKey(chain string, key string) ([]byte, error) {
-	d.mutex.Lock()
-	defer d.mutex.Unlock()
+	d.MaybeMutexLock()
+	defer d.MaybeMutexUnlock()
 
 	var value []byte
 
@@ -364,7 +376,10 @@ func (d *Database) GetValueByKey(chain string, key string) ([]byte, error) {
 		Scan(&value)
 
 	if err != nil {
-		d.logger.Error().Err(err).Str("key", key).Msg("Could not get value")
+		d.logger.Error().Err(err).
+			Str("chain", chain).
+			Str("key", key).
+			Msg("Could not get value")
 		return value, err
 	}
 
@@ -372,8 +387,8 @@ func (d *Database) GetValueByKey(chain string, key string) ([]byte, error) {
 }
 
 func (d *Database) SetValueByKey(chain string, key string, data []byte) error {
-	d.mutex.Lock()
-	defer d.mutex.Unlock()
+	d.MaybeMutexLock()
+	defer d.MaybeMutexUnlock()
 
 	_, err := d.client.Exec(
 		"INSERT INTO data (chain, key, value) VALUES ($1, $2, $3) ON CONFLICT (chain, key) DO UPDATE SET value = $3",
