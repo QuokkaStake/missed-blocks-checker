@@ -35,10 +35,16 @@ func TestValidatorGroupChanged(t *testing.T) {
 	}
 
 	olderSnapshot := Snapshot{Entries: map[string]Entry{
-		"validator": {Validator: &types.Validator{}, SignatureInfo: types.SignatureInto{NotSigned: 0}},
+		"validator": {
+			Validator:     &types.Validator{Jailed: false, Status: 3},
+			SignatureInfo: types.SignatureInto{NotSigned: 0},
+		},
 	}}
 	newerSnapshot := Snapshot{Entries: map[string]Entry{
-		"validator": {Validator: &types.Validator{}, SignatureInfo: types.SignatureInto{NotSigned: 50}},
+		"validator": {
+			Validator:     &types.Validator{Jailed: false, Status: 3},
+			SignatureInfo: types.SignatureInto{NotSigned: 50},
+		},
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
@@ -208,6 +214,34 @@ func TestValidatorActive(t *testing.T) {
 	assert.Equal(t, report.Entries[0].Type(), constants.EventValidatorActive, 1, "Entry type mismatch!")
 }
 
+func TestValidatorJailedAndChangedGroup(t *testing.T) {
+	t.Parallel()
+
+	config := &configPkg.ChainConfig{
+		MissedBlocksGroups: []*configPkg.MissedBlocksGroup{
+			{Start: 0, End: 49},
+			{Start: 50, End: 99},
+		},
+	}
+
+	olderSnapshot := Snapshot{Entries: map[string]Entry{
+		"validator": {
+			Validator:     &types.Validator{Jailed: true, Status: 3},
+			SignatureInfo: types.SignatureInto{NotSigned: 0},
+		},
+	}}
+	newerSnapshot := Snapshot{Entries: map[string]Entry{
+		"validator": {
+			Validator:     &types.Validator{Jailed: true, Status: 3},
+			SignatureInfo: types.SignatureInto{NotSigned: 50},
+		},
+	}}
+
+	report, err := newerSnapshot.GetReport(olderSnapshot, config)
+	assert.Nil(t, err, "Error should not be present!")
+	assert.Empty(t, report.Entries, "Report should be empty!")
+}
+
 func TestToSlice(t *testing.T) {
 	t.Parallel()
 
@@ -236,13 +270,13 @@ func TestNewMissedBlocksGroupNotPresent(t *testing.T) {
 
 	olderSnapshot := Snapshot{Entries: map[string]Entry{
 		"validator": {
-			Validator:     &types.Validator{Jailed: false},
+			Validator:     &types.Validator{Jailed: false, Status: 3},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
 	newerSnapshot := Snapshot{Entries: map[string]Entry{
 		"validator": {
-			Validator:     &types.Validator{Jailed: false},
+			Validator:     &types.Validator{Jailed: false, Status: 3},
 			SignatureInfo: types.SignatureInto{NotSigned: 150},
 		},
 	}}
@@ -264,13 +298,13 @@ func TestOldMissedBlocksGroupNotPresent(t *testing.T) {
 
 	olderSnapshot := Snapshot{Entries: map[string]Entry{
 		"validator": {
-			Validator:     &types.Validator{Jailed: false},
+			Validator:     &types.Validator{Jailed: false, Status: 3},
 			SignatureInfo: types.SignatureInto{NotSigned: 150},
 		},
 	}}
 	newerSnapshot := Snapshot{Entries: map[string]Entry{
 		"validator": {
-			Validator:     &types.Validator{Jailed: false},
+			Validator:     &types.Validator{Jailed: false, Status: 3},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
