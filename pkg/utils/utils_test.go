@@ -183,3 +183,29 @@ func TestSplitStringIntoChunksMoreChunks(t *testing.T) {
 	chunks := SplitStringIntoChunks(str, 10)
 	assert.Len(t, chunks, 3, "There should be 3 chunks!")
 }
+
+func TestConvertBech32PrefixInvalid(t *testing.T) {
+	t.Parallel()
+
+	_, err := ConvertBech32Prefix(
+		"test",
+		"cosmosvaloper",
+	)
+	assert.NotNil(t, err, "Error should be present!")
+}
+
+func TestConvertBech32PrefixValid(t *testing.T) {
+	t.Parallel()
+
+	address, err := ConvertBech32Prefix(
+		"cosmos1xqz9pemz5e5zycaa89kys5aw6m8rhgsvtp9lt2",
+		"cosmosvaloper",
+	)
+	assert.Nil(t, err, "Error should not be present!")
+	assert.Equal(
+		t,
+		address,
+		"cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e",
+		"Bech addresses should not be equal!",
+	)
+}
