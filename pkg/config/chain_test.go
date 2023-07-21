@@ -1,8 +1,9 @@
 package config
 
 import (
-	"gopkg.in/guregu/null.v4"
 	"testing"
+
+	"gopkg.in/guregu/null.v4"
 
 	"github.com/stretchr/testify/assert"
 )

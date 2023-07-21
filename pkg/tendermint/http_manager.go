@@ -1,11 +1,12 @@
 package tendermint
 
 import (
-	providerTypes "github.com/cosmos/interchain-security/x/ccv/provider/types"
 	configPkg "main/pkg/config"
 	"main/pkg/metrics"
 	"main/pkg/types"
 	"sync"
+
+	providerTypes "github.com/cosmos/interchain-security/x/ccv/provider/types"
 
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"

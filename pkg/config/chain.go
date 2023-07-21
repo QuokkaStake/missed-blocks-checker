@@ -16,7 +16,7 @@ type ChainConfig struct {
 	QueryEachSigningInfo null.Bool `default:"false"      toml:"query-each-signing-info"`
 	QuerySlashingParams  null.Bool `default:"true"       toml:"query-slashing-params"`
 
-	IsConsumer              null.Bool `default:"false" toml:"consumer"`
+	IsConsumer              null.Bool `default:"false"                  toml:"consumer"`
 	ProviderRPCEndpoints    []string  `toml:"provider-rpc-endpoints"`
 	ConsumerValidatorPrefix string    `toml:"consumer-validator-prefix"`
 
