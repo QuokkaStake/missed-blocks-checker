@@ -57,6 +57,19 @@ func TestValidateConsumerChainWithoutProviderEndpoints(t *testing.T) {
 	assert.NotNil(t, err, "Error should be present!")
 }
 
+func TestValidateConsumerChainWithoutChainID(t *testing.T) {
+	t.Parallel()
+
+	config := &ChainConfig{
+		Name:                 "chain",
+		RPCEndpoints:         []string{"endpoint"},
+		IsConsumer:           null.BoolFrom(true),
+		ProviderRPCEndpoints: []string{"endpoint"},
+	}
+	err := config.Validate()
+	assert.NotNil(t, err, "Error should be present!")
+}
+
 func TestValidateChainValid(t *testing.T) {
 	t.Parallel()
 
@@ -73,6 +86,7 @@ func TestValidateConsumerChainValid(t *testing.T) {
 		RPCEndpoints:         []string{"endpoint"},
 		IsConsumer:           null.BoolFrom(true),
 		ProviderRPCEndpoints: []string{"endpoint"},
+		ConsumerChainId:      "chain",
 	}
 	err := config.Validate()
 	assert.Nil(t, err, "Error should not be present!")

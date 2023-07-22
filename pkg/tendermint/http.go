@@ -196,7 +196,7 @@ func (rpc *RPC) GetValidatorAssignedConsumerKey(
 	height int64,
 ) (*providerTypes.QueryValidatorConsumerAddrResponse, error) {
 	query := providerTypes.QueryValidatorConsumerAddrRequest{
-		ChainId:         "neutron-1",
+		ChainId:         rpc.config.ConsumerChainId,
 		ProviderAddress: providerValcons,
 	}
 
