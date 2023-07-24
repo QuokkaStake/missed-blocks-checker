@@ -86,7 +86,7 @@ func TestValidateConsumerChainValid(t *testing.T) {
 		RPCEndpoints:         []string{"endpoint"},
 		IsConsumer:           null.BoolFrom(true),
 		ProviderRPCEndpoints: []string{"endpoint"},
-		ConsumerChainId:      "chain",
+		ConsumerChainID:      "chain",
 	}
 	err := config.Validate()
 	assert.Nil(t, err, "Error should not be present!")
