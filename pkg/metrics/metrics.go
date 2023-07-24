@@ -36,11 +36,13 @@ type Manager struct {
 	reporterEnabledGauge   *prometheus.GaugeVec
 	reporterQueriesCounter *prometheus.CounterVec
 
-	missingBlocksGauge *prometheus.GaugeVec
-	activeBlocksGauge  *prometheus.GaugeVec
-	isActiveGauge      *prometheus.GaugeVec
-	isJailedGauge      *prometheus.GaugeVec
-	isTombstonedGauge  *prometheus.GaugeVec
+	missingBlocksGauge   *prometheus.GaugeVec
+	activeBlocksGauge    *prometheus.GaugeVec
+	notActiveBlocksGauge *prometheus.GaugeVec
+
+	isActiveGauge     *prometheus.GaugeVec
+	isJailedGauge     *prometheus.GaugeVec
+	isTombstonedGauge *prometheus.GaugeVec
 
 	appVersionGauge         *prometheus.GaugeVec
 	chainInfoGauge          *prometheus.GaugeVec
@@ -112,6 +114,10 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 		activeBlocksGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
 			Name: constants.PrometheusMetricsPrefix + "active_blocks",
 			Help: "Count of each validator's blocks during which they were active",
+		}, []string{"chain", "moniker", "address"}),
+		notActiveBlocksGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
+			Name: constants.PrometheusMetricsPrefix + "not_active_blocks",
+			Help: "Count of each validator's blocks during which they were not active",
 		}, []string{"chain", "moniker", "address"}),
 		isActiveGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
 			Name: constants.PrometheusMetricsPrefix + "active",
@@ -294,6 +300,14 @@ func (m *Manager) LogValidatorStats(
 			"address": validator.OperatorAddress,
 		}).
 		Set(float64(signatureInfo.Active))
+
+	m.notActiveBlocksGauge.
+		With(prometheus.Labels{
+			"chain":   chain,
+			"moniker": validator.Moniker,
+			"address": validator.OperatorAddress,
+		}).
+		Set(float64(signatureInfo.NotActive))
 
 	m.isActiveGauge.
 		With(prometheus.Labels{
