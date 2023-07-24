@@ -16,6 +16,11 @@ type ChainConfig struct {
 	QueryEachSigningInfo null.Bool `default:"false"      toml:"query-each-signing-info"`
 	QuerySlashingParams  null.Bool `default:"true"       toml:"query-slashing-params"`
 
+	IsConsumer              null.Bool `default:"false"                  toml:"consumer"`
+	ProviderRPCEndpoints    []string  `toml:"provider-rpc-endpoints"`
+	ConsumerValidatorPrefix string    `toml:"consumer-validator-prefix"`
+	ConsumerChainID         string    `toml:"consumer-chain-id"`
+
 	MissedBlocksGroups MissedBlocksGroups `toml:"missed-blocks-groups"`
 	ExplorerConfig     ExplorerConfig     `toml:"explorer"`
 	TelegramConfig     TelegramConfig     `toml:"telegram"`
@@ -41,6 +46,16 @@ func (c *ChainConfig) Validate() error {
 
 	if len(c.RPCEndpoints) == 0 {
 		return fmt.Errorf("chain has 0 RPC endpoints")
+	}
+
+	if c.IsConsumer.Bool {
+		if len(c.ProviderRPCEndpoints) == 0 {
+			return fmt.Errorf("chain is a consumer, but has 0 provider RPC endpoints")
+		}
+
+		if c.ConsumerChainID == "" {
+			return fmt.Errorf("chain is a consumer, but consumer chain id is not provided")
+		}
 	}
 
 	return nil

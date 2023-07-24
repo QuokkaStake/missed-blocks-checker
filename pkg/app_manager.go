@@ -16,6 +16,7 @@ import (
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"main/pkg/utils"
+	"strconv"
 	"sync"
 	"time"
 
@@ -23,18 +24,17 @@ import (
 )
 
 type AppManager struct {
-	Logger                zerolog.Logger
-	Config                *configPkg.ChainConfig
-	RPCManager            *tendermint.RPCManager
-	Database              *databasePkg.Database
-	DataManager           *dataPkg.Manager
-	StateManager          *statePkg.Manager
-	SnapshotManager       *snapshotPkg.Manager
-	WebsocketManager      *tendermint.WebsocketManager
-	MetricsManager        *metrics.Manager
-	Reporters             []reportersPkg.Reporter
-	IsPopulatingBlocks    bool
-	IsPopulatingActiveSet bool
+	Logger             zerolog.Logger
+	Config             *configPkg.ChainConfig
+	RPCManager         *tendermint.RPCManager
+	Database           *databasePkg.Database
+	DataManager        *dataPkg.Manager
+	StateManager       *statePkg.Manager
+	SnapshotManager    *snapshotPkg.Manager
+	WebsocketManager   *tendermint.WebsocketManager
+	MetricsManager     *metrics.Manager
+	Reporters          []reportersPkg.Reporter
+	IsPopulatingBlocks bool
 
 	mutex sync.Mutex
 }
@@ -63,18 +63,17 @@ func NewAppManager(
 	}
 
 	return &AppManager{
-		Logger:                managerLogger,
-		Config:                config,
-		RPCManager:            rpcManager,
-		DataManager:           dataManager,
-		Database:              database,
-		StateManager:          stateManager,
-		SnapshotManager:       snapshotManager,
-		WebsocketManager:      websocketManager,
-		MetricsManager:        metricsManager,
-		Reporters:             reporters,
-		IsPopulatingBlocks:    false,
-		IsPopulatingActiveSet: false,
+		Logger:             managerLogger,
+		Config:             config,
+		RPCManager:         rpcManager,
+		DataManager:        dataManager,
+		Database:           database,
+		StateManager:       stateManager,
+		SnapshotManager:    snapshotManager,
+		WebsocketManager:   websocketManager,
+		MetricsManager:     metricsManager,
+		Reporters:          reporters,
+		IsPopulatingBlocks: false,
 	}
 }
 
@@ -122,32 +121,48 @@ func (a *AppManager) ProcessEvent(emittable types.WebsocketEmittable) {
 	a.mutex.Lock()
 	defer a.mutex.Unlock()
 
-	block, ok := emittable.(*types.Block)
+	blockRaw, ok := emittable.(types.TendermintBlock)
 	if !ok {
 		a.Logger.Warn().Msg("Event is not a block!")
 		return
 	}
 
-	if a.StateManager.HasBlockAtHeight(block.Height) {
+	height, err := strconv.ParseInt(blockRaw.Header.Height, 10, 64)
+	if err != nil {
+		a.Logger.Warn().Msg("Error converting block height!")
+		return
+	}
+
+	if a.StateManager.HasBlockAtHeight(height) {
 		a.Logger.Info().
-			Int64("height", block.Height).
+			Int64("height", height).
 			Msg("Already have block at this height, not generating report.")
 		return
 	}
 
-	if err := a.UpdateValidators(block.Height - 1); err != nil {
+	if err := a.UpdateValidators(height - 1); err != nil {
 		a.Logger.Error().
 			Err(err).
 			Msg("Error updating validators")
+		return
 	}
 
-	if err := a.AddLastActiveSet(block.Height); err != nil {
+	validators, err := a.RPCManager.GetActiveSetAtBlock(height)
+	if err != nil {
 		a.Logger.Error().
 			Err(err).
 			Msg("Error updating historical validators")
+		return
 	}
 
-	a.Logger.Debug().Int64("height", block.Height).Msg("Got new block from Tendermint")
+	block, err := blockRaw.ToBlock(validators)
+	if err != nil {
+		a.Logger.Error().
+			Err(err).
+			Msg("Error converting block")
+	}
+
+	a.Logger.Debug().Int64("height", height).Msg("Got new block from Tendermint")
 	if err := a.StateManager.AddBlock(block); err != nil {
 		a.Logger.Error().
 			Err(err).
@@ -160,16 +175,13 @@ func (a *AppManager) ProcessEvent(emittable types.WebsocketEmittable) {
 		Int64("height", block.Height).
 		Msg("Added new Tendermint block into state")
 
-	blocksCount := a.StateManager.GetActiveSetsCountSinceLatest(a.Config.BlocksWindow)
-	historicalValidatorsCount := a.StateManager.GetActiveSetsCountSinceLatest(a.Config.BlocksWindow)
+	blocksCount := a.StateManager.GetBlocksCountSinceLatest(a.Config.BlocksWindow)
 
 	hasEnoughBlocks := blocksCount >= a.Config.BlocksWindow
-	hasEnoughHistoricalValidators := historicalValidatorsCount >= a.Config.BlocksWindow
 
-	if !hasEnoughBlocks || !hasEnoughHistoricalValidators {
+	if !hasEnoughBlocks {
 		a.Logger.Info().
 			Int64("blocks_count", blocksCount).
-			Int64("historical_validators_count", historicalValidatorsCount).
 			Int64("expected", a.Config.BlocksWindow).
 			Msg("Not enough data for producing a snapshot, skipping.")
 		return
@@ -227,11 +239,13 @@ func (a *AppManager) ProcessEvent(emittable types.WebsocketEmittable) {
 	}
 
 	for _, reporter := range a.Reporters {
-		if err := reporter.Send(report); err != nil {
-			a.Logger.Error().
-				Err(err).
-				Str("name", string(reporter.Name())).
-				Msg("Error sending report")
+		if reporter.Enabled() {
+			if err := reporter.Send(report); err != nil {
+				a.Logger.Error().
+					Err(err).
+					Str("name", string(reporter.Name())).
+					Msg("Error sending report")
+			}
 		}
 	}
 }
@@ -285,24 +299,13 @@ func (a *AppManager) UpdateValidators(height int64) error {
 	return nil
 }
 
-func (a *AppManager) AddLastActiveSet(height int64) error {
-	validators, err := a.RPCManager.GetActiveSetAtBlock(height)
-	if err != nil {
-		return err
-	}
-
-	return a.StateManager.AddActiveSet(height, validators)
-}
-
 func (a *AppManager) PopulateInBackground() {
 	a.PopulateLatestBlock()
 	a.PopulateSlashingParams()
 
 	go a.PopulateBlocks()
-	go a.PopulateActiveSet()
 
 	blocksTicker := time.NewTicker(60 * time.Second)
-	activeSetTicker := time.NewTicker(60 * time.Second)
 	latestBlockTimer := time.NewTicker(120 * time.Second)
 	trimTimer := time.NewTicker(300 * time.Second)
 	slashingParamsTimer := time.NewTicker(300 * time.Second)
@@ -313,8 +316,6 @@ func (a *AppManager) PopulateInBackground() {
 		select {
 		case <-blocksTicker.C:
 			a.PopulateBlocks()
-		case <-activeSetTicker.C:
-			a.PopulateActiveSet()
 		case <-latestBlockTimer.C:
 			a.PopulateLatestBlock()
 		case <-slashingParamsTimer.C:
@@ -324,13 +325,9 @@ func (a *AppManager) PopulateInBackground() {
 				if err := a.StateManager.TrimBlocks(); err != nil {
 					a.Logger.Error().Err(err).Msg("Error trimming blocks")
 				}
-				if err := a.StateManager.TrimHistoricalValidators(); err != nil {
-					a.Logger.Error().Err(err).Msg("Error trimming historical validators")
-				}
 			}
 		case <-quit:
 			blocksTicker.Stop()
-			activeSetTicker.Stop()
 			return
 		}
 	}
@@ -343,7 +340,20 @@ func (a *AppManager) PopulateLatestBlock() {
 		return
 	}
 
-	blockParsed, err := blockRaw.Result.Block.ToBlock()
+	height, err := strconv.ParseInt(blockRaw.Result.Block.Header.Height, 10, 64)
+	if err != nil {
+		a.Logger.Warn().Msg("Error converting block height!")
+		return
+	}
+
+	validators, err := a.RPCManager.GetActiveSetAtBlock(height)
+	if err != nil {
+		a.Logger.Error().
+			Err(err).
+			Msg("Error updating historical validators")
+	}
+
+	blockParsed, err := blockRaw.Result.Block.ToBlock(validators)
 	if err != nil {
 		a.Logger.Error().Err(err).Msg("Error fetching last block")
 		return
@@ -363,11 +373,11 @@ func (a *AppManager) PopulateLatestBlock() {
 
 func (a *AppManager) PopulateBlocks() {
 	if a.IsPopulatingBlocks {
-		a.Logger.Debug().Msg("AppManager is populating blocks already, not populating again")
+		a.Logger.Info().Msg("AppManager is populating blocks already, not populating again")
 		return
 	}
 
-	a.Logger.Debug().Msg("Populating blocks...")
+	a.Logger.Info().Msg("Populating blocks...")
 
 	a.IsPopulatingBlocks = true
 
@@ -392,7 +402,7 @@ func (a *AppManager) PopulateBlocks() {
 			Ints64("blocks", chunk).
 			Msg("Fetching more blocks...")
 
-		blocks, errs := a.RPCManager.GetBlocksAtHeights(chunk)
+		blocks, allValidators, errs := a.RPCManager.GetBlocksAndValidatorsAtHeights(chunk)
 
 		if len(errs) > 0 {
 			a.Logger.Error().Errs("errors", errs).Msg("Error querying for blocks")
@@ -400,14 +410,29 @@ func (a *AppManager) PopulateBlocks() {
 			return
 		}
 
-		for _, blockRaw := range blocks {
-			block, err := blockRaw.Result.Block.ToBlock()
+		for _, height := range chunk {
+			blockRaw, found := blocks[height]
+			if !found {
+				a.Logger.Error().
+					Int64("height", height).
+					Msg("Could not find block at height, which should never happen.")
+				continue
+			}
+
+			validators, found := allValidators[height]
+			if !found {
+				a.Logger.Error().
+					Int64("height", height).
+					Msg("Could not find historical validators at height, which should never happen.")
+				continue
+			}
+
+			block, err := blockRaw.Result.Block.ToBlock(validators)
 			if err != nil {
 				a.Logger.Error().
 					Err(err).
 					Msg("Error getting older block")
-				a.IsPopulatingBlocks = false
-				return
+				continue
 			}
 
 			a.mutex.Lock()
@@ -423,64 +448,9 @@ func (a *AppManager) PopulateBlocks() {
 
 			a.mutex.Unlock()
 		}
+
+		a.Logger.Debug().Int("len", len(blocks)).Msg("Inserted all blocks")
 	}
 
 	a.IsPopulatingBlocks = false
-}
-
-func (a *AppManager) PopulateActiveSet() {
-	if a.IsPopulatingActiveSet {
-		a.Logger.Debug().Msg("AppManager is populating active set already, not populating again")
-		return
-	}
-
-	a.Logger.Debug().Msg("Populating active set...")
-
-	a.IsPopulatingActiveSet = true
-
-	missing := a.StateManager.GetMissingHistoricalValidatorsSinceLatest(a.Config.StoreBlocks)
-	if len(missing) == 0 {
-		a.Logger.Info().
-			Int64("count", a.Config.StoreBlocks).
-			Msg("Got enough historical validators for populating")
-		a.IsPopulatingActiveSet = false
-		return
-	}
-
-	chunks := utils.SplitIntoChunks(missing, int(constants.ActiveSetsBulkQueryCount))
-	for _, chunk := range chunks {
-		count := a.StateManager.GetActiveSetsCountSinceLatest(a.Config.StoreBlocks)
-
-		a.Logger.Info().
-			Int64("count", count).
-			Ints64("blocks_to_fetch", chunk).
-			Int64("required", a.Config.StoreBlocks).
-			Msg("Not enough historical validators, fetching more...")
-
-		heightActiveSets, errs := a.RPCManager.GetActiveSetAtBlocks(chunk)
-		if len(errs) > 0 {
-			a.Logger.Error().
-				Errs("errors", errs).
-				Msg("Error querying for active set")
-			a.IsPopulatingActiveSet = false
-			return
-		}
-
-		a.mutex.Lock()
-
-		for height, activeSet := range heightActiveSets {
-			if err := a.StateManager.AddActiveSet(height, activeSet); err != nil {
-				a.Logger.Error().
-					Err(err).
-					Msg("Error inserting active set")
-				a.IsPopulatingActiveSet = false
-				a.mutex.Unlock()
-				return
-			}
-		}
-
-		a.mutex.Unlock()
-	}
-
-	a.IsPopulatingActiveSet = false
 }

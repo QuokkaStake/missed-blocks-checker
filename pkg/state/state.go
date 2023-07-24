@@ -15,20 +15,18 @@ type LastBlockHeight struct {
 }
 
 type State struct {
-	blocks               *Blocks
-	validators           types.ValidatorsMap
-	historicalValidators *HistoricalValidators
-	notifiers            *types.Notifiers
-	lastBlockHeight      *LastBlockHeight
-	mutex                sync.RWMutex
+	blocks          *Blocks
+	validators      types.ValidatorsMap
+	notifiers       *types.Notifiers
+	lastBlockHeight *LastBlockHeight
+	mutex           sync.RWMutex
 }
 
 func NewState() *State {
 	return &State{
-		blocks:               NewBlocks(),
-		validators:           make(types.ValidatorsMap),
-		historicalValidators: NewHistoricalValidators(),
-		notifiers:            &types.Notifiers{},
+		blocks:     NewBlocks(),
+		validators: make(types.ValidatorsMap),
+		notifiers:  &types.Notifiers{},
 		lastBlockHeight: &LastBlockHeight{
 			signingInfos: 0,
 			validators:   0,
@@ -41,10 +39,6 @@ func (s *State) AddBlock(block *types.Block) {
 	s.blocks.AddBlock(block)
 }
 
-func (s *State) AddActiveSet(height int64, activeSet map[string]bool) {
-	s.historicalValidators.SetValidators(height, activeSet)
-}
-
 func (s *State) GetBlocksCountSinceLatest(expected int64) int64 {
 	return s.blocks.GetCountSinceLatest(expected)
 }
@@ -53,24 +47,12 @@ func (s *State) GetMissingBlocksSinceLatest(expected int64) []int64 {
 	return s.blocks.GetMissingSinceLatest(expected)
 }
 
-func (s *State) GetActiveSetsCountSinceLatest(expected int64) int64 {
-	return s.historicalValidators.GetCountSinceLatest(expected, s.blocks.lastHeight)
-}
-
-func (s *State) GetMissingActiveSetsSinceLatest(expected int64) []int64 {
-	return s.historicalValidators.GetMissingSinceLatest(expected, s.blocks.lastHeight)
-}
-
 func (s *State) HasBlockAtHeight(height int64) bool {
 	return s.blocks.HasBlockAtHeight(height)
 }
 
 func (s *State) TrimBlocksBefore(trimHeight int64) {
 	s.blocks.TrimBefore(trimHeight)
-}
-
-func (s *State) TrimActiveSetsBefore(trimHeight int64) {
-	s.historicalValidators.TrimBefore(trimHeight)
 }
 
 func (s *State) SetValidators(validators types.ValidatorsMap) {
@@ -89,10 +71,6 @@ func (s *State) SetNotifiers(notifiers *types.Notifiers) {
 
 func (s *State) SetBlocks(blocks map[int64]*types.Block) {
 	s.blocks.SetBlocks(blocks)
-}
-
-func (s *State) SetActiveSet(activeSet types.HistoricalValidatorsMap) {
-	s.historicalValidators.SetAllValidators(activeSet)
 }
 
 func (s *State) AddNotifier(
@@ -150,10 +128,6 @@ func (s *State) GetValidators() types.ValidatorsMap {
 	return s.validators
 }
 
-func (s *State) IsValidatorActiveAtBlock(validator *types.Validator, height int64) bool {
-	return s.historicalValidators.IsValidatorActiveAtBlock(validator, height)
-}
-
 func (s *State) GetValidator(operatorAddress string) (*types.Validator, bool) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -171,7 +145,7 @@ func (s *State) GetValidatorMissedBlocks(validator *types.Validator, blocksToChe
 			continue
 		}
 
-		if !s.IsValidatorActiveAtBlock(validator, height) {
+		if _, ok := block.Validators[validator.ConsensusAddressHex]; !ok {
 			signatureInfo.NotActive++
 			continue
 		} else {

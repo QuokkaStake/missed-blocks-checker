@@ -34,6 +34,10 @@ func NewManager(
 }
 
 func (m *Manager) GetValidators(height int64) (types.Validators, error) {
+	if m.config.IsConsumer.Bool {
+		return m.GetValidatorsAndSigningInfoForConsumerChain(height)
+	}
+
 	if m.config.QueryEachSigningInfo.Bool {
 		return m.GetValidatorsAndEachSigningInfo(height)
 	}
@@ -86,7 +90,7 @@ func (m *Manager) GetValidators(height int64) (types.Validators, error) {
 		})
 
 		if !ok {
-			m.logger.Warn().
+			m.logger.Debug().
 				Str("operator_address", validatorRaw.OperatorAddress).
 				Msg("Could not find signing info for validator")
 		}
@@ -129,6 +133,103 @@ func (m *Manager) GetValidatorsAndEachSigningInfo(height int64) (types.Validator
 			}
 
 			validator := m.converter.ValidatorFromCosmosValidator(validatorRaw, signingInfo)
+
+			mutex.Lock()
+			validators[index] = validator
+			mutex.Unlock()
+		}(validatorRaw, index)
+	}
+
+	wg.Wait()
+
+	return validators, nil
+}
+
+func (m *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64) (types.Validators, error) {
+	var (
+		wg                  sync.WaitGroup
+		validatorsResponse  *stakingTypes.QueryValidatorsResponse
+		validatorsError     error
+		signingInfoResponse *slashingTypes.QuerySigningInfosResponse
+		signingInfoErr      error
+		mutex               sync.Mutex
+	)
+
+	wg.Add(2)
+	go func() {
+		validatorsResponse, validatorsError = m.httpManager.GetValidators(0)
+		wg.Done()
+	}()
+
+	go func() {
+		signingInfoResponse, signingInfoErr = m.httpManager.GetSigningInfos(height)
+		wg.Done()
+	}()
+
+	wg.Wait()
+
+	if validatorsError != nil {
+		return nil, validatorsError
+	}
+
+	if signingInfoErr != nil {
+		return nil, signingInfoErr
+	}
+
+	validators := make([]*types.Validator, len(validatorsResponse.Validators))
+
+	for index, validatorRaw := range validatorsResponse.Validators {
+		if m.config.ConsumerValidatorPrefix != "" {
+			if newOperatorAddress, convertErr := utils.ConvertBech32Prefix(
+				validatorRaw.OperatorAddress,
+				m.config.ConsumerValidatorPrefix,
+			); convertErr != nil {
+				m.logger.Error().
+					Str("operator_address", validatorRaw.OperatorAddress).
+					Msg("Error converting operator address to a new prefix")
+			} else {
+				validatorRaw.OperatorAddress = newOperatorAddress
+			}
+		}
+
+		wg.Add(1)
+		go func(validatorRaw stakingTypes.Validator, index int) {
+			defer wg.Done()
+
+			consensusAddrProvider := m.converter.GetConsensusAddress(validatorRaw)
+			consensusAddr := consensusAddrProvider
+
+			consensusAddrConsumer, err := m.httpManager.GetValidatorAssignedConsumerKey(consensusAddrProvider, 0)
+			if err != nil {
+				m.logger.Warn().
+					Str("operator_address", validatorRaw.OperatorAddress).
+					Err(err).
+					Msg("Error fetching validator assigned consumer key")
+			} else if consensusAddrConsumer.ConsumerAddress != "" {
+				consensusAddr = consensusAddrConsumer.ConsumerAddress
+			}
+
+			signingInfo, ok := utils.Find(signingInfoResponse.Info, func(i slashingTypes.ValidatorSigningInfo) bool {
+				equal, compareErr := utils.CompareTwoBech32(i.Address, consensusAddr)
+				if compareErr != nil {
+					m.logger.Error().
+						Str("operator_address", validatorRaw.OperatorAddress).
+						Str("first", i.Address).
+						Str("second", consensusAddr).
+						Msg("Error converting bech32 address")
+					return false
+				}
+
+				return equal
+			})
+
+			if !ok {
+				m.logger.Debug().
+					Str("operator_address", validatorRaw.OperatorAddress).
+					Msg("Could not find signing info for validator")
+			}
+
+			validator := m.converter.ValidatorFromCosmosValidator(validatorRaw, &signingInfo)
 
 			mutex.Lock()
 			validators[index] = validator

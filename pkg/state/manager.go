@@ -67,19 +67,6 @@ func (m *Manager) Init() {
 		Float64("duration", time.Since(notifiersStart).Seconds()).
 		Msg("Loaded notifiers from database")
 
-	activeSetStart := time.Now()
-
-	activeSet, err := m.database.GetAllActiveSets(m.config.Name)
-	if err != nil {
-		m.logger.Fatal().Err(err).Msg("Could not get historical validators from the database")
-	}
-
-	m.state.SetActiveSet(activeSet)
-	m.logger.Info().
-		Int("len", len(activeSet)).
-		Float64("duration", time.Since(activeSetStart).Seconds()).
-		Msg("Loaded historical validators from database")
-
 	snapshotStart := time.Now()
 
 	snapshot, err := m.database.GetLastSnapshot(m.config.Name)
@@ -116,20 +103,6 @@ func (m *Manager) AddBlock(block *types.Block) error {
 	return nil
 }
 
-func (m *Manager) AddActiveSet(height int64, activeSet map[string]bool) error {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	m.state.AddActiveSet(height, activeSet)
-
-	if err := m.database.InsertActiveSet(m.config.Name, height, activeSet); err != nil {
-		return err
-	}
-	m.metricsManager.LogTotalHistoricalValidatorsAmount(m.config.Name, m.GetActiveSetsCountSinceLatest(m.config.StoreBlocks))
-
-	return nil
-}
-
 func (m *Manager) TrimBlocks() error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -148,24 +121,6 @@ func (m *Manager) TrimBlocks() error {
 	return nil
 }
 
-func (m *Manager) TrimHistoricalValidators() error {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	trimHeight := m.state.GetLastBlockHeight() - m.config.StoreBlocks
-	m.logger.Info().
-		Int64("height", m.state.GetLastBlockHeight()).
-		Int64("trim_height", trimHeight).
-		Msg("Need to trim historical validators")
-
-	m.state.TrimActiveSetsBefore(trimHeight)
-	if err := m.database.TrimActiveSetsBefore(m.config.Name, trimHeight); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (m *Manager) HasBlockAtHeight(height int64) bool {
 	return m.state.HasBlockAtHeight(height)
 }
@@ -176,14 +131,6 @@ func (m *Manager) GetBlocksCountSinceLatest(expected int64) int64 {
 
 func (m *Manager) GetMissingBlocksSinceLatest(expected int64) []int64 {
 	return m.state.GetMissingBlocksSinceLatest(expected)
-}
-
-func (m *Manager) GetActiveSetsCountSinceLatest(expected int64) int64 {
-	return m.state.GetActiveSetsCountSinceLatest(expected)
-}
-
-func (m *Manager) GetMissingHistoricalValidatorsSinceLatest(expected int64) []int64 {
-	return m.state.GetMissingActiveSetsSinceLatest(expected)
 }
 
 func (m *Manager) GetSnapshot() snapshotPkg.Snapshot {

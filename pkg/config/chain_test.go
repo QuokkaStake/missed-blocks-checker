@@ -3,6 +3,8 @@ package config
 import (
 	"testing"
 
+	"gopkg.in/guregu/null.v4"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -43,10 +45,49 @@ func TestValidateChainWithoutRPCEndpoints(t *testing.T) {
 	assert.NotNil(t, err, "Error should be present!")
 }
 
+func TestValidateConsumerChainWithoutProviderEndpoints(t *testing.T) {
+	t.Parallel()
+
+	config := &ChainConfig{
+		Name:         "chain",
+		RPCEndpoints: []string{"endpoint"},
+		IsConsumer:   null.BoolFrom(true),
+	}
+	err := config.Validate()
+	assert.NotNil(t, err, "Error should be present!")
+}
+
+func TestValidateConsumerChainWithoutChainID(t *testing.T) {
+	t.Parallel()
+
+	config := &ChainConfig{
+		Name:                 "chain",
+		RPCEndpoints:         []string{"endpoint"},
+		IsConsumer:           null.BoolFrom(true),
+		ProviderRPCEndpoints: []string{"endpoint"},
+	}
+	err := config.Validate()
+	assert.NotNil(t, err, "Error should be present!")
+}
+
 func TestValidateChainValid(t *testing.T) {
 	t.Parallel()
 
 	config := &ChainConfig{Name: "chain", RPCEndpoints: []string{"endpoint"}}
+	err := config.Validate()
+	assert.Nil(t, err, "Error should not be present!")
+}
+
+func TestValidateConsumerChainValid(t *testing.T) {
+	t.Parallel()
+
+	config := &ChainConfig{
+		Name:                 "chain",
+		RPCEndpoints:         []string{"endpoint"},
+		IsConsumer:           null.BoolFrom(true),
+		ProviderRPCEndpoints: []string{"endpoint"},
+		ConsumerChainID:      "chain",
+	}
 	err := config.Validate()
 	assert.Nil(t, err, "Error should not be present!")
 }

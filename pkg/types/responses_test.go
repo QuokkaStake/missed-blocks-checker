@@ -13,7 +13,7 @@ func TestToBlockInvalid(t *testing.T) {
 		Header: BlockHeader{Height: "invalid"},
 	}
 
-	block, err := blockRaw.ToBlock()
+	block, err := blockRaw.ToBlock(map[string]bool{})
 	assert.NotNil(t, err, "Error should be presented!")
 	assert.Nil(t, block, "Block should not be presented!")
 }
@@ -31,7 +31,7 @@ func TestToBlockValid(t *testing.T) {
 		},
 	}
 
-	block, err := blockRaw.ToBlock()
+	block, err := blockRaw.ToBlock(map[string]bool{})
 	assert.Nil(t, err, "Error should not be presented!")
 	assert.NotNil(t, block, "Block should be presented!")
 	assert.Equalf(t, block.Height, int64(100), "Block height mismatch!")

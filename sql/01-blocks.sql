@@ -4,5 +4,6 @@ CREATE TABLE IF NOT EXISTS blocks (
     time BIGINT NOT NULL,
     proposer TEXT NOT NULL,
     signatures TEXT NOT NULL,
+    validators TEXT NOT NULL,
     PRIMARY KEY (chain, height)
 );

@@ -5,6 +5,7 @@ import (
 	"main/pkg/events"
 	"main/pkg/report"
 	"main/pkg/types"
+	"math"
 )
 
 type Entry struct {
@@ -45,34 +46,9 @@ func (snapshot *Snapshot) GetReport(
 			continue
 		}
 
-		missedBlocksBefore := olderEntry.SignatureInfo.GetNotSigned()
-		missedBlocksAfter := entry.SignatureInfo.GetNotSigned()
-
-		beforeGroup, err := chainConfig.MissedBlocksGroups.GetGroup(missedBlocksBefore)
-		if err != nil {
-			return nil, err
-		}
-		afterGroup, err := chainConfig.MissedBlocksGroups.GetGroup(missedBlocksAfter)
-		if err != nil {
-			return nil, err
-		}
-
-		missedBlocksGroupsEqual := beforeGroup.Start == afterGroup.Start
-
-		if !missedBlocksGroupsEqual && !entry.Validator.Jailed {
-			entries = append(entries, events.ValidatorGroupChanged{
-				Validator:               entry.Validator,
-				MissedBlocksBefore:      missedBlocksBefore,
-				MissedBlocksAfter:       missedBlocksAfter,
-				MissedBlocksGroupBefore: beforeGroup,
-				MissedBlocksGroupAfter:  afterGroup,
-			})
-		}
-
-		if entry.Validator.SigningInfo != nil &&
-			olderEntry.Validator.SigningInfo != nil &&
-			entry.Validator.SigningInfo.Tombstoned &&
-			!olderEntry.Validator.SigningInfo.Tombstoned {
+		oldTombstoned := olderEntry.Validator.SigningInfo != nil && olderEntry.Validator.SigningInfo.Tombstoned
+		newTombstoned := entry.Validator.SigningInfo != nil && entry.Validator.SigningInfo.Tombstoned
+		if oldTombstoned != newTombstoned {
 			entries = append(entries, events.ValidatorTombstoned{
 				Validator: entry.Validator,
 			})
@@ -100,6 +76,39 @@ func (snapshot *Snapshot) GetReport(
 		if !entry.Validator.Active() && olderEntry.Validator.Active() {
 			entries = append(entries, events.ValidatorInactive{
 				Validator: entry.Validator,
+			})
+		}
+
+		if newTombstoned || entry.Validator.Jailed || !entry.Validator.Active() {
+			continue
+		}
+
+		missedBlocksBefore := olderEntry.SignatureInfo.GetNotSigned()
+		missedBlocksAfter := entry.SignatureInfo.GetNotSigned()
+
+		beforeGroup, beforeIndex, err := chainConfig.MissedBlocksGroups.GetGroup(missedBlocksBefore)
+		if err != nil {
+			return nil, err
+		}
+		afterGroup, afterIndex, err := chainConfig.MissedBlocksGroups.GetGroup(missedBlocksAfter)
+		if err != nil {
+			return nil, err
+		}
+
+		// To fix anomalies, like a validator jumping from 0 to 9500 missed blocks
+		if math.Abs(float64(beforeIndex-afterIndex)) > 1 {
+			continue
+		}
+
+		missedBlocksGroupsEqual := beforeGroup.Start == afterGroup.Start
+
+		if !missedBlocksGroupsEqual && !entry.Validator.Jailed {
+			entries = append(entries, events.ValidatorGroupChanged{
+				Validator:               entry.Validator,
+				MissedBlocksBefore:      missedBlocksBefore,
+				MissedBlocksAfter:       missedBlocksAfter,
+				MissedBlocksGroupBefore: beforeGroup,
+				MissedBlocksGroupAfter:  afterGroup,
 			})
 		}
 	}

@@ -31,8 +31,7 @@ type Manager struct {
 	reportsCounter       *prometheus.CounterVec
 	reportEntriesCounter *prometheus.CounterVec
 
-	totalBlocksGauge               *prometheus.GaugeVec
-	totalHistoricalValidatorsGauge *prometheus.GaugeVec
+	totalBlocksGauge *prometheus.GaugeVec
 
 	reporterEnabledGauge   *prometheus.GaugeVec
 	reporterQueriesCounter *prometheus.CounterVec
@@ -85,10 +84,6 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 		totalBlocksGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
 			Name: constants.PrometheusMetricsPrefix + "node_blocks",
 			Help: "Total amount of blocks stored",
-		}, []string{"chain"}),
-		totalHistoricalValidatorsGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: constants.PrometheusMetricsPrefix + "node_historical_validators",
-			Help: "Total amount of historical validators stored",
 		}, []string{"chain"}),
 		reporterEnabledGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
 			Name: constants.PrometheusMetricsPrefix + "reporter_enabled",
@@ -251,12 +246,6 @@ func (m *Manager) LogReport(chain string, report *report.Report) {
 
 func (m *Manager) LogTotalBlocksAmount(chain string, amount int64) {
 	m.totalBlocksGauge.
-		With(prometheus.Labels{"chain": chain}).
-		Set(float64(amount))
-}
-
-func (m *Manager) LogTotalHistoricalValidatorsAmount(chain string, amount int64) {
-	m.totalHistoricalValidatorsGauge.
 		With(prometheus.Labels{"chain": chain}).
 		Set(float64(amount))
 }

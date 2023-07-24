@@ -224,17 +224,12 @@ func TestValidatorsMissedBlocksAllSigned(t *testing.T) {
 
 	validator := &types.Validator{ConsensusAddressHex: "address"}
 	state := NewState()
-	state.AddActiveSet(1, types.HistoricalValidators{"address": true})
-	state.AddActiveSet(2, types.HistoricalValidators{"address": true})
-	state.AddActiveSet(3, types.HistoricalValidators{"address": true})
-	state.AddActiveSet(4, types.HistoricalValidators{"address": true})
-	state.AddActiveSet(5, types.HistoricalValidators{"address": true})
 
-	state.AddBlock(&types.Block{Height: 1, Signatures: map[string]int32{"address": 3}, Proposer: "address"})
-	state.AddBlock(&types.Block{Height: 2, Signatures: map[string]int32{"address": 3}})
-	state.AddBlock(&types.Block{Height: 3, Signatures: map[string]int32{"address": 3}})
-	state.AddBlock(&types.Block{Height: 4, Signatures: map[string]int32{"address": 3}})
-	state.AddBlock(&types.Block{Height: 5, Signatures: map[string]int32{"address": 3}})
+	state.AddBlock(&types.Block{Height: 1, Signatures: map[string]int32{"address": 3}, Proposer: "address", Validators: map[string]bool{"address": true}})
+	state.AddBlock(&types.Block{Height: 2, Signatures: map[string]int32{"address": 3}, Validators: map[string]bool{"address": true}})
+	state.AddBlock(&types.Block{Height: 3, Signatures: map[string]int32{"address": 3}, Validators: map[string]bool{"address": true}})
+	state.AddBlock(&types.Block{Height: 4, Signatures: map[string]int32{"address": 3}, Validators: map[string]bool{"address": true}})
+	state.AddBlock(&types.Block{Height: 5, Signatures: map[string]int32{"address": 3}, Validators: map[string]bool{"address": true}})
 
 	signature := state.GetValidatorMissedBlocks(validator, 5)
 
@@ -250,17 +245,12 @@ func TestValidatorsMissedBlocksAllMissed(t *testing.T) {
 
 	validator := &types.Validator{ConsensusAddressHex: "address"}
 	state := NewState()
-	state.AddActiveSet(1, types.HistoricalValidators{"address": true})
-	state.AddActiveSet(2, types.HistoricalValidators{"address": true})
-	state.AddActiveSet(3, types.HistoricalValidators{"address": true})
-	state.AddActiveSet(4, types.HistoricalValidators{"address": true})
-	state.AddActiveSet(5, types.HistoricalValidators{"address": true})
 
-	state.AddBlock(&types.Block{Height: 1, Signatures: map[string]int32{}})
-	state.AddBlock(&types.Block{Height: 2, Signatures: map[string]int32{}})
-	state.AddBlock(&types.Block{Height: 3, Signatures: map[string]int32{}})
-	state.AddBlock(&types.Block{Height: 4, Signatures: map[string]int32{"address": 1}})
-	state.AddBlock(&types.Block{Height: 5, Signatures: map[string]int32{"address": 1}})
+	state.AddBlock(&types.Block{Height: 1, Signatures: map[string]int32{}, Validators: map[string]bool{"address": true}})
+	state.AddBlock(&types.Block{Height: 2, Signatures: map[string]int32{}, Validators: map[string]bool{"address": true}})
+	state.AddBlock(&types.Block{Height: 3, Signatures: map[string]int32{}, Validators: map[string]bool{"address": true}})
+	state.AddBlock(&types.Block{Height: 4, Signatures: map[string]int32{"address": 1}, Validators: map[string]bool{"address": true}})
+	state.AddBlock(&types.Block{Height: 5, Signatures: map[string]int32{"address": 1}, Validators: map[string]bool{"address": true}})
 
 	signature := state.GetValidatorMissedBlocks(validator, 5)
 
@@ -276,17 +266,12 @@ func TestValidatorsMissedBlocksAllInactive(t *testing.T) {
 
 	validator := &types.Validator{ConsensusAddressHex: "address"}
 	state := NewState()
-	state.AddActiveSet(1, types.HistoricalValidators{})
-	state.AddActiveSet(2, types.HistoricalValidators{})
-	state.AddActiveSet(3, types.HistoricalValidators{})
-	state.AddActiveSet(4, types.HistoricalValidators{})
-	state.AddActiveSet(5, types.HistoricalValidators{})
 
-	state.AddBlock(&types.Block{Height: 1, Signatures: map[string]int32{}})
-	state.AddBlock(&types.Block{Height: 2, Signatures: map[string]int32{}})
-	state.AddBlock(&types.Block{Height: 3, Signatures: map[string]int32{}})
-	state.AddBlock(&types.Block{Height: 4, Signatures: map[string]int32{}})
-	state.AddBlock(&types.Block{Height: 5, Signatures: map[string]int32{}})
+	state.AddBlock(&types.Block{Height: 1, Signatures: map[string]int32{}, Validators: map[string]bool{}})
+	state.AddBlock(&types.Block{Height: 2, Signatures: map[string]int32{}, Validators: map[string]bool{}})
+	state.AddBlock(&types.Block{Height: 3, Signatures: map[string]int32{}, Validators: map[string]bool{}})
+	state.AddBlock(&types.Block{Height: 4, Signatures: map[string]int32{}, Validators: map[string]bool{}})
+	state.AddBlock(&types.Block{Height: 5, Signatures: map[string]int32{}, Validators: map[string]bool{}})
 
 	signature := state.GetValidatorMissedBlocks(validator, 5)
 
@@ -305,17 +290,12 @@ func TestValidatorsMissedBlocksSomeSkipped(t *testing.T) {
 		SigningInfo:         &types.SigningInfo{MissedBlocksCounter: 1},
 	}
 	state := NewState()
-	state.AddActiveSet(1, types.HistoricalValidators{"address": true})
-	state.AddActiveSet(2, types.HistoricalValidators{"address": true})
-	state.AddActiveSet(3, types.HistoricalValidators{"address": true})
-	state.AddActiveSet(4, types.HistoricalValidators{"address": true})
-	state.AddActiveSet(5, types.HistoricalValidators{})
 
-	state.AddBlock(&types.Block{Height: 1, Signatures: map[string]int32{}})
-	state.AddBlock(&types.Block{Height: 2, Signatures: map[string]int32{}})
-	state.AddBlock(&types.Block{Height: 3, Signatures: map[string]int32{}})
-	state.AddBlock(&types.Block{Height: 4, Signatures: map[string]int32{}})
-	state.AddBlock(&types.Block{Height: 5, Signatures: map[string]int32{}})
+	state.AddBlock(&types.Block{Height: 1, Signatures: map[string]int32{}, Validators: map[string]bool{"address": true}})
+	state.AddBlock(&types.Block{Height: 2, Signatures: map[string]int32{}, Validators: map[string]bool{"address": true}})
+	state.AddBlock(&types.Block{Height: 3, Signatures: map[string]int32{}, Validators: map[string]bool{"address": true}})
+	state.AddBlock(&types.Block{Height: 4, Signatures: map[string]int32{}, Validators: map[string]bool{"address": true}})
+	state.AddBlock(&types.Block{Height: 5, Signatures: map[string]int32{}, Validators: map[string]bool{}})
 
 	signature := state.GetValidatorMissedBlocks(validator, 5)
 

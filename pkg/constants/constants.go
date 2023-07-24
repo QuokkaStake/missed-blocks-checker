@@ -33,9 +33,11 @@ const (
 	DiscordReporterName  ReporterName = "discord"
 	TestReporterName     ReporterName = "test"
 
-	QueryTypeValidators           QueryType = "validators"
-	QueryTypeSigningInfos         QueryType = "signing_infos"
-	QueryTypeSigningInfo          QueryType = "signing_info"
+	QueryTypeValidators   QueryType = "validators"
+	QueryTypeSigningInfos QueryType = "signing_infos"
+	QueryTypeSigningInfo  QueryType = "signing_info"
+	QueryTypeConsumerAddr QueryType = "consumer_addr"
+
 	QueryTypeSlashingParams       QueryType = "slashing_params"
 	QueryTypeHistoricalValidators QueryType = "historical_validators"
 	QueryTypeBlock                QueryType = "block"
