@@ -187,7 +187,11 @@ func (a *AppManager) ProcessEvent(emittable types.WebsocketEmittable) {
 		return
 	}
 
-	snapshot := a.StateManager.GetSnapshot()
+	snapshot, err := a.StateManager.GetSnapshot()
+	if err != nil {
+		a.Logger.Error().Err(err).Msg("Error generating snapshot")
+		return
+	}
 
 	for _, entry := range snapshot.Entries {
 		a.Logger.Trace().

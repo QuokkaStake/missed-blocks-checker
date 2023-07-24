@@ -1,6 +1,7 @@
 package types
 
 type SignatureInto struct {
+	BlocksCount int64
 	Signed      int64
 	NoSignature int64
 	NotSigned   int64

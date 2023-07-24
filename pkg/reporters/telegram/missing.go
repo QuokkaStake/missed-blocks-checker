@@ -3,7 +3,7 @@ package telegram
 import (
 	"fmt"
 	"main/pkg/constants"
-	"main/pkg/snapshot"
+	snapshotPkg "main/pkg/snapshot"
 	"main/pkg/utils"
 	"sort"
 
@@ -18,8 +18,13 @@ func (reporter *Reporter) HandleMissingValidators(c tele.Context) error {
 
 	reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, "missing")
 
-	validatorEntries := reporter.Manager.GetSnapshot().Entries.ToSlice()
-	activeValidatorsEntries := utils.Filter(validatorEntries, func(v snapshot.Entry) bool {
+	snapshot, err := reporter.Manager.GetSnapshot()
+	if err != nil {
+		return reporter.BotReply(c, fmt.Sprintf("Error rendering missing validators: %s", err))
+	}
+
+	validatorEntries := snapshot.Entries.ToSlice()
+	activeValidatorsEntries := utils.Filter(validatorEntries, func(v snapshotPkg.Entry) bool {
 		if !v.Validator.Active() {
 			return false
 		}
@@ -37,7 +42,7 @@ func (reporter *Reporter) HandleMissingValidators(c tele.Context) error {
 
 	render := missingValidatorsRender{
 		Config: reporter.Config,
-		Validators: utils.Map(activeValidatorsEntries, func(v snapshot.Entry) missingValidatorsEntry {
+		Validators: utils.Map(activeValidatorsEntries, func(v snapshotPkg.Entry) missingValidatorsEntry {
 			link := reporter.Config.ExplorerConfig.GetValidatorLink(v.Validator)
 			group, _, _ := reporter.Config.MissedBlocksGroups.GetGroup(v.SignatureInfo.GetNotSigned())
 			link.Text = fmt.Sprintf("%s %s", group.EmojiEnd, v.Validator.Moniker)

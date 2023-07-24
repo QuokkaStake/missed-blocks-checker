@@ -3,7 +3,7 @@ package discord
 import (
 	"fmt"
 	"main/pkg/constants"
-	"main/pkg/snapshot"
+	snapshotPkg "main/pkg/snapshot"
 	"main/pkg/utils"
 	"sort"
 
@@ -19,8 +19,20 @@ func (reporter *Reporter) GetMissingCommand() *Command {
 		Handler: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, "missing")
 
-			validatorEntries := reporter.Manager.GetSnapshot().Entries.ToSlice()
-			activeValidatorsEntries := utils.Filter(validatorEntries, func(v snapshot.Entry) bool {
+			snapshot, err := reporter.Manager.GetSnapshot()
+			if err != nil {
+				if reportErr := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Content: fmt.Sprintf("Error rendering missing validators: %s", err),
+					},
+				}); err != nil {
+					reporter.Logger.Error().Err(reportErr).Msg("Error sending missing")
+				}
+			}
+
+			validatorEntries := snapshot.Entries.ToSlice()
+			activeValidatorsEntries := utils.Filter(validatorEntries, func(v snapshotPkg.Entry) bool {
 				if !v.Validator.Active() {
 					return false
 				}
@@ -38,7 +50,7 @@ func (reporter *Reporter) GetMissingCommand() *Command {
 
 			render := missingValidatorsRender{
 				Config: reporter.Config,
-				Validators: utils.Map(activeValidatorsEntries, func(v snapshot.Entry) missingValidatorsEntry {
+				Validators: utils.Map(activeValidatorsEntries, func(v snapshotPkg.Entry) missingValidatorsEntry {
 					link := reporter.Config.ExplorerConfig.GetValidatorLink(v.Validator)
 					group, _, _ := reporter.Config.MissedBlocksGroups.GetGroup(v.SignatureInfo.GetNotSigned())
 					link.Text = fmt.Sprintf("%s %s", group.EmojiEnd, v.Validator.Moniker)

@@ -1,6 +1,7 @@
 package state
 
 import (
+	"fmt"
 	"main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/types"
@@ -136,14 +137,19 @@ func (s *State) GetValidator(operatorAddress string) (*types.Validator, bool) {
 	return validator, found
 }
 
-func (s *State) GetValidatorMissedBlocks(validator *types.Validator, blocksToCheck int64) types.SignatureInto {
+func (s *State) GetValidatorMissedBlocks(
+	validator *types.Validator,
+	blocksToCheck int64,
+) (types.SignatureInto, error) {
 	signatureInfo := types.SignatureInto{}
 
 	for height := s.blocks.lastHeight; height > s.blocks.lastHeight-blocksToCheck; height-- {
 		block, exists := s.blocks.GetBlock(height)
 		if !exists {
-			continue
+			return signatureInfo, fmt.Errorf("could not get info on block with height %d", height)
 		}
+
+		signatureInfo.BlocksCount++
 
 		if _, ok := block.Validators[validator.ConsensusAddressHex]; !ok {
 			signatureInfo.NotActive++
@@ -176,7 +182,7 @@ func (s *State) GetValidatorMissedBlocks(validator *types.Validator, blocksToChe
 		signatureInfo.Signed = blocksToCheck - validator.SigningInfo.MissedBlocksCounter
 	}
 
-	return signatureInfo
+	return signatureInfo, nil
 }
 
 func (s *State) GetEarliestBlock() *types.Block {
