@@ -334,7 +334,7 @@ func (rpc *RPC) GetFull(
 	queryType constants.QueryType,
 	target interface{},
 ) error {
-	client := &http.Client{Timeout: 60 * 1000000000}
+	client := &http.Client{Timeout: 10 * 1000000000}
 	start := time.Now()
 
 	fullURL := host + url
