@@ -366,6 +366,11 @@ func (a *AppManager) PopulateBlocks() {
 		return
 	}
 
+	if a.StateManager.GetLastBlockHeight() == 0 {
+		a.Logger.Warn().Msg("Latest block is not set, cannot populate blocks.")
+		return
+	}
+
 	a.Logger.Info().Msg("Populating blocks...")
 
 	a.IsPopulatingBlocks = true
