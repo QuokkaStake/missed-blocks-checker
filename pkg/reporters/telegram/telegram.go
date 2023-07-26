@@ -60,7 +60,7 @@ func NewReporter(
 
 func (reporter *Reporter) Init() {
 	if reporter.Token == "" || reporter.Chat == 0 {
-		reporter.Logger.Debug().Msg("Telegram credentials not set, not creating Telegram reporter.")
+		reporter.Logger.Debug().Msg("Telegram credentials not set, not creating Telegram reporter")
 		return
 	}
 

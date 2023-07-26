@@ -99,5 +99,5 @@ func (manager *RPCManager) GetBlocksAndValidatorsAtHeights(heights []int64) (
 	}
 
 	wg.Wait()
-	return blocksMap, activeSetsMap, nil
+	return blocksMap, activeSetsMap, errors
 }

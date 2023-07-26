@@ -16,3 +16,7 @@ type Block struct {
 func (b *Block) Hash() string {
 	return fmt.Sprintf("block_%d", b.Height)
 }
+
+func (b *Block) SetValidators(validators map[string]bool) {
+	b.Validators = validators
+}

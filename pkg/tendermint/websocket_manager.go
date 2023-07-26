@@ -84,7 +84,7 @@ func (m *WebsocketManager) Listen() {
 				if m.queue.Has(msg) {
 					m.logger.Trace().
 						Str("hash", msg.Hash()).
-						Msg("Message already received, not sending again.")
+						Msg("Message already received, not sending again")
 					m.mutex.Unlock()
 					continue
 				}
