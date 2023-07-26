@@ -338,18 +338,19 @@ func (a *AppManager) PopulateLatestBlock() {
 		return
 	}
 
+	a.Logger.Info().
+		Int64("height", block.Height).
+		Msg("Last block height")
+
 	validators, err := a.RPCManager.GetActiveSetAtBlock(block.Height)
 	if err != nil {
 		a.Logger.Error().
 			Err(err).
 			Msg("Error updating historical validators")
+		return
 	}
 
 	block.SetValidators(validators)
-
-	a.Logger.Info().
-		Int64("height", block.Height).
-		Msg("Last block height")
 
 	if err := a.StateManager.AddBlock(block); err != nil {
 		a.Logger.Error().
