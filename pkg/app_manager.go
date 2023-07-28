@@ -392,7 +392,7 @@ func (a *AppManager) PopulateBlocks() {
 		a.Logger.Info().
 			Int64("count", count).
 			Int64("required", a.Config.StoreBlocks).
-			Int64("needed_blocks", constants.BlockSearchPagination).
+			Int("needed_blocks", len(chunk)).
 			Ints64("blocks", chunk).
 			Msg("Fetching more blocks...")
 
