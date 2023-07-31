@@ -6,15 +6,20 @@ import (
 	"gopkg.in/guregu/null.v4"
 )
 
+type ChainPagination struct {
+	HistoricalValidators int `default:"100"  toml:"historical-validators"`
+}
+
 type ChainConfig struct {
-	Name                 string    `toml:"name"`
-	PrettyName           string    `toml:"pretty-name"`
-	RPCEndpoints         []string  `toml:"rpc-endpoints"`
-	StoreBlocks          int64     `default:"20000"      toml:"store-blocks"`
-	BlocksWindow         int64     `default:"10000"      toml:"blocks-window"`
-	MinSignedPerWindow   float64   `default:"0.05"       toml:"min-signed-per-window"`
-	QueryEachSigningInfo null.Bool `default:"false"      toml:"query-each-signing-info"`
-	QuerySlashingParams  null.Bool `default:"true"       toml:"query-slashing-params"`
+	Name                 string          `toml:"name"`
+	PrettyName           string          `toml:"pretty-name"`
+	RPCEndpoints         []string        `toml:"rpc-endpoints"`
+	StoreBlocks          int64           `default:"20000"      toml:"store-blocks"`
+	BlocksWindow         int64           `default:"10000"      toml:"blocks-window"`
+	MinSignedPerWindow   float64         `default:"0.05"       toml:"min-signed-per-window"`
+	QueryEachSigningInfo null.Bool       `default:"false"      toml:"query-each-signing-info"`
+	QuerySlashingParams  null.Bool       `default:"true"       toml:"query-slashing-params"`
+	Pagination           ChainPagination `toml:"pagination"`
 
 	IsConsumer              null.Bool `default:"false"                  toml:"consumer"`
 	ProviderRPCEndpoints    []string  `toml:"provider-rpc-endpoints"`

@@ -89,6 +89,8 @@ type ValidatorsResponse struct {
 
 type ValidatorsResult struct {
 	Validators []HistoricalValidator `json:"validators"`
+	Count      string                `json:"count"`
+	Total      string                `json:"total"`
 }
 
 type HistoricalValidator struct {
