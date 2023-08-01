@@ -18,6 +18,13 @@ func (reporter *Reporter) HandleSubscribe(c tele.Context) error {
 
 	reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, "subscribe")
 
+	username := c.Sender().Username
+	if username == "" {
+		username = c.Sender().FirstName
+	} else {
+		username = "@" + username
+	}
+
 	args := strings.Split(c.Text(), " ")
 	if len(args) < 2 {
 		return reporter.BotReply(c, html.EscapeString(fmt.Sprintf(
@@ -41,7 +48,7 @@ func (reporter *Reporter) HandleSubscribe(c tele.Context) error {
 		address,
 		reporter.Name(),
 		strconv.FormatInt(c.Sender().ID, 10),
-		c.Sender().Username,
+		username,
 	)
 
 	if !added {
