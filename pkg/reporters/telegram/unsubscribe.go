@@ -35,7 +35,7 @@ func (reporter *Reporter) HandleUnsubscribe(c tele.Context) error {
 		))
 	}
 
-	removed := reporter.Manager.RemoveNotifier(address, reporter.Name(), c.Sender().Username)
+	removed := reporter.Manager.RemoveNotifier(address, reporter.Name(), c.Sender().ID)
 
 	if !removed {
 		return reporter.BotReply(c, "You are not subscribed to this validator's notifications")
