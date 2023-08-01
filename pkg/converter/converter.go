@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTyped "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
+	sdkTypes "github.com/cosmos/cosmos-sdk/types"
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -81,4 +82,25 @@ func (c *Converter) ValidatorFromCosmosValidator(
 		Jailed:                  validator.Jailed,
 		SigningInfo:             valSigningInfo,
 	}
+}
+
+func (c *Converter) SetValidatorConsumerConsensusAddr(validator *types.Validator, consumerKey string) error {
+	consAddress, err := sdkTypes.ConsAddressFromBech32(consumerKey)
+	if err != nil {
+		return err
+	}
+
+	validator.ConsensusAddressValcons = consAddress.String()
+	validator.ConsensusAddressHex = fmt.Sprintf("%x", consAddress)
+
+	return nil
+}
+
+func (c *Converter) GetConsKeyFromBech32(addr string) (string, error) {
+	consAddress, err := sdkTypes.ConsAddressFromBech32(addr)
+	if err != nil {
+		return "", err
+	}
+
+	return consAddress.String(), nil
 }

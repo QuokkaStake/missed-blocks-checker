@@ -230,6 +230,9 @@ func (m *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64) (typ
 			}
 
 			validator := m.converter.ValidatorFromCosmosValidator(validatorRaw, &signingInfo)
+			if err := m.converter.SetValidatorConsumerConsensusAddr(validator, consensusAddr); err != nil {
+				m.logger.Warn().Err(err).Msg("Could not set validator consumer consensus address")
+			}
 
 			mutex.Lock()
 			validators[index] = validator
