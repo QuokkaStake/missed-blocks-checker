@@ -46,9 +46,13 @@ func (snapshot *Snapshot) GetReport(
 			continue
 		}
 
-		oldTombstoned := olderEntry.Validator.SigningInfo != nil && olderEntry.Validator.SigningInfo.Tombstoned
-		newTombstoned := entry.Validator.SigningInfo != nil && entry.Validator.SigningInfo.Tombstoned
-		if oldTombstoned != newTombstoned {
+		hasOlderSigningInfo := olderEntry.Validator.SigningInfo != nil
+		hasNewerSigningInfo := entry.Validator.SigningInfo != nil
+
+		if hasOlderSigningInfo &&
+			hasNewerSigningInfo &&
+			!olderEntry.Validator.SigningInfo.Tombstoned &&
+			entry.Validator.SigningInfo.Tombstoned {
 			entries = append(entries, events.ValidatorTombstoned{
 				Validator: entry.Validator,
 			})
@@ -79,7 +83,8 @@ func (snapshot *Snapshot) GetReport(
 			})
 		}
 
-		if newTombstoned || entry.Validator.Jailed || !entry.Validator.Active() {
+		isTombstoned := hasNewerSigningInfo && entry.Validator.SigningInfo.Tombstoned
+		if isTombstoned || entry.Validator.Jailed || !entry.Validator.Active() {
 			continue
 		}
 

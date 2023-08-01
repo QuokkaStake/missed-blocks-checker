@@ -54,13 +54,20 @@ func (reporter *Reporter) HandleStatus(c tele.Context) error {
 				reporter.SerializeLink(link),
 			))
 		} else {
-			signatureInfo := reporter.Manager.GetValidatorMissedBlocks(validator)
-			sb.WriteString(fmt.Sprintf(
-				"<strong>%s:</strong> %d missed blocks (%.2f%%)\n",
-				reporter.SerializeLink(link),
-				signatureInfo.GetNotSigned(),
-				float64(signatureInfo.GetNotSigned())/float64(reporter.Config.BlocksWindow)*100,
-			))
+			if signatureInfo, err := reporter.Manager.GetValidatorMissedBlocks(validator); err != nil {
+				sb.WriteString(fmt.Sprintf(
+					"<strong>%s:</strong>: error getting validators missed blocks: %s",
+					reporter.SerializeLink(link),
+					err,
+				))
+			} else {
+				sb.WriteString(fmt.Sprintf(
+					"<strong>%s:</strong> %d missed blocks (%.2f%%)\n",
+					reporter.SerializeLink(link),
+					signatureInfo.GetNotSigned(),
+					float64(signatureInfo.GetNotSigned())/float64(reporter.Config.BlocksWindow)*100,
+				))
+			}
 		}
 	}
 

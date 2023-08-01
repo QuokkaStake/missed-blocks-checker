@@ -240,7 +240,7 @@ func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 		queryURL := fmt.Sprintf(
 			"/validators?height=%d&per_page=%d&page=%d",
 			height,
-			constants.ActiveSetPagination,
+			rpc.config.Pagination.HistoricalValidators,
 			page,
 		)
 
@@ -268,7 +268,7 @@ func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 			activeSetMap[validator.Address] = true
 		}
 
-		if len(response.Result.Validators) <= constants.ActiveSetPagination {
+		if len(response.Result.Validators) < rpc.config.Pagination.HistoricalValidators {
 			break
 		}
 
@@ -334,7 +334,7 @@ func (rpc *RPC) GetFull(
 	queryType constants.QueryType,
 	target interface{},
 ) error {
-	client := &http.Client{Timeout: 60 * 1000000000}
+	client := &http.Client{Timeout: 10 * 1000000000}
 	start := time.Now()
 
 	fullURL := host + url

@@ -196,7 +196,7 @@ func (t *WebsocketClient) ProcessEvent(event rpcTypes.RPCResponse) {
 	}
 
 	if resultEvent.Query == "" {
-		t.logger.Debug().Msg("Event is empty, skipping.")
+		t.logger.Debug().Msg("Event is empty, skipping")
 		return
 	}
 
@@ -214,9 +214,16 @@ func (t *WebsocketClient) ProcessEvent(event rpcTypes.RPCResponse) {
 	var blockData types.SingleBlockResult
 	if err := json.Unmarshal(blockDataStr, &blockData); err != nil {
 		t.logger.Error().Err(err).Msg("Failed to unmarshall event")
+		return
 	}
 
-	t.Channel <- blockData.Block
+	block, err := blockData.Block.ToBlock()
+	if err != nil {
+		t.logger.Error().Err(err).Msg("Failed to parse block")
+		return
+	}
+
+	t.Channel <- block
 }
 
 func (t *WebsocketClient) SubscribeToUpdates() {

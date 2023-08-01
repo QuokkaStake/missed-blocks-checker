@@ -16,7 +16,6 @@ import (
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"main/pkg/utils"
-	"strconv"
 	"sync"
 	"time"
 
@@ -121,33 +120,27 @@ func (a *AppManager) ProcessEvent(emittable types.WebsocketEmittable) {
 	a.mutex.Lock()
 	defer a.mutex.Unlock()
 
-	blockRaw, ok := emittable.(types.TendermintBlock)
+	block, ok := emittable.(*types.Block)
 	if !ok {
 		a.Logger.Warn().Msg("Event is not a block!")
 		return
 	}
 
-	height, err := strconv.ParseInt(blockRaw.Header.Height, 10, 64)
-	if err != nil {
-		a.Logger.Warn().Msg("Error converting block height!")
-		return
-	}
-
-	if a.StateManager.HasBlockAtHeight(height) {
+	if a.StateManager.HasBlockAtHeight(block.Height) {
 		a.Logger.Info().
-			Int64("height", height).
-			Msg("Already have block at this height, not generating report.")
+			Int64("height", block.Height).
+			Msg("Already have block at this height, not generating report")
 		return
 	}
 
-	if err := a.UpdateValidators(height - 1); err != nil {
+	if err := a.UpdateValidators(block.Height - 1); err != nil {
 		a.Logger.Error().
 			Err(err).
 			Msg("Error updating validators")
 		return
 	}
 
-	validators, err := a.RPCManager.GetActiveSetAtBlock(height)
+	validators, err := a.RPCManager.GetActiveSetAtBlock(block.Height)
 	if err != nil {
 		a.Logger.Error().
 			Err(err).
@@ -155,14 +148,9 @@ func (a *AppManager) ProcessEvent(emittable types.WebsocketEmittable) {
 		return
 	}
 
-	block, err := blockRaw.ToBlock(validators)
-	if err != nil {
-		a.Logger.Error().
-			Err(err).
-			Msg("Error converting block")
-	}
+	block.SetValidators(validators)
 
-	a.Logger.Debug().Int64("height", height).Msg("Got new block from Tendermint")
+	a.Logger.Debug().Int64("height", block.Height).Msg("Got new block from Tendermint")
 	if err := a.StateManager.AddBlock(block); err != nil {
 		a.Logger.Error().
 			Err(err).
@@ -183,11 +171,15 @@ func (a *AppManager) ProcessEvent(emittable types.WebsocketEmittable) {
 		a.Logger.Info().
 			Int64("blocks_count", blocksCount).
 			Int64("expected", a.Config.BlocksWindow).
-			Msg("Not enough data for producing a snapshot, skipping.")
+			Msg("Not enough data for producing a snapshot, skipping")
 		return
 	}
 
-	snapshot := a.StateManager.GetSnapshot()
+	snapshot, err := a.StateManager.GetSnapshot()
+	if err != nil {
+		a.Logger.Error().Err(err).Msg("Error generating snapshot")
+		return
+	}
 
 	for _, entry := range snapshot.Entries {
 		a.Logger.Trace().
@@ -228,7 +220,7 @@ func (a *AppManager) ProcessEvent(emittable types.WebsocketEmittable) {
 	}
 
 	if report.Empty() {
-		a.Logger.Info().Msg("Report is empty, no events to send.")
+		a.Logger.Info().Msg("Report is empty, no events to send")
 		return
 	}
 
@@ -340,30 +332,27 @@ func (a *AppManager) PopulateLatestBlock() {
 		return
 	}
 
-	height, err := strconv.ParseInt(blockRaw.Result.Block.Header.Height, 10, 64)
+	block, err := blockRaw.Result.Block.ToBlock()
 	if err != nil {
-		a.Logger.Warn().Msg("Error converting block height!")
-		return
-	}
-
-	validators, err := a.RPCManager.GetActiveSetAtBlock(height)
-	if err != nil {
-		a.Logger.Error().
-			Err(err).
-			Msg("Error updating historical validators")
-	}
-
-	blockParsed, err := blockRaw.Result.Block.ToBlock(validators)
-	if err != nil {
-		a.Logger.Error().Err(err).Msg("Error fetching last block")
+		a.Logger.Warn().Msg("Error parsing block")
 		return
 	}
 
 	a.Logger.Info().
-		Int64("height", blockParsed.Height).
+		Int64("height", block.Height).
 		Msg("Last block height")
 
-	if err := a.StateManager.AddBlock(blockParsed); err != nil {
+	validators, err := a.RPCManager.GetActiveSetAtBlock(block.Height)
+	if err != nil {
+		a.Logger.Error().
+			Err(err).
+			Msg("Error updating historical validators")
+		return
+	}
+
+	block.SetValidators(validators)
+
+	if err := a.StateManager.AddBlock(block); err != nil {
 		a.Logger.Error().
 			Err(err).
 			Msg("Error inserting last block")
@@ -374,6 +363,11 @@ func (a *AppManager) PopulateLatestBlock() {
 func (a *AppManager) PopulateBlocks() {
 	if a.IsPopulatingBlocks {
 		a.Logger.Info().Msg("AppManager is populating blocks already, not populating again")
+		return
+	}
+
+	if a.StateManager.GetLastBlockHeight() == 0 {
+		a.Logger.Warn().Msg("Latest block is not set, cannot populate blocks.")
 		return
 	}
 
@@ -398,7 +392,7 @@ func (a *AppManager) PopulateBlocks() {
 		a.Logger.Info().
 			Int64("count", count).
 			Int64("required", a.Config.StoreBlocks).
-			Int64("needed_blocks", constants.BlockSearchPagination).
+			Int("needed_blocks", len(chunk)).
 			Ints64("blocks", chunk).
 			Msg("Fetching more blocks...")
 
@@ -406,8 +400,6 @@ func (a *AppManager) PopulateBlocks() {
 
 		if len(errs) > 0 {
 			a.Logger.Error().Errs("errors", errs).Msg("Error querying for blocks")
-			a.IsPopulatingBlocks = false
-			return
 		}
 
 		for _, height := range chunk {
@@ -415,7 +407,7 @@ func (a *AppManager) PopulateBlocks() {
 			if !found {
 				a.Logger.Error().
 					Int64("height", height).
-					Msg("Could not find block at height, which should never happen.")
+					Msg("Could not find block at height")
 				continue
 			}
 
@@ -423,17 +415,19 @@ func (a *AppManager) PopulateBlocks() {
 			if !found {
 				a.Logger.Error().
 					Int64("height", height).
-					Msg("Could not find historical validators at height, which should never happen.")
+					Msg("Could not find historical validators at height")
 				continue
 			}
 
-			block, err := blockRaw.Result.Block.ToBlock(validators)
+			block, err := blockRaw.Result.Block.ToBlock()
 			if err != nil {
 				a.Logger.Error().
 					Err(err).
 					Msg("Error getting older block")
 				continue
 			}
+
+			block.SetValidators(validators)
 
 			a.mutex.Lock()
 

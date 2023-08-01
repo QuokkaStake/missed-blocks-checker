@@ -242,6 +242,38 @@ func TestValidatorJailedAndChangedGroup(t *testing.T) {
 	assert.Empty(t, report.Entries, "Report should be empty!")
 }
 
+func TestTombstonedAndNoPreviousSigningInfo(t *testing.T) {
+	t.Parallel()
+
+	config := &configPkg.ChainConfig{
+		MissedBlocksGroups: []*configPkg.MissedBlocksGroup{
+			{Start: 0, End: 49},
+			{Start: 50, End: 99},
+		},
+	}
+
+	olderSnapshot := Snapshot{Entries: map[string]Entry{
+		"validator": {
+			Validator:     &types.Validator{Jailed: true, Status: 3},
+			SignatureInfo: types.SignatureInto{NotSigned: 0},
+		},
+	}}
+	newerSnapshot := Snapshot{Entries: map[string]Entry{
+		"validator": {
+			Validator: &types.Validator{
+				Jailed:      true,
+				Status:      3,
+				SigningInfo: &types.SigningInfo{Tombstoned: true},
+			},
+			SignatureInfo: types.SignatureInto{NotSigned: 50},
+		},
+	}}
+
+	report, err := newerSnapshot.GetReport(olderSnapshot, config)
+	assert.Nil(t, err, "Error should not be present!")
+	assert.Empty(t, report.Entries, "Report should be empty!")
+}
+
 func TestToSlice(t *testing.T) {
 	t.Parallel()
 

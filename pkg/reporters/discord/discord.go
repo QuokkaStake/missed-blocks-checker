@@ -53,7 +53,7 @@ func NewReporter(
 
 func (reporter *Reporter) Init() {
 	if !reporter.Enabled() {
-		reporter.Logger.Debug().Msg("Discord credentials not set, not creating Discord reporter.")
+		reporter.Logger.Debug().Msg("Discord credentials not set, not creating Discord reporter")
 		return
 	}
 	session, err := discordgo.New("Bot " + reporter.Token)

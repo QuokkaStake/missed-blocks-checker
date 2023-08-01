@@ -211,8 +211,9 @@ func TestValidatorsMissedBlocksNoBlocks(t *testing.T) {
 	t.Parallel()
 	state := NewState()
 	validator := &types.Validator{}
-	signature := state.GetValidatorMissedBlocks(validator, 5)
+	signature, err := state.GetValidatorMissedBlocks(validator, 5)
 
+	assert.NotNil(t, err, "Error should be present!")
 	assert.Equal(t, signature.Signed, int64(0), "Argument mismatch!")
 	assert.Equal(t, signature.NoSignature, int64(0), "Argument mismatch!")
 	assert.Equal(t, signature.NotSigned, int64(0), "Argument mismatch!")
@@ -231,8 +232,9 @@ func TestValidatorsMissedBlocksAllSigned(t *testing.T) {
 	state.AddBlock(&types.Block{Height: 4, Signatures: map[string]int32{"address": 3}, Validators: map[string]bool{"address": true}})
 	state.AddBlock(&types.Block{Height: 5, Signatures: map[string]int32{"address": 3}, Validators: map[string]bool{"address": true}})
 
-	signature := state.GetValidatorMissedBlocks(validator, 5)
+	signature, err := state.GetValidatorMissedBlocks(validator, 5)
 
+	assert.Nil(t, err, "Error should not be present!")
 	assert.Equal(t, signature.Signed, int64(5), "Argument mismatch!")
 	assert.Equal(t, signature.NoSignature, int64(0), "Argument mismatch!")
 	assert.Equal(t, signature.NotSigned, int64(0), "Argument mismatch!")
@@ -252,8 +254,9 @@ func TestValidatorsMissedBlocksAllMissed(t *testing.T) {
 	state.AddBlock(&types.Block{Height: 4, Signatures: map[string]int32{"address": 1}, Validators: map[string]bool{"address": true}})
 	state.AddBlock(&types.Block{Height: 5, Signatures: map[string]int32{"address": 1}, Validators: map[string]bool{"address": true}})
 
-	signature := state.GetValidatorMissedBlocks(validator, 5)
+	signature, err := state.GetValidatorMissedBlocks(validator, 5)
 
+	assert.Nil(t, err, "Error should not be present!")
 	assert.Equal(t, signature.Signed, int64(0), "Argument mismatch!")
 	assert.Equal(t, signature.NoSignature, int64(3), "Argument mismatch!")
 	assert.Equal(t, signature.NotSigned, int64(2), "Argument mismatch!")
@@ -273,8 +276,9 @@ func TestValidatorsMissedBlocksAllInactive(t *testing.T) {
 	state.AddBlock(&types.Block{Height: 4, Signatures: map[string]int32{}, Validators: map[string]bool{}})
 	state.AddBlock(&types.Block{Height: 5, Signatures: map[string]int32{}, Validators: map[string]bool{}})
 
-	signature := state.GetValidatorMissedBlocks(validator, 5)
+	signature, err := state.GetValidatorMissedBlocks(validator, 5)
 
+	assert.Nil(t, err, "Error should not be present!")
 	assert.Equal(t, signature.Signed, int64(0), "Argument mismatch!")
 	assert.Equal(t, signature.NoSignature, int64(0), "Argument mismatch!")
 	assert.Equal(t, signature.NotSigned, int64(0), "Argument mismatch!")
@@ -297,8 +301,9 @@ func TestValidatorsMissedBlocksSomeSkipped(t *testing.T) {
 	state.AddBlock(&types.Block{Height: 4, Signatures: map[string]int32{}, Validators: map[string]bool{"address": true}})
 	state.AddBlock(&types.Block{Height: 5, Signatures: map[string]int32{}, Validators: map[string]bool{}})
 
-	signature := state.GetValidatorMissedBlocks(validator, 5)
+	signature, err := state.GetValidatorMissedBlocks(validator, 5)
 
+	assert.Nil(t, err, "Error should not be present!")
 	assert.Equal(t, signature.Signed, int64(4), "Argument mismatch!")
 	assert.Equal(t, signature.NoSignature, int64(0), "Argument mismatch!")
 	assert.Equal(t, signature.NotSigned, int64(1), "Argument mismatch!")

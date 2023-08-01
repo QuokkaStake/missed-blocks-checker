@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"strconv"
 	"time"
 )
@@ -24,10 +23,6 @@ type TendermintBlock struct {
 	LastCommit BlockLastCommit `json:"last_commit"`
 }
 
-func (b TendermintBlock) Hash() string {
-	return fmt.Sprintf("block_%s", b.Header.Height)
-}
-
 type BlockHeader struct {
 	Height   string    `json:"height"`
 	Time     time.Time `json:"time"`
@@ -43,7 +38,7 @@ type BlockSignature struct {
 	ValidatorAddress string `json:"validator_address"`
 }
 
-func (b *TendermintBlock) ToBlock(validators map[string]bool) (*Block, error) {
+func (b *TendermintBlock) ToBlock() (*Block, error) {
 	height, err := strconv.ParseInt(b.Header.Height, 10, 64)
 	if err != nil {
 		return nil, err
@@ -60,7 +55,6 @@ func (b *TendermintBlock) ToBlock(validators map[string]bool) (*Block, error) {
 		Time:       b.Header.Time,
 		Proposer:   b.Header.Proposer,
 		Signatures: signatures,
-		Validators: validators,
 	}, nil
 }
 
@@ -95,6 +89,8 @@ type ValidatorsResponse struct {
 
 type ValidatorsResult struct {
 	Validators []HistoricalValidator `json:"validators"`
+	Count      string                `json:"count"`
+	Total      string                `json:"total"`
 }
 
 type HistoricalValidator struct {

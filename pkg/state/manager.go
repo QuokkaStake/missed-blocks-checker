@@ -133,18 +133,23 @@ func (m *Manager) GetMissingBlocksSinceLatest(expected int64) []int64 {
 	return m.state.GetMissingBlocksSinceLatest(expected)
 }
 
-func (m *Manager) GetSnapshot() snapshotPkg.Snapshot {
+func (m *Manager) GetSnapshot() (snapshotPkg.Snapshot, error) {
 	validators := m.state.GetValidators()
 	entries := make(map[string]snapshotPkg.Entry, len(validators))
 
 	for _, validator := range validators {
+		signatureInfo, err := m.state.GetValidatorMissedBlocks(validator, m.config.BlocksWindow)
+		if err != nil {
+			return snapshotPkg.Snapshot{}, err
+		}
+
 		entries[validator.OperatorAddress] = snapshotPkg.Entry{
 			Validator:     validator,
-			SignatureInfo: m.state.GetValidatorMissedBlocks(validator, m.config.BlocksWindow),
+			SignatureInfo: signatureInfo,
 		}
 	}
 
-	return snapshotPkg.Snapshot{Entries: entries}
+	return snapshotPkg.Snapshot{Entries: entries}, nil
 }
 
 func (m *Manager) AddNotifier(
@@ -204,7 +209,7 @@ func (m *Manager) GetBlockTime() time.Duration {
 	return m.state.GetBlockTime()
 }
 
-func (m *Manager) GetValidatorMissedBlocks(validator *types.Validator) types.SignatureInto {
+func (m *Manager) GetValidatorMissedBlocks(validator *types.Validator) (types.SignatureInto, error) {
 	return m.state.GetValidatorMissedBlocks(validator, m.config.BlocksWindow)
 }
 
