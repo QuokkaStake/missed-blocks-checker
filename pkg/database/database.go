@@ -278,16 +278,16 @@ func (d *Database) RemoveNotifier(
 	chain string,
 	operatorAddress string,
 	reporter constants.ReporterName,
-	notifier string,
+	userID string,
 ) error {
 	d.MaybeMutexLock()
 	defer d.MaybeMutexUnlock()
 
 	_, err := d.client.Exec(
-		"DELETE FROM notifiers WHERE operator_address = $1 AND reporter = $2 AND notifier = $3 AND chain = $4",
+		"DELETE FROM notifiers WHERE operator_address = $1 AND reporter = $2 AND user_id = $3 AND chain = $4",
 		operatorAddress,
 		reporter,
-		notifier,
+		userID,
 		chain,
 	)
 	if err != nil {

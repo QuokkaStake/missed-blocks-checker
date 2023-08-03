@@ -249,9 +249,9 @@ func (reporter *Reporter) SerializeNotifiers(notifiers []*types.Notifier) string
 }
 
 func (reporter *Reporter) SerializeNotifier(notifier *types.Notifier) string {
-	if strings.HasPrefix(notifier.UserName, "@") {
-		return notifier.UserName
-	}
-
-	return "@" + notifier.UserName
+	return fmt.Sprintf(
+		"<a href=\"tg://user?id=%s\">%s</a>",
+		notifier.UserID,
+		notifier.UserName,
+	)
 }
