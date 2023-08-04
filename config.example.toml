@@ -66,7 +66,9 @@ min-signed-per-window = 0.05
 # will be overriden on chain startup with the actual values from chain, and will be periodically updated.
 # Defaults to true
 query-slashing-params = true
-# Pagination params. Why you might need this:
+# Queries pagination params.
+[[chains.pagination]]
+# How many historical validators to query at once. Why you might need this:
 # When querying for historical validators on chains with more than 100 validators, you need to do multiple queries,
 # as Tendermint returns 100 validators at max. If your chain has exactly 100 validators, querying first batch
 # would work, but second one won't with the following error: "page should be within [1, 1] range, given 2"
@@ -75,7 +77,16 @@ query-slashing-params = true
 # would return 95 validators, and the second one would return 5 validators.
 # Do not try setting it to more than 100, this won't work.
 # Defaults to 100.
-pagination = { historical-validators = 95 }
+historical-validators = 95
+# How many blocks to query at once.
+# Defaults to 100.
+# Decrease it if the node you're querying has rate limiting and doing too many requests at once
+# causes some requests to fail
+blocks-search = 100
+# How many validators to query at once.
+validators-list = 1000
+# How many signing infos to query at once.
+validators-list = 1000
 
 # You can specify multiple chain. Each chain should have its own set of reporters
 # and they should not overlap.

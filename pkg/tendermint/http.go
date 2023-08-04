@@ -130,7 +130,7 @@ func (rpc *RPC) AbciQuery(
 func (rpc *RPC) GetValidators(height int64) (*stakingTypes.QueryValidatorsResponse, error) {
 	query := stakingTypes.QueryValidatorsRequest{
 		Pagination: &queryTypes.PageRequest{
-			Limit: constants.ValidatorsQueryPagination,
+			Limit: rpc.config.Pagination.ValidatorsList,
 		},
 	}
 
@@ -152,7 +152,7 @@ func (rpc *RPC) GetValidators(height int64) (*stakingTypes.QueryValidatorsRespon
 func (rpc *RPC) GetSigningInfos(height int64) (*slashingTypes.QuerySigningInfosResponse, error) {
 	query := slashingTypes.QuerySigningInfosRequest{
 		Pagination: &queryTypes.PageRequest{
-			Limit: constants.SigningInfosQueryPagination,
+			Limit: rpc.config.Pagination.SigningInfos,
 		},
 	}
 
