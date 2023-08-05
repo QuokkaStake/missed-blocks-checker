@@ -3,7 +3,6 @@ package pkg
 import (
 	"fmt"
 	configPkg "main/pkg/config"
-	"main/pkg/constants"
 	dataPkg "main/pkg/data"
 	databasePkg "main/pkg/database"
 	"main/pkg/metrics"
@@ -384,7 +383,7 @@ func (a *AppManager) PopulateBlocks() {
 		return
 	}
 
-	blocksChunks := utils.SplitIntoChunks(missingBlocks, int(constants.BlockSearchPagination))
+	blocksChunks := utils.SplitIntoChunks(missingBlocks, a.Config.Pagination.BlocksSearch)
 
 	for _, chunk := range blocksChunks {
 		count := a.StateManager.GetBlocksCountSinceLatest(a.Config.StoreBlocks)
