@@ -1,5 +1,9 @@
 package types
 
+import (
+	"math/big"
+)
+
 type WebsocketEmittable interface {
 	Hash() string
 }
@@ -21,6 +25,18 @@ func (validators Validators) ToMap() ValidatorsMap {
 	}
 
 	return validatorsMap
+}
+
+func (validators Validators) GetTotalVotingPower() *big.Int {
+	sum := big.NewInt(0)
+
+	for _, validator := range validators {
+		if validator.Active() {
+			sum.Add(sum, validator.VotingPower)
+		}
+	}
+
+	return sum
 }
 
 func (validatorsMap ValidatorsMap) ToSlice() Validators {

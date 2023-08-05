@@ -63,6 +63,10 @@ func (r paramsRender) FormatGroupPercent(group *config.MissedBlocksGroup) string
 	)
 }
 
+func (r paramsRender) FormatSoftOptOut() string {
+	return fmt.Sprintf("%.2f", r.Config.ConsumerSoftOptOut*100)
+}
+
 type statusEntry struct {
 	Validator   *types.Validator
 	Error       error

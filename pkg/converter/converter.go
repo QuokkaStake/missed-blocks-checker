@@ -81,6 +81,7 @@ func (c *Converter) ValidatorFromCosmosValidator(
 		Status:                  int32(validator.Status),
 		Jailed:                  validator.Jailed,
 		SigningInfo:             valSigningInfo,
+		VotingPower:             validator.Tokens.BigInt(),
 	}
 }
 

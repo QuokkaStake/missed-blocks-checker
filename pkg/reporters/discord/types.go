@@ -60,6 +60,10 @@ func (r paramsRender) FormatGroupPercent(group *config.MissedBlocksGroup) string
 	)
 }
 
+func (r paramsRender) FormatSoftOptOut() string {
+	return fmt.Sprintf("%.2f", r.Config.ConsumerSoftOptOut*100)
+}
+
 type notifierEntry struct {
 	Link      types.Link
 	Notifiers []*types.Notifier

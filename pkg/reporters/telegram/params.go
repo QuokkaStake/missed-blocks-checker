@@ -1,9 +1,8 @@
 package telegram
 
 import (
-	"main/pkg/constants"
-
 	tele "gopkg.in/telebot.v3"
+	"main/pkg/constants"
 )
 
 func (reporter *Reporter) HandleParams(c tele.Context) error {
