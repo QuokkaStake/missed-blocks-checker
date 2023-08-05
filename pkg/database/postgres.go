@@ -27,3 +27,11 @@ func (d *Database) InitPostgresDatabase() *sql.DB {
 
 	return db
 }
+
+func (d *Database) GetPostgresMigrations() []string {
+	return []string{
+		"01-blocks.sql",
+		"02-notifiers.sql",
+		"03-data.sql",
+	}
+}
