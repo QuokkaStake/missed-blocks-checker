@@ -31,5 +31,6 @@ func (d *Database) GetSqliteMigrations() []string {
 		"01-blocks.sql",
 		"02-notifiers.sql",
 		"03-data.sql",
+		"04-events.sqlite.sql",
 	}
 }
