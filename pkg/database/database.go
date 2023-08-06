@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
+	"main/pkg/report"
 	snapshotPkg "main/pkg/snapshot"
 	"main/pkg/types"
-	migrations "main/sql"
+	migrationsPkg "main/sql"
 	"sync"
 	"time"
 
@@ -34,30 +35,28 @@ func NewDatabase(
 
 func (d *Database) Init() {
 	var db *sql.DB
+	var migrations []string
 
 	switch d.config.Type {
 	case constants.DatabaseTypeSqlite:
 		db = d.InitSqliteDatabase()
+		migrations = d.GetSqliteMigrations()
 	case constants.DatabaseTypePostgres:
 		db = d.InitPostgresDatabase()
+		migrations = d.GetPostgresMigrations()
 	default:
 		d.logger.Fatal().Str("type", d.config.Type).Msg("Unsupported database type")
 	}
 
-	entries, err := migrations.FS.ReadDir(".")
-	if err != nil {
-		d.logger.Fatal().Err(err).Msg("Could not get migrations folder path")
-	}
-
-	for _, entry := range entries {
+	for _, entry := range migrations {
 		d.logger.Info().
-			Str("name", entry.Name()).
+			Str("name", entry).
 			Msg("Applying sqlite migration")
 
-		content, err := migrations.FS.ReadFile(entry.Name())
+		content, err := migrationsPkg.FS.ReadFile(entry)
 		if err != nil {
 			d.logger.Fatal().
-				Str("name", entry.Name()).
+				Str("name", entry).
 				Err(err).
 				Msg("Could not read migration content")
 		}
@@ -65,13 +64,13 @@ func (d *Database) Init() {
 		statement, err := db.Prepare(string(content))
 		if err != nil {
 			d.logger.Fatal().
-				Str("name", entry.Name()).
+				Str("name", entry).
 				Err(err).
 				Msg("Could not prepare migration")
 		}
 		if _, err := statement.Exec(); err != nil {
 			d.logger.Fatal().
-				Str("name", entry.Name()).
+				Str("name", entry).
 				Err(err).
 				Msg("Could not execute migration")
 		}
@@ -361,6 +360,31 @@ func (d *Database) SetSnapshot(chain string, snapshot *snapshotPkg.Info) error {
 
 	if err := d.SetValueByKey(chain, "snapshot", rawData); err != nil {
 		d.logger.Error().Err(err).Msg("Could not save snapshot")
+		return err
+	}
+
+	return nil
+}
+
+func (d *Database) InsertEvent(chain string, entry report.Entry) error {
+	d.MaybeMutexLock()
+	defer d.MaybeMutexUnlock()
+
+	payloadBytes, err := json.Marshal(entry)
+	if err != nil {
+		d.logger.Error().Err(err).Msg("Error marshaling payload for event")
+		return err
+	}
+
+	_, err = d.client.Exec(
+		"INSERT INTO events (chain, event, validator, payload, time) VALUES ($1, $2, $3, $4, NOW())",
+		chain,
+		entry.Type(),
+		entry.GetValidator().OperatorAddress,
+		payloadBytes,
+	)
+	if err != nil {
+		d.logger.Error().Err(err).Msg("Error saving event")
 		return err
 	}
 

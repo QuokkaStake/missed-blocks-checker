@@ -5,6 +5,7 @@ import (
 	"main/pkg/constants"
 	databasePkg "main/pkg/database"
 	"main/pkg/metrics"
+	reportPkg "main/pkg/report"
 	snapshotPkg "main/pkg/snapshot"
 	"main/pkg/types"
 	"sync"
@@ -223,4 +224,14 @@ func (m *Manager) SaveSnapshot(snapshot *snapshotPkg.Info) error {
 
 func (m *Manager) GetEarliestBlock() *types.Block {
 	return m.state.GetEarliestBlock()
+}
+
+func (m *Manager) SaveReport(report *reportPkg.Report) error {
+	for _, event := range report.Entries {
+		if err := m.database.InsertEvent(m.config.Name, event); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
