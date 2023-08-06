@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
+	"main/pkg/report"
 	snapshotPkg "main/pkg/snapshot"
 	"main/pkg/types"
 	migrationsPkg "main/sql"
@@ -359,6 +360,31 @@ func (d *Database) SetSnapshot(chain string, snapshot *snapshotPkg.Info) error {
 
 	if err := d.SetValueByKey(chain, "snapshot", rawData); err != nil {
 		d.logger.Error().Err(err).Msg("Could not save snapshot")
+		return err
+	}
+
+	return nil
+}
+
+func (d *Database) InsertEvent(chain string, entry report.Entry) error {
+	d.MaybeMutexLock()
+	defer d.MaybeMutexUnlock()
+
+	payloadBytes, err := json.Marshal(entry)
+	if err != nil {
+		d.logger.Error().Err(err).Msg("Error marshaling payload for event")
+		return err
+	}
+
+	_, err = d.client.Exec(
+		"INSERT INTO events (chain, event, validator, payload, time) VALUES ($1, $2, $3, $4, NOW())",
+		chain,
+		entry.Type(),
+		entry.GetValidator().OperatorAddress,
+		payloadBytes,
+	)
+	if err != nil {
+		d.logger.Error().Err(err).Msg("Error saving event")
 		return err
 	}
 
