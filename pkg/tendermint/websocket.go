@@ -104,7 +104,9 @@ func (t *WebsocketClient) ConnectAndListen() {
 	t.logger.Info().Msg("Connecting to node...")
 
 	for {
-		if err := t.client.Start(); err != nil && !strings.Contains(err.Error(), "client already running") {
+		if err := t.client.Start(); err != nil &&
+			!strings.Contains(err.Error(), "client already running") &&
+			!strings.Contains(err.Error(), "already started") {
 			t.error = err
 			t.Channel <- &types.WSError{Error: err}
 			t.logger.Warn().Err(err).Msg("Error connecting to node")
