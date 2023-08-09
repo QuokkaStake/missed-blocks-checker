@@ -23,7 +23,7 @@ type Validator struct {
 	Status                  int32
 	Jailed                  bool
 	SigningInfo             *SigningInfo
-	VotingPower             *big.Int
+	VotingPower             *big.Float
 }
 
 func (v *Validator) Active() bool {

@@ -11,6 +11,8 @@ Approximate time to go to jail when missing all blocks: {{ .FormatTimeToJail }}
 {{ if .Config.IsConsumer -}}
 The chain is an ICS consumer chain.
 Soft opt-out percent is at {{ .FormatSoftOptOut }}%.
+{{ .ConsumerOptOutValidators }} bottom validators are not required to sign blocks.
+Top {{ .GetConsumerRequiredValidators }} are required to sign blocks.
 {{- else -}}
 The chain is a sovereign chain.
 {{ end }}
