@@ -1,7 +1,6 @@
 package snapshot
 
 import (
-	"golang.org/x/exp/slices"
 	"main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/events"
@@ -9,6 +8,8 @@ import (
 	"main/pkg/types"
 	"math"
 	"sort"
+
+	"golang.org/x/exp/slices"
 )
 
 type Entry struct {
