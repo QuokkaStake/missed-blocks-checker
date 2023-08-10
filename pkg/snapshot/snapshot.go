@@ -1,11 +1,14 @@
 package snapshot
 
 import (
+	"golang.org/x/exp/slices"
 	"main/pkg/config"
+	"main/pkg/constants"
 	"main/pkg/events"
 	"main/pkg/report"
 	"main/pkg/types"
 	"math"
+	"sort"
 )
 
 type Entry struct {
@@ -117,6 +120,13 @@ func (snapshot *Snapshot) GetReport(
 			})
 		}
 	}
+
+	sort.Slice(entries, func(first, second int) bool {
+		firstPriority := slices.Index(constants.GetEventNames(), entries[first].Type())
+		secondPriority := slices.Index(constants.GetEventNames(), entries[second].Type())
+
+		return firstPriority < secondPriority
+	})
 
 	return &report.Report{Entries: entries}, nil
 }
