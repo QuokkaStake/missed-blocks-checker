@@ -345,3 +345,51 @@ func TestOldMissedBlocksGroupNotPresent(t *testing.T) {
 	assert.NotNil(t, err, "Error should be present!")
 	assert.Nil(t, report, "Report should not be present!")
 }
+
+func TestSorting(t *testing.T) {
+	t.Parallel()
+
+	config := &configPkg.ChainConfig{
+		MissedBlocksGroups: []*configPkg.MissedBlocksGroup{
+			{Start: 0, End: 49},
+			{Start: 50, End: 99},
+		},
+	}
+
+	olderSnapshot := Snapshot{Entries: map[string]Entry{
+		"validator1": {
+			Validator:     &types.Validator{Jailed: false, Status: 3},
+			SignatureInfo: types.SignatureInto{NotSigned: 25},
+		},
+		"validator2": {
+			Validator:     &types.Validator{Jailed: false, Status: 3},
+			SignatureInfo: types.SignatureInto{NotSigned: 25},
+		},
+		"validator3": {
+			Validator:     &types.Validator{Jailed: false, Status: 3, SigningInfo: &types.SigningInfo{Tombstoned: false}},
+			SignatureInfo: types.SignatureInto{NotSigned: 25},
+		},
+	}}
+	newerSnapshot := Snapshot{Entries: map[string]Entry{
+		"validator1": {
+			Validator:     &types.Validator{Jailed: true, Status: 3},
+			SignatureInfo: types.SignatureInto{NotSigned: 25},
+		},
+		"validator2": {
+			Validator:     &types.Validator{Jailed: false, Status: 3},
+			SignatureInfo: types.SignatureInto{NotSigned: 75},
+		},
+		"validator3": {
+			Validator:     &types.Validator{Jailed: false, Status: 3, SigningInfo: &types.SigningInfo{Tombstoned: true}},
+			SignatureInfo: types.SignatureInto{NotSigned: 25},
+		},
+	}}
+
+	report, err := newerSnapshot.GetReport(olderSnapshot, config)
+	assert.Nil(t, err, "Error should not be present!")
+	assert.NotNil(t, report, "Report should be present!")
+	assert.Len(t, report.Entries, 3, "Slice should have exactly 3 entries!")
+	assert.Equal(t, report.Entries[0].Type(), constants.EventValidatorTombstoned, "Entry type mismatch!")
+	assert.Equal(t, report.Entries[1].Type(), constants.EventValidatorJailed, "Entry type mismatch!")
+	assert.Equal(t, report.Entries[2].Type(), constants.EventValidatorGroupChanged, "Entry type mismatch!")
+}

@@ -45,13 +45,13 @@ const (
 
 func GetEventNames() []EventName {
 	return []EventName{
-		EventValidatorActive,
-		EventValidatorGroupChanged,
-		EventValidatorInactive,
-		EventValidatorJailed,
-		EventValidatorUnjailed,
 		EventValidatorTombstoned,
+		EventValidatorJailed,
+		EventValidatorInactive,
+		EventValidatorUnjailed,
+		EventValidatorActive,
 		EventValidatorCreated,
+		EventValidatorGroupChanged,
 	}
 }
 
