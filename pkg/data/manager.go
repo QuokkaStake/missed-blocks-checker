@@ -33,7 +33,7 @@ func NewManager(
 	}
 }
 
-func (m *Manager) GetValidators(height int64) (types.Validators, error) {
+func (m *Manager) GetValidators(height int64) (types.Validators, []error) {
 	if m.config.IsConsumer.Bool {
 		return m.GetValidatorsAndSigningInfoForConsumerChain(height)
 	}
@@ -64,11 +64,11 @@ func (m *Manager) GetValidators(height int64) (types.Validators, error) {
 	wg.Wait()
 
 	if validatorsError != nil {
-		return nil, validatorsError
+		return nil, []error{validatorsError}
 	}
 
 	if signingInfoErr != nil {
-		return nil, signingInfoErr
+		return nil, []error{signingInfoErr}
 	}
 
 	validators := make([]*types.Validator, len(validatorsResponse.Validators))
@@ -103,14 +103,15 @@ func (m *Manager) GetValidators(height int64) (types.Validators, error) {
 	return validators, nil
 }
 
-func (m *Manager) GetValidatorsAndEachSigningInfo(height int64) (types.Validators, error) {
+func (m *Manager) GetValidatorsAndEachSigningInfo(height int64) (types.Validators, []error) {
 	validatorsResponse, validatorsError := m.httpManager.GetValidators(height)
 	if validatorsError != nil {
-		return nil, validatorsError
+		return nil, []error{validatorsError}
 	}
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
+	errs := make([]error, 0)
 
 	validators := make([]*types.Validator, len(validatorsResponse.Validators))
 	for index, validatorRaw := range validatorsResponse.Validators {
@@ -125,6 +126,10 @@ func (m *Manager) GetValidatorsAndEachSigningInfo(height int64) (types.Validator
 					Str("operator_address", validatorRaw.OperatorAddress).
 					Err(signingInfoErr).
 					Msg("Error fetching validator signing info")
+				mutex.Lock()
+				errs = append(errs, signingInfoErr)
+				mutex.Unlock()
+				return
 			}
 
 			var signingInfo *slashingTypes.ValidatorSigningInfo
@@ -142,10 +147,10 @@ func (m *Manager) GetValidatorsAndEachSigningInfo(height int64) (types.Validator
 
 	wg.Wait()
 
-	return validators, nil
+	return validators, errs
 }
 
-func (m *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64) (types.Validators, error) {
+func (m *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64) (types.Validators, []error) {
 	var (
 		wg                  sync.WaitGroup
 		validatorsResponse  *stakingTypes.QueryValidatorsResponse
@@ -169,14 +174,15 @@ func (m *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64) (typ
 	wg.Wait()
 
 	if validatorsError != nil {
-		return nil, validatorsError
+		return nil, []error{validatorsError}
 	}
 
 	if signingInfoErr != nil {
-		return nil, signingInfoErr
+		return nil, []error{signingInfoErr}
 	}
 
 	validators := make([]*types.Validator, len(validatorsResponse.Validators))
+	errs := make([]error, 0)
 
 	for index, validatorRaw := range validatorsResponse.Validators {
 		if m.config.ConsumerValidatorPrefix != "" {
@@ -205,6 +211,10 @@ func (m *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64) (typ
 					Str("operator_address", validatorRaw.OperatorAddress).
 					Err(err).
 					Msg("Error fetching validator assigned consumer key")
+
+				mutex.Lock()
+				errs = append(errs, err)
+				mutex.Unlock()
 			} else if consensusAddrConsumer.ConsumerAddress != "" {
 				consensusAddr = consensusAddrConsumer.ConsumerAddress
 			}
@@ -242,5 +252,5 @@ func (m *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64) (typ
 
 	wg.Wait()
 
-	return validators, nil
+	return validators, errs
 }

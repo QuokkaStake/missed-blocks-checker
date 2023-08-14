@@ -132,9 +132,9 @@ func (a *AppManager) ProcessEvent(emittable types.WebsocketEmittable) {
 		return
 	}
 
-	if err := a.UpdateValidators(block.Height - 1); err != nil {
+	if errs := a.UpdateValidators(block.Height - 1); len(errs) > 0 {
 		a.Logger.Error().
-			Err(err).
+			Errs("errors", errs).
 			Msg("Error updating validators")
 		return
 	}
@@ -286,10 +286,10 @@ func (a *AppManager) PopulateSlashingParams() {
 	a.Config.RecalculateMissedBlocksGroups()
 }
 
-func (a *AppManager) UpdateValidators(height int64) error {
-	validators, err := a.DataManager.GetValidators(height)
-	if err != nil {
-		return err
+func (a *AppManager) UpdateValidators(height int64) []error {
+	validators, errs := a.DataManager.GetValidators(height)
+	if errs != nil {
+		return errs
 	}
 
 	a.StateManager.SetValidators(validators.ToMap())
