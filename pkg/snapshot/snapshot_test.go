@@ -393,3 +393,71 @@ func TestSorting(t *testing.T) {
 	assert.Equal(t, report.Entries[1].Type(), constants.EventValidatorJailed, "Entry type mismatch!")
 	assert.Equal(t, report.Entries[2].Type(), constants.EventValidatorGroupChanged, "Entry type mismatch!")
 }
+
+func TestSortingMissedBlocksGroups(t *testing.T) {
+	t.Parallel()
+
+	config := &configPkg.ChainConfig{
+		MissedBlocksGroups: []*configPkg.MissedBlocksGroup{
+			{Start: 0, End: 49},
+			{Start: 50, End: 99},
+			{Start: 100, End: 149},
+		},
+	}
+
+	olderSnapshot := Snapshot{Entries: map[string]Entry{
+		"validator1": {
+			Validator:     &types.Validator{OperatorAddress: "validator1", Status: 3},
+			SignatureInfo: types.SignatureInto{NotSigned: 25},
+		},
+		"validator2": {
+			Validator:     &types.Validator{OperatorAddress: "validator2", Status: 3},
+			SignatureInfo: types.SignatureInto{NotSigned: 75},
+		},
+		"validator3": {
+			Validator:     &types.Validator{OperatorAddress: "validator3", Status: 3},
+			SignatureInfo: types.SignatureInto{NotSigned: 125},
+		},
+		"validator4": {
+			Validator:     &types.Validator{OperatorAddress: "validator4", Status: 3},
+			SignatureInfo: types.SignatureInto{NotSigned: 75},
+		},
+	}}
+	newerSnapshot := Snapshot{Entries: map[string]Entry{
+		// skipping blocks: 25 -> 75
+		"validator1": {
+			Validator:     &types.Validator{OperatorAddress: "validator1", Status: 3},
+			SignatureInfo: types.SignatureInto{NotSigned: 75},
+		},
+		// skipping blocks: 75 -> 125
+		"validator2": {
+			Validator:     &types.Validator{OperatorAddress: "validator2", Status: 3},
+			SignatureInfo: types.SignatureInto{NotSigned: 125},
+		},
+		// recovering: 125 -> 75
+		"validator3": {
+			Validator:     &types.Validator{OperatorAddress: "validator3", Status: 3},
+			SignatureInfo: types.SignatureInto{NotSigned: 75},
+		},
+		// recovering: 75 -> 25
+		"validator4": {
+			Validator:     &types.Validator{OperatorAddress: "validator4", Status: 3},
+			SignatureInfo: types.SignatureInto{NotSigned: 25},
+		},
+	}}
+
+	// expected order:
+	// 1) validator2 skipping 75 -> 125
+	// 2) validator1 skipping 25 -> 75
+	// 3) validator3 recovering 125 -> 75
+	// 4) validator4 recovering 75 -> 25
+
+	report, err := newerSnapshot.GetReport(olderSnapshot, config)
+	assert.Nil(t, err, "Error should not be present!")
+	assert.NotNil(t, report, "Report should be present!")
+	assert.Len(t, report.Entries, 4, "Slice should have exactly 4 entries!")
+	assert.Equal(t, report.Entries[0].GetValidator().OperatorAddress, "validator2", "Wrong validator!")
+	assert.Equal(t, report.Entries[1].GetValidator().OperatorAddress, "validator1", "Wrong validator!")
+	assert.Equal(t, report.Entries[2].GetValidator().OperatorAddress, "validator3", "Wrong validator!")
+	assert.Equal(t, report.Entries[3].GetValidator().OperatorAddress, "validator4", "Wrong validator!")
+}
