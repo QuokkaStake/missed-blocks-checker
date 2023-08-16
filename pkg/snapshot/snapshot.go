@@ -6,6 +6,7 @@ import (
 	"main/pkg/events"
 	"main/pkg/report"
 	"main/pkg/types"
+	"main/pkg/utils"
 	"math"
 	"sort"
 
@@ -122,9 +123,29 @@ func (snapshot *Snapshot) GetReport(
 		}
 	}
 
-	sort.Slice(entries, func(first, second int) bool {
-		firstPriority := slices.Index(constants.GetEventNames(), entries[first].Type())
-		secondPriority := slices.Index(constants.GetEventNames(), entries[second].Type())
+	sort.Slice(entries, func(firstIndex, secondIndex int) bool {
+		first := entries[firstIndex]
+		second := entries[secondIndex]
+
+		// sorting events by their type (e.g. tombstones first, etc, see constants.GetEventNames() for priority
+		// if both are EventValidatorGroupChanged, we additionally sort the following:
+		// - validators missing blocks are going first, recovering second
+		// - if both validators are either skipping or recovering, those skipped more blocks go first
+
+		if first.Type() == constants.EventValidatorGroupChanged && second.Type() == constants.EventValidatorGroupChanged {
+			firstConverted, _ := first.(events.ValidatorGroupChanged)
+			secondConverted, _ := second.(events.ValidatorGroupChanged)
+
+			// increasing goes first, decreasing goes latest
+			if firstConverted.IsIncreasing() != secondConverted.IsIncreasing() {
+				return utils.BoolToFloat64(firstConverted.IsIncreasing()) > utils.BoolToFloat64(secondConverted.IsIncreasing())
+			}
+
+			return firstConverted.MissedBlocksAfter > secondConverted.MissedBlocksAfter
+		}
+
+		firstPriority := slices.Index(constants.GetEventNames(), first.Type())
+		secondPriority := slices.Index(constants.GetEventNames(), second.Type())
 
 		return firstPriority < secondPriority
 	})
