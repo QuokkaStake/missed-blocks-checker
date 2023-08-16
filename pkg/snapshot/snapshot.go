@@ -133,8 +133,8 @@ func (snapshot *Snapshot) GetReport(
 		// - if both validators are either skipping or recovering, those skipped more blocks go first
 
 		if first.Type() == constants.EventValidatorGroupChanged && second.Type() == constants.EventValidatorGroupChanged {
-			firstConverted := first.(events.ValidatorGroupChanged)
-			secondConverted := second.(events.ValidatorGroupChanged)
+			firstConverted, _ := first.(events.ValidatorGroupChanged)
+			secondConverted, _ := second.(events.ValidatorGroupChanged)
 
 			// increasing goes first, decreasing goes latest
 			if firstConverted.IsIncreasing() != secondConverted.IsIncreasing() {
