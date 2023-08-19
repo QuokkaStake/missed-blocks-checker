@@ -24,7 +24,12 @@ func TestManagerCommitNewSnapshot(t *testing.T) {
 	t.Parallel()
 
 	log := logger.GetDefaultLogger()
-	config := &configPkg.ChainConfig{StoreBlocks: 10}
+	config := &configPkg.ChainConfig{
+		StoreBlocks: 10,
+		Thresholds:  []float64{0, 100},
+		EmojisStart: []string{"x"},
+		EmojisEnd:   []string{"x"},
+	}
 	config.RecalculateMissedBlocksGroups()
 
 	metricsManager := metrics.NewManager(*log, configPkg.MetricsConfig{Enabled: null.BoolFrom(true)})
@@ -32,12 +37,12 @@ func TestManagerCommitNewSnapshot(t *testing.T) {
 
 	manager.CommitNewSnapshot(10, Snapshot{
 		Entries: map[string]Entry{
-			"validator": Entry{Validator: &types.Validator{}},
+			"validator": {Validator: &types.Validator{}},
 		},
 	})
 	manager.CommitNewSnapshot(20, Snapshot{
 		Entries: map[string]Entry{
-			"validator": Entry{Validator: &types.Validator{}},
+			"validator": {Validator: &types.Validator{}},
 		},
 	})
 

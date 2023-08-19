@@ -28,10 +28,14 @@ type ChainConfig struct {
 	ConsumerValidatorPrefix string    `toml:"consumer-validator-prefix"`
 	ConsumerChainID         string    `toml:"consumer-chain-id"`
 
-	MissedBlocksGroups MissedBlocksGroups `toml:"missed-blocks-groups"`
-	ExplorerConfig     ExplorerConfig     `toml:"explorer"`
-	TelegramConfig     TelegramConfig     `toml:"telegram"`
-	DiscordConfig      DiscordConfig      `toml:"discord"`
+	MissedBlocksGroups MissedBlocksGroups `toml:"-"`
+	Thresholds         []float64          `default:"[0, 0.5, 1, 5, 10, 25, 50, 75, 90, 100]"                                                    toml:"thresholds"`
+	EmojisStart        []string           `default:"[\"🟡\", \"🟡\", \"🟡\", \"🟠\", \"🟠\", \"🟠\", \"🔴\", \"🔴\", \"🔴\"]"                            toml:"emoji-start"`
+	EmojisEnd          []string           `default:"[\"🟢\", \"🟡\", \"🟡\", \"🟡\", \"🟡\", \"🟠\", \"🟠\", \"🟠\", \"🟠\"]"                            toml:"emoji-end"`
+
+	ExplorerConfig ExplorerConfig `toml:"explorer"`
+	TelegramConfig TelegramConfig `toml:"telegram"`
+	DiscordConfig  DiscordConfig  `toml:"discord"`
 }
 
 func (c *ChainConfig) GetName() string {
@@ -55,6 +59,42 @@ func (c *ChainConfig) Validate() error {
 		return fmt.Errorf("chain has 0 RPC endpoints")
 	}
 
+	if len(c.Thresholds) <= 2 {
+		return fmt.Errorf("not enough thresholds provided")
+	}
+
+	if len(c.Thresholds) != len(c.EmojisStart)+1 {
+		return fmt.Errorf("got %d start emojis but %d thresholds", len(c.EmojisStart), len(c.Thresholds))
+	}
+
+	if len(c.Thresholds) != len(c.EmojisEnd)+1 {
+		return fmt.Errorf("got %d end emojis but %d thresholds", len(c.EmojisStart), len(c.Thresholds))
+	}
+
+	if c.Thresholds[0] != 0 {
+		return fmt.Errorf("first threshold should be 0, but got %.2f", c.Thresholds[0])
+	}
+
+	if c.Thresholds[len(c.Thresholds)-1] != 100 {
+		return fmt.Errorf("last threshold should be 100, but got %.2f", c.Thresholds[len(c.Thresholds)-1])
+	}
+
+	for index, threshold := range c.Thresholds {
+		if index == 0 {
+			continue
+		}
+
+		if threshold <= c.Thresholds[index-1] {
+			return fmt.Errorf(
+				"threshold at index %d is less than threshold at index %d: %.2f <= %.2f",
+				index,
+				index-1,
+				threshold,
+				c.Thresholds[index-1],
+			)
+		}
+	}
+
 	if c.IsConsumer.Bool {
 		if len(c.ProviderRPCEndpoints) == 0 {
 			return fmt.Errorf("chain is a consumer, but has 0 provider RPC endpoints")
@@ -71,28 +111,24 @@ func (c *ChainConfig) Validate() error {
 func (c *ChainConfig) RecalculateMissedBlocksGroups() {
 	totalRange := float64(c.BlocksWindow) + 1 // from 0 till max blocks allowed, including
 
-	percents := []float64{0, 0.5, 1, 5, 10, 25, 50, 75, 90, 100}
-	emojiStart := []string{"🟡", "🟡", "🟡", "🟠", "🟠", "🟠", "🔴", "🔴", "🔴"}
-	emojiEnd := []string{"🟢", "🟡", "🟡", "🟡", "🟡", "🟠", "🟠", "🟠", "🟠"}
-
-	groupsCount := len(percents) - 1
+	groupsCount := len(c.Thresholds) - 1
 	groups := make([]*MissedBlocksGroup, groupsCount)
 
 	for i := 0; i < groupsCount; i++ {
-		start := totalRange * percents[i] / 100
-		end := totalRange*percents[i+1]/100 - 1
+		start := totalRange * c.Thresholds[i] / 100
+		end := totalRange*c.Thresholds[i+1]/100 - 1
 
 		groups[i] = &MissedBlocksGroup{
 			Start:      int64(start),
 			End:        int64(end),
-			EmojiStart: emojiStart[i],
-			EmojiEnd:   emojiEnd[i],
-			DescStart:  fmt.Sprintf("is skipping blocks (> %.1f%%)", percents[i]),
-			DescEnd:    fmt.Sprintf("is recovering (< %.1f%%)", percents[i+1]),
+			EmojiStart: c.EmojisStart[i],
+			EmojiEnd:   c.EmojisEnd[i],
+			DescStart:  fmt.Sprintf("is skipping blocks (> %.1f%%)", c.Thresholds[i]),
+			DescEnd:    fmt.Sprintf("is recovering (< %.1f%%)", c.Thresholds[i+1]),
 		}
 	}
 
-	groups[0].DescEnd = fmt.Sprintf("is recovered (< %.1f%%)", percents[1])
+	groups[0].DescEnd = fmt.Sprintf("is recovered (< %.1f%%)", c.Thresholds[1])
 
 	c.MissedBlocksGroups = groups
 }

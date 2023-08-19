@@ -24,12 +24,13 @@ func NewApp(configPath string, version string) *App {
 	if err != nil {
 		loggerPkg.GetDefaultLogger().Fatal().Err(err).Msg("Could not load config")
 	}
-	for _, chainConfig := range config.ChainConfigs {
-		chainConfig.RecalculateMissedBlocksGroups()
-	}
 
 	if err = config.Validate(); err != nil {
 		loggerPkg.GetDefaultLogger().Fatal().Err(err).Msg("Provided config is invalid!")
+	}
+
+	for _, chainConfig := range config.ChainConfigs {
+		chainConfig.RecalculateMissedBlocksGroups()
 	}
 
 	logger := loggerPkg.GetLogger(config.LogConfig).
