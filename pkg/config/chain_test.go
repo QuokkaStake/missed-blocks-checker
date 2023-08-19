@@ -70,12 +70,129 @@ func TestValidateConsumerChainWithoutChainID(t *testing.T) {
 	assert.NotNil(t, err, "Error should be present!")
 }
 
+func TestValidateNotEnoughThresholds(t *testing.T) {
+	t.Parallel()
+
+	config := &ChainConfig{
+		Name: "chain", RPCEndpoints: []string{"endpoint"},
+		Thresholds:  []float64{0, 100},
+		EmojisStart: []string{"x"},
+		EmojisEnd:   []string{"x"},
+	}
+	err := config.Validate()
+	assert.NotNil(t, err, "Error should be present!")
+}
+
+func TestValidateNotEnoughStartEmojis(t *testing.T) {
+	t.Parallel()
+
+	config := &ChainConfig{
+		Name: "chain", RPCEndpoints: []string{"endpoint"},
+		Thresholds:  []float64{0, 50, 100},
+		EmojisStart: []string{"x"},
+		EmojisEnd:   []string{"x", "y"},
+	}
+	err := config.Validate()
+	assert.NotNil(t, err, "Error should be present!")
+}
+
+func TestValidateNotEnoughEndEmojis(t *testing.T) {
+	t.Parallel()
+
+	config := &ChainConfig{
+		Name: "chain", RPCEndpoints: []string{"endpoint"},
+		Thresholds:  []float64{0, 50, 100},
+		EmojisStart: []string{"x", "y"},
+		EmojisEnd:   []string{"x"},
+	}
+	err := config.Validate()
+	assert.NotNil(t, err, "Error should be present!")
+}
+
+func TestValidateFirstThresholdNotZero(t *testing.T) {
+	t.Parallel()
+
+	config := &ChainConfig{
+		Name: "chain", RPCEndpoints: []string{"endpoint"},
+		Thresholds:  []float64{1, 50, 100},
+		EmojisStart: []string{"x", "y"},
+		EmojisEnd:   []string{"x", "y"},
+	}
+	err := config.Validate()
+	assert.NotNil(t, err, "Error should be present!")
+}
+
+func TestValidateLastThresholdNotHundred(t *testing.T) {
+	t.Parallel()
+
+	config := &ChainConfig{
+		Name: "chain", RPCEndpoints: []string{"endpoint"},
+		Thresholds:  []float64{0, 50, 95},
+		EmojisStart: []string{"x", "y"},
+		EmojisEnd:   []string{"x", "y"},
+	}
+	err := config.Validate()
+	assert.NotNil(t, err, "Error should be present!")
+}
+
+func TestValidateThresholdsInconsistent(t *testing.T) {
+	t.Parallel()
+
+	config := &ChainConfig{
+		Name: "chain", RPCEndpoints: []string{"endpoint"},
+		Thresholds:  []float64{0, 75, 25, 100},
+		EmojisStart: []string{"x", "y", "z"},
+		EmojisEnd:   []string{"x", "y", "z"},
+	}
+	err := config.Validate()
+	assert.NotNil(t, err, "Error should be present!")
+}
+
 func TestValidateChainValid(t *testing.T) {
 	t.Parallel()
 
-	config := &ChainConfig{Name: "chain", RPCEndpoints: []string{"endpoint"}}
+	config := &ChainConfig{
+		Name: "chain", RPCEndpoints: []string{"endpoint"},
+		Thresholds:  []float64{0, 50, 100},
+		EmojisStart: []string{"x", "y"},
+		EmojisEnd:   []string{"x", "y"},
+	}
 	err := config.Validate()
 	assert.Nil(t, err, "Error should not be present!")
+}
+
+func TestValidateConsumerChainWithoutEndpoints(t *testing.T) {
+	t.Parallel()
+
+	config := &ChainConfig{
+		Name:                 "chain",
+		RPCEndpoints:         []string{"endpoint"},
+		IsConsumer:           null.BoolFrom(true),
+		ProviderRPCEndpoints: []string{},
+		ConsumerChainID:      "chain",
+		Thresholds:           []float64{0, 50, 100},
+		EmojisStart:          []string{"x", "y"},
+		EmojisEnd:            []string{"x", "y"},
+	}
+	err := config.Validate()
+	assert.NotNil(t, err, "Error should be present!")
+}
+
+func TestValidateConsumerChainWithoutChainId(t *testing.T) {
+	t.Parallel()
+
+	config := &ChainConfig{
+		Name:                 "chain",
+		RPCEndpoints:         []string{"endpoint"},
+		IsConsumer:           null.BoolFrom(true),
+		ProviderRPCEndpoints: []string{"endpoint"},
+		ConsumerChainID:      "",
+		Thresholds:           []float64{0, 50, 100},
+		EmojisStart:          []string{"x", "y"},
+		EmojisEnd:            []string{"x", "y"},
+	}
+	err := config.Validate()
+	assert.NotNil(t, err, "Error should be present!")
 }
 
 func TestValidateConsumerChainValid(t *testing.T) {
@@ -87,6 +204,9 @@ func TestValidateConsumerChainValid(t *testing.T) {
 		IsConsumer:           null.BoolFrom(true),
 		ProviderRPCEndpoints: []string{"endpoint"},
 		ConsumerChainID:      "chain",
+		Thresholds:           []float64{0, 50, 100},
+		EmojisStart:          []string{"x", "y"},
+		EmojisEnd:            []string{"x", "y"},
 	}
 	err := config.Validate()
 	assert.Nil(t, err, "Error should not be present!")
