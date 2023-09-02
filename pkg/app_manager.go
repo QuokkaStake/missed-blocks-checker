@@ -288,12 +288,12 @@ func (a *AppManager) PopulateSlashingParams() {
 
 func (a *AppManager) UpdateValidators(height int64) []error {
 	validators, errs := a.DataManager.GetValidators(height)
-	if errs != nil {
+	if len(errs) > 0 {
 		return errs
 	}
 
 	a.StateManager.SetValidators(validators.ToMap())
-	return nil
+	return []error{}
 }
 
 func (a *AppManager) PopulateInBackground() {
