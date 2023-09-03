@@ -120,8 +120,6 @@ func (t *WebsocketClient) ConnectAndListen() {
 		}
 	}
 
-	t.logger.Info().Msg("Subscribing to updates...")
-
 	t.SubscribeToUpdates()
 
 	t.logger.Info().Msg("Listening for events...")
