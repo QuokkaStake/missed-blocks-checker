@@ -12,6 +12,7 @@ import (
 	"main/pkg/types"
 	"main/pkg/utils"
 	"strings"
+	"sync"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
@@ -64,9 +65,6 @@ func (reporter *Reporter) Init() {
 
 	reporter.DiscordSession = session
 
-	// Register the messageCreate func as a callback for MessageCreate events.
-	// dg.AddHandler(messageCreate)
-
 	// Open a websocket connection to Discord and begin listening.
 	err = session.Open()
 	if err != nil {
@@ -77,16 +75,25 @@ func (reporter *Reporter) Init() {
 	reporter.Logger.Info().Err(err).Msg("Discord bot listening")
 
 	reporter.Commands = map[string]*Command{
-		"help":        reporter.GetHelpCommand(),
 		"params":      reporter.GetParamsCommand(),
 		"missing":     reporter.GetMissingCommand(),
 		"subscribe":   reporter.GetSubscribeCommand(),
 		"unsubscribe": reporter.GetUnubscribeCommand(),
+		"status":      reporter.GetStatusCommand(),
+		"help":        reporter.GetHelpCommand(),
 	}
 
 	for query := range reporter.Commands {
 		reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.DiscordReporterName, query)
 	}
+
+	go reporter.InitCommands()
+}
+
+func (reporter *Reporter) InitCommands() {
+	session := reporter.DiscordSession
+	var wg sync.WaitGroup
+	var mutex sync.Mutex
 
 	session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		commandName := i.ApplicationCommandData().Name
@@ -102,24 +109,41 @@ func (reporter *Reporter) Init() {
 		return
 	}
 
-	for _, v := range registeredCommands {
-		err := session.ApplicationCommandDelete(session.State.User.ID, reporter.Guild, v.ID)
-		if err != nil {
-			reporter.Logger.Error().Err(err).Str("command", v.Name).Msg("Could not delete command")
-			return
-		}
-		reporter.Logger.Info().Str("command", v.Name).Msg("Deleted command")
+	for _, command := range registeredCommands {
+		wg.Add(1)
+		go func(command *discordgo.ApplicationCommand) {
+			defer wg.Done()
+
+			err := session.ApplicationCommandDelete(session.State.User.ID, reporter.Guild, command.ID)
+			if err != nil {
+				reporter.Logger.Error().Err(err).Str("command", command.Name).Msg("Could not delete command")
+				return
+			}
+			reporter.Logger.Info().Str("command", command.Name).Msg("Deleted command")
+		}(command)
 	}
 
-	for key, v := range reporter.Commands {
-		cmd, err := session.ApplicationCommandCreate(session.State.User.ID, reporter.Guild, v.Info)
-		if err != nil {
-			reporter.Logger.Error().Err(err).Str("command", v.Info.Name).Msg("Could not create command")
-			return
-		}
-		reporter.Logger.Info().Str("command", cmd.Name).Msg("Created command")
-		reporter.Commands[key].Info = cmd
+	wg.Wait()
+
+	for key, command := range reporter.Commands {
+		wg.Add(1)
+		go func(key string, command *Command) {
+			defer wg.Done()
+
+			cmd, err := session.ApplicationCommandCreate(session.State.User.ID, reporter.Guild, command.Info)
+			if err != nil {
+				reporter.Logger.Error().Err(err).Str("command", command.Info.Name).Msg("Could not create command")
+				return
+			}
+			reporter.Logger.Info().Str("command", cmd.Name).Msg("Created command")
+
+			mutex.Lock()
+			reporter.Commands[key].Info = cmd
+			mutex.Unlock()
+		}(key, command)
 	}
+
+	wg.Wait()
 }
 
 func (reporter *Reporter) Enabled() bool {

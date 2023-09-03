@@ -21,7 +21,7 @@ func (reporter *Reporter) GetUnubscribeCommand() *Command {
 			},
 		},
 		Handler: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.DiscordReporterName, "subscribe")
+			reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.DiscordReporterName, "unsubscribe")
 
 			options := i.ApplicationCommandData().Options
 			address := options[0].Value.(string)
