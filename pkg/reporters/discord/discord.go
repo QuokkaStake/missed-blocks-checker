@@ -243,7 +243,9 @@ func (reporter *Reporter) SerializeLink(link types.Link) string {
 		return link.Text
 	}
 
-	return fmt.Sprintf("[%s](%s)", link.Text, link.Href)
+	// using <> to prevent auto-embed links, taken from here:
+	// https://support.discord.com/hc/en-us/articles/206342858--How-do-I-disable-auto-embed-
+	return fmt.Sprintf("[%s](<%s>)", link.Text, link.Href)
 }
 
 func (reporter *Reporter) BotRespond(s *discordgo.Session, i *discordgo.InteractionCreate, text string) {
