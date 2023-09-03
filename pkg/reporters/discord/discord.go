@@ -77,9 +77,11 @@ func (reporter *Reporter) Init() {
 	reporter.Logger.Info().Err(err).Msg("Discord bot listening")
 
 	reporter.Commands = map[string]*Command{
-		"help":    reporter.GetHelpCommand(),
-		"params":  reporter.GetParamsCommand(),
-		"missing": reporter.GetMissingCommand(),
+		"help":        reporter.GetHelpCommand(),
+		"params":      reporter.GetParamsCommand(),
+		"missing":     reporter.GetMissingCommand(),
+		"subscribe":   reporter.GetSubscribeCommand(),
+		"unsubscribe": reporter.GetUnubscribeCommand(),
 	}
 
 	for query := range reporter.Commands {
@@ -218,4 +220,17 @@ func (reporter *Reporter) SerializeLink(link types.Link) string {
 	}
 
 	return fmt.Sprintf("[%s](%s)", link.Text, link.Href)
+}
+
+func (reporter *Reporter) BotRespond(s *discordgo.Session, i *discordgo.InteractionCreate, text string) {
+	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: text,
+		},
+	})
+
+	if err != nil {
+		reporter.Logger.Error().Err(err).Msg("Error sending response")
+	}
 }

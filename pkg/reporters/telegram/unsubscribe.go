@@ -45,7 +45,8 @@ func (reporter *Reporter) HandleUnsubscribe(c tele.Context) error {
 	validatorLinkSerialized := reporter.SerializeLink(validatorLink)
 
 	return reporter.BotReply(c, fmt.Sprintf(
-		"Unsubscribed from validator's notifications: %s",
+		"Unsubscribed from validator's notifications on %s: %s",
+		reporter.Config.GetName(),
 		validatorLinkSerialized,
 	))
 }
