@@ -78,9 +78,10 @@ func (reporter *Reporter) Init() {
 		"params":      reporter.GetParamsCommand(),
 		"missing":     reporter.GetMissingCommand(),
 		"subscribe":   reporter.GetSubscribeCommand(),
-		"unsubscribe": reporter.GetUnubscribeCommand(),
+		"unsubscribe": reporter.GetUnsubscribeCommand(),
 		"status":      reporter.GetStatusCommand(),
 		"help":        reporter.GetHelpCommand(),
+		"notifiers":   reporter.GetNotifiersCommand(),
 	}
 
 	for query := range reporter.Commands {

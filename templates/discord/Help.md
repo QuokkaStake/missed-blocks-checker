@@ -13,3 +13,4 @@ The bot can understand the following commands:
 - /missing - see the missed blocks counter of validators missing blocks
 - /validators - see the missed blocks counter of all validators
 - </params:{{ .params.Info.ID }}> - see the app config and chain params
+- </notifiers:{{ .notifiers.Info.ID }}> - see notifiers for each validator

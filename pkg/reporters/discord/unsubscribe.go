@@ -6,7 +6,7 @@ import (
 	"main/pkg/constants"
 )
 
-func (reporter *Reporter) GetUnubscribeCommand() *Command {
+func (reporter *Reporter) GetUnsubscribeCommand() *Command {
 	return &Command{
 		Info: &discordgo.ApplicationCommand{
 			Name:        "unsubscribe",
