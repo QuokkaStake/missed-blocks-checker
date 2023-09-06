@@ -59,3 +59,13 @@ func (r paramsRender) FormatGroupPercent(group *config.MissedBlocksGroup) string
 		float64(group.End)/float64(r.Config.BlocksWindow)*100,
 	)
 }
+
+type notifierEntry struct {
+	Link      types.Link
+	Notifiers []*types.Notifier
+}
+
+type notifierRender struct {
+	Config  *config.ChainConfig
+	Entries []notifierEntry
+}

@@ -12,6 +12,8 @@ import (
 	"main/pkg/types"
 	"main/pkg/utils"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
@@ -64,9 +66,6 @@ func (reporter *Reporter) Init() {
 
 	reporter.DiscordSession = session
 
-	// Register the messageCreate func as a callback for MessageCreate events.
-	// dg.AddHandler(messageCreate)
-
 	// Open a websocket connection to Discord and begin listening.
 	err = session.Open()
 	if err != nil {
@@ -77,14 +76,26 @@ func (reporter *Reporter) Init() {
 	reporter.Logger.Info().Err(err).Msg("Discord bot listening")
 
 	reporter.Commands = map[string]*Command{
-		"help":    reporter.GetHelpCommand(),
-		"params":  reporter.GetParamsCommand(),
-		"missing": reporter.GetMissingCommand(),
+		"params":      reporter.GetParamsCommand(),
+		"missing":     reporter.GetMissingCommand(),
+		"subscribe":   reporter.GetSubscribeCommand(),
+		"unsubscribe": reporter.GetUnsubscribeCommand(),
+		"status":      reporter.GetStatusCommand(),
+		"help":        reporter.GetHelpCommand(),
+		"notifiers":   reporter.GetNotifiersCommand(),
 	}
 
 	for query := range reporter.Commands {
 		reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.DiscordReporterName, query)
 	}
+
+	go reporter.InitCommands()
+}
+
+func (reporter *Reporter) InitCommands() {
+	session := reporter.DiscordSession
+	var wg sync.WaitGroup
+	var mutex sync.Mutex
 
 	session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		commandName := i.ApplicationCommandData().Name
@@ -100,24 +111,41 @@ func (reporter *Reporter) Init() {
 		return
 	}
 
-	for _, v := range registeredCommands {
-		err := session.ApplicationCommandDelete(session.State.User.ID, reporter.Guild, v.ID)
-		if err != nil {
-			reporter.Logger.Error().Err(err).Str("command", v.Name).Msg("Could not delete command")
-			return
-		}
-		reporter.Logger.Info().Str("command", v.Name).Msg("Deleted command")
+	for _, command := range registeredCommands {
+		wg.Add(1)
+		go func(command *discordgo.ApplicationCommand) {
+			defer wg.Done()
+
+			err := session.ApplicationCommandDelete(session.State.User.ID, reporter.Guild, command.ID)
+			if err != nil {
+				reporter.Logger.Error().Err(err).Str("command", command.Name).Msg("Could not delete command")
+				return
+			}
+			reporter.Logger.Info().Str("command", command.Name).Msg("Deleted command")
+		}(command)
 	}
 
-	for key, v := range reporter.Commands {
-		cmd, err := session.ApplicationCommandCreate(session.State.User.ID, reporter.Guild, v.Info)
-		if err != nil {
-			reporter.Logger.Error().Err(err).Str("command", v.Info.Name).Msg("Could not create command")
-			return
-		}
-		reporter.Logger.Info().Str("command", cmd.Name).Msg("Created command")
-		reporter.Commands[key].Info = cmd
+	wg.Wait()
+
+	for key, command := range reporter.Commands {
+		wg.Add(1)
+		go func(key string, command *Command) {
+			defer wg.Done()
+
+			cmd, err := session.ApplicationCommandCreate(session.State.User.ID, reporter.Guild, command.Info)
+			if err != nil {
+				reporter.Logger.Error().Err(err).Str("command", command.Info.Name).Msg("Could not create command")
+				return
+			}
+			reporter.Logger.Info().Str("command", cmd.Name).Msg("Created command")
+
+			mutex.Lock()
+			reporter.Commands[key].Info = cmd
+			mutex.Unlock()
+		}(key, command)
 	}
+
+	wg.Wait()
 }
 
 func (reporter *Reporter) Enabled() bool {
@@ -149,10 +177,9 @@ func (reporter *Reporter) Send(report *reportPkg.Report) error {
 }
 
 func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.Entry) string {
-	// validator := rawEntry.GetValidator()
-	// notifiers := reporter.Manager.GetNotifiersForReporter(validator.OperatorAddress, reporter.Name())
-	// notifiersSerialized := " " + reporter.SerializeNotifiers(notifiers)
-	notifiersSerialized := " "
+	validator := rawEntry.GetValidator()
+	notifiers := reporter.Manager.GetNotifiersForReporter(validator.OperatorAddress, reporter.Name())
+	notifiersSerialized := " " + reporter.SerializeNotifiers(notifiers)
 
 	switch entry := rawEntry.(type) {
 	case events.ValidatorGroupChanged:
@@ -212,10 +239,31 @@ func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.Entry) string {
 	}
 }
 
-func (reporter *Reporter) SerializeLink(link types.Link) string {
-	if link.Href == "" {
-		return link.Text
-	}
+func (reporter *Reporter) BotRespond(s *discordgo.Session, i *discordgo.InteractionCreate, text string) {
+	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: text,
+		},
+	})
 
-	return fmt.Sprintf("[%s](%s)", link.Text, link.Href)
+	if err != nil {
+		reporter.Logger.Error().Err(err).Msg("Error sending response")
+	}
+}
+
+func (reporter *Reporter) SerializeDate(date time.Time) string {
+	return date.Format(time.RFC822)
+}
+
+func (reporter *Reporter) SerializeLink(link types.Link) string {
+	return reporter.TemplatesManager.SerializeMarkdownLink(link)
+}
+
+func (reporter *Reporter) SerializeNotifiers(notifiers []*types.Notifier) string {
+	return reporter.TemplatesManager.SerializeMarkdownNotifiers(notifiers)
+}
+
+func (reporter *Reporter) SerializeNotifier(notifier *types.Notifier) string {
+	return reporter.TemplatesManager.SerializeMarkdownNotifier(notifier)
 }

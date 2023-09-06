@@ -235,23 +235,13 @@ func (reporter *Reporter) SerializeDate(date time.Time) string {
 }
 
 func (reporter *Reporter) SerializeLink(link types.Link) template.HTML {
-	if link.Href == "" {
-		return template.HTML(link.Text)
-	}
-
-	return template.HTML(fmt.Sprintf("<a href='%s'>%s</a>", link.Href, link.Text))
+	return reporter.TemplatesManager.SerializeLink(link)
 }
 
 func (reporter *Reporter) SerializeNotifiers(notifiers []*types.Notifier) string {
-	notifiersNormalized := utils.Map(notifiers, reporter.SerializeNotifier)
-
-	return strings.Join(notifiersNormalized, " ")
+	return reporter.TemplatesManager.SerializeNotifiers(notifiers)
 }
 
 func (reporter *Reporter) SerializeNotifier(notifier *types.Notifier) string {
-	return fmt.Sprintf(
-		"<a href=\"tg://user?id=%s\">%s</a>",
-		notifier.UserID,
-		notifier.UserName,
-	)
+	return reporter.TemplatesManager.SerializeNotifier(notifier)
 }

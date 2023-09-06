@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"main/pkg/types"
+	"main/pkg/utils"
 	"main/templates"
+	"strings"
 	"text/template"
 )
 
@@ -22,8 +24,10 @@ func (m *Manager) GetMarkdownTemplate(
 	}
 
 	allSerializers := map[string]any{
-		"SerializeLink": m.SerializeMarkdownLink,
-		"SerializeDate": m.SerializeDate,
+		"SerializeLink":      m.SerializeMarkdownLink,
+		"SerializeDate":      m.SerializeDate,
+		"SerializeNotifier":  m.SerializeMarkdownNotifier,
+		"SerializeNotifiers": m.SerializeMarkdownNotifiers,
 	}
 
 	for key, serializer := range serializers {
@@ -70,5 +74,17 @@ func (m *Manager) SerializeMarkdownLink(link types.Link) string {
 		return link.Text
 	}
 
-	return fmt.Sprintf("[%s](%s)", link.Text, link.Href)
+	// using <> to prevent auto-embed links, taken from here:
+	// https://support.discord.com/hc/en-us/articles/206342858--How-do-I-disable-auto-embed-
+	return fmt.Sprintf("[%s](<%s>)", link.Text, link.Href)
+}
+
+func (m *Manager) SerializeMarkdownNotifiers(notifiers types.Notifiers) string {
+	notifiersNormalized := utils.Map(notifiers, m.SerializeMarkdownNotifier)
+
+	return strings.Join(notifiersNormalized, " ")
+}
+
+func (m *Manager) SerializeMarkdownNotifier(notifier *types.Notifier) string {
+	return fmt.Sprintf("<@%s>", notifier.UserID)
 }
