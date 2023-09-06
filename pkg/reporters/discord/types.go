@@ -69,3 +69,19 @@ type notifierRender struct {
 	Config  *config.ChainConfig
 	Entries []notifierEntry
 }
+
+type statusEntry struct {
+	Validator   *types.Validator
+	Error       error
+	SigningInfo types.SignatureInto
+	Link        types.Link
+}
+
+type statusRender struct {
+	Entries     []statusEntry
+	ChainConfig *config.ChainConfig
+}
+
+func (s statusRender) FormatNotSignedPercent(entry statusEntry) string {
+	return fmt.Sprintf("%.2f", float64(entry.SigningInfo.GetNotSigned())/float64(s.ChainConfig.BlocksWindow)*100)
+}

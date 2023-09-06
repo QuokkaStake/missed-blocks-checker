@@ -62,3 +62,19 @@ func (r paramsRender) FormatGroupPercent(group *config.MissedBlocksGroup) string
 		float64(group.End)/float64(r.Config.BlocksWindow)*100,
 	)
 }
+
+type statusEntry struct {
+	Validator   *types.Validator
+	Error       error
+	SigningInfo types.SignatureInto
+	Link        types.Link
+}
+
+type statusRender struct {
+	Entries     []statusEntry
+	ChainConfig *config.ChainConfig
+}
+
+func (s statusRender) FormatNotSignedPercent(entry statusEntry) string {
+	return fmt.Sprintf("%.2f", float64(entry.SigningInfo.GetNotSigned())/float64(s.ChainConfig.BlocksWindow)*100)
+}

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"main/pkg/constants"
 	"strconv"
-	"strings"
 
 	tele "gopkg.in/telebot.v3"
 )
@@ -25,13 +24,9 @@ func (reporter *Reporter) HandleStatus(c tele.Context) error {
 		))
 	}
 
-	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf(
-		"You are subscribed to the following validators' updates on %s:\n",
-		reporter.Config.GetName(),
-	))
+	entries := make([]statusEntry, len(operatorAddresses))
 
-	for _, operatorAddress := range operatorAddresses {
+	for index, operatorAddress := range operatorAddresses {
 		validator, found := reporter.Manager.GetValidator(operatorAddress)
 		if !found {
 			return reporter.BotReply(c, fmt.Sprintf(
@@ -41,35 +36,25 @@ func (reporter *Reporter) HandleStatus(c tele.Context) error {
 			))
 		}
 
-		link := reporter.Config.ExplorerConfig.GetValidatorLink(validator)
+		entries[index] = statusEntry{
+			Validator: validator,
+			Link:      reporter.Config.ExplorerConfig.GetValidatorLink(validator),
+		}
 
-		if validator.Jailed {
-			sb.WriteString(fmt.Sprintf(
-				"<strong>%s:</strong> jailed\n",
-				reporter.TemplatesManager.SerializeLink(link),
-			))
-		} else if !validator.Active() {
-			sb.WriteString(fmt.Sprintf(
-				"<strong>%s:</strong> not in the active set\n",
-				reporter.TemplatesManager.SerializeLink(link),
-			))
-		} else {
-			if signatureInfo, err := reporter.Manager.GetValidatorMissedBlocks(validator); err != nil {
-				sb.WriteString(fmt.Sprintf(
-					"<strong>%s:</strong>: error getting validators missed blocks: %s",
-					reporter.TemplatesManager.SerializeLink(link),
-					err,
-				))
-			} else {
-				sb.WriteString(fmt.Sprintf(
-					"<strong>%s:</strong> %d missed blocks (%.2f%%)\n",
-					reporter.TemplatesManager.SerializeLink(link),
-					signatureInfo.GetNotSigned(),
-					float64(signatureInfo.GetNotSigned())/float64(reporter.Config.BlocksWindow)*100,
-				))
-			}
+		if validator.Active() && !validator.Jailed {
+			signatureInfo, err := reporter.Manager.GetValidatorMissedBlocks(validator)
+			entries[index].Error = err
+			entries[index].SigningInfo = signatureInfo
 		}
 	}
 
-	return reporter.BotReply(c, sb.String())
+	template, err := reporter.TemplatesManager.Render("Status", statusRender{
+		ChainConfig: reporter.Config,
+		Entries:     entries,
+	})
+	if err != nil {
+		return err
+	}
+
+	return reporter.BotReply(c, template)
 }
