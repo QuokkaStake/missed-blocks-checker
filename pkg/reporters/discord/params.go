@@ -22,7 +22,7 @@ func (reporter *Reporter) GetParamsCommand() *Command {
 				Config:        reporter.Config,
 				BlockTime:     blockTime,
 				MaxTimeToJail: maxTimeToJail,
-			}, constants.FormatTypeMarkdown)
+			})
 			if err != nil {
 				reporter.Logger.Error().Err(err).Msg("Error rendering params template")
 				return

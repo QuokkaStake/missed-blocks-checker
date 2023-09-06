@@ -59,7 +59,7 @@ func (reporter *Reporter) GetSubscribeCommand() *Command {
 			}
 
 			validatorLink := reporter.Config.ExplorerConfig.GetValidatorLink(validator)
-			validatorLinkSerialized := reporter.SerializeLink(validatorLink)
+			validatorLinkSerialized := reporter.TemplatesManager.SerializeLink(validatorLink)
 
 			reporter.BotRespond(s, i, fmt.Sprintf(
 				"Subscribed to validator's notifications on %s: %s",

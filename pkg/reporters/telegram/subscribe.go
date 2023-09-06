@@ -56,7 +56,7 @@ func (reporter *Reporter) HandleSubscribe(c tele.Context) error {
 	}
 
 	validatorLink := reporter.Config.ExplorerConfig.GetValidatorLink(validator)
-	validatorLinkSerialized := reporter.SerializeLink(validatorLink)
+	validatorLinkSerialized := reporter.TemplatesManager.SerializeLink(validatorLink)
 
 	return reporter.BotReply(c, fmt.Sprintf(
 		"Subscribed to validator's notifications on %s: %s",

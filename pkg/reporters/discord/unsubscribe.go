@@ -54,7 +54,7 @@ func (reporter *Reporter) GetUnsubscribeCommand() *Command {
 			}
 
 			validatorLink := reporter.Config.ExplorerConfig.GetValidatorLink(validator)
-			validatorLinkSerialized := reporter.SerializeLink(validatorLink)
+			validatorLinkSerialized := reporter.TemplatesManager.SerializeLink(validatorLink)
 
 			reporter.BotRespond(s, i, fmt.Sprintf(
 				"Unsubscribed from validator's notifications on %s: %s",

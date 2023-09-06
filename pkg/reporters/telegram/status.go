@@ -46,24 +46,24 @@ func (reporter *Reporter) HandleStatus(c tele.Context) error {
 		if validator.Jailed {
 			sb.WriteString(fmt.Sprintf(
 				"<strong>%s:</strong> jailed\n",
-				reporter.SerializeLink(link),
+				reporter.TemplatesManager.SerializeLink(link),
 			))
 		} else if !validator.Active() {
 			sb.WriteString(fmt.Sprintf(
 				"<strong>%s:</strong> not in the active set\n",
-				reporter.SerializeLink(link),
+				reporter.TemplatesManager.SerializeLink(link),
 			))
 		} else {
 			if signatureInfo, err := reporter.Manager.GetValidatorMissedBlocks(validator); err != nil {
 				sb.WriteString(fmt.Sprintf(
 					"<strong>%s:</strong>: error getting validators missed blocks: %s",
-					reporter.SerializeLink(link),
+					reporter.TemplatesManager.SerializeLink(link),
 					err,
 				))
 			} else {
 				sb.WriteString(fmt.Sprintf(
 					"<strong>%s:</strong> %d missed blocks (%.2f%%)\n",
-					reporter.SerializeLink(link),
+					reporter.TemplatesManager.SerializeLink(link),
 					signatureInfo.GetNotSigned(),
 					float64(signatureInfo.GetNotSigned())/float64(reporter.Config.BlocksWindow)*100,
 				))

@@ -3,17 +3,33 @@ package templates
 import (
 	"bytes"
 	"fmt"
+	htmlTemplate "html/template"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"main/templates"
 	"strings"
 	"text/template"
+	"time"
+
+	"github.com/rs/zerolog"
 )
 
-func (m *Manager) GetMarkdownTemplate(
-	name string,
-	serializers map[string]any,
-) (*template.Template, error) {
+type DiscordTemplateManager struct {
+	Logger    zerolog.Logger
+	Templates map[string]interface{}
+}
+
+func NewDiscordTemplateManager(logger zerolog.Logger) *DiscordTemplateManager {
+	return &DiscordTemplateManager{
+		Logger: logger.With().
+			Str("component", "templates_manager").
+			Str("reporter", "discord").
+			Logger(),
+		Templates: make(map[string]interface{}, 0),
+	}
+}
+
+func (m *DiscordTemplateManager) GetTemplate(name string) (*template.Template, error) {
 	if cachedTemplate, ok := m.Templates[name]; ok {
 		m.Logger.Trace().Str("type", name).Msg("Using cached template")
 		if convertedTemplate, ok := cachedTemplate.(*template.Template); !ok {
@@ -24,14 +40,10 @@ func (m *Manager) GetMarkdownTemplate(
 	}
 
 	allSerializers := map[string]any{
-		"SerializeLink":      m.SerializeMarkdownLink,
+		"SerializeLink":      m.SerializeLink,
 		"SerializeDate":      m.SerializeDate,
-		"SerializeNotifier":  m.SerializeMarkdownNotifier,
-		"SerializeNotifiers": m.SerializeMarkdownNotifiers,
-	}
-
-	for key, serializer := range serializers {
-		allSerializers[key] = serializer
+		"SerializeNotifier":  m.SerializeNotifier,
+		"SerializeNotifiers": m.SerializeNotifiers,
 	}
 
 	m.Logger.Trace().Str("type", name).Msg("Loading template")
@@ -48,12 +60,8 @@ func (m *Manager) GetMarkdownTemplate(
 	return t, nil
 }
 
-func (m *Manager) RenderMarkdown(
-	templateName string,
-	data interface{},
-	serializers map[string]any,
-) (string, error) {
-	templateToRender, err := m.GetMarkdownTemplate(templateName, serializers)
+func (m *DiscordTemplateManager) Render(templateName string, data interface{}) (string, error) {
+	templateToRender, err := m.GetTemplate(templateName)
 	if err != nil {
 		m.Logger.Error().Err(err).Str("type", templateName).Msg("Error loading template")
 		return "", err
@@ -69,22 +77,26 @@ func (m *Manager) RenderMarkdown(
 	return buffer.String(), err
 }
 
-func (m *Manager) SerializeMarkdownLink(link types.Link) string {
+func (m *DiscordTemplateManager) SerializeLink(link types.Link) htmlTemplate.HTML {
 	if link.Href == "" {
-		return link.Text
+		return htmlTemplate.HTML(link.Text)
 	}
 
 	// using <> to prevent auto-embed links, taken from here:
 	// https://support.discord.com/hc/en-us/articles/206342858--How-do-I-disable-auto-embed-
-	return fmt.Sprintf("[%s](<%s>)", link.Text, link.Href)
+	return htmlTemplate.HTML(fmt.Sprintf("[%s](<%s>)", link.Text, link.Href))
 }
 
-func (m *Manager) SerializeMarkdownNotifiers(notifiers types.Notifiers) string {
-	notifiersNormalized := utils.Map(notifiers, m.SerializeMarkdownNotifier)
+func (m *DiscordTemplateManager) SerializeNotifiers(notifiers types.Notifiers) string {
+	notifiersNormalized := utils.Map(notifiers, m.SerializeNotifier)
 
 	return strings.Join(notifiersNormalized, " ")
 }
 
-func (m *Manager) SerializeMarkdownNotifier(notifier *types.Notifier) string {
+func (m *DiscordTemplateManager) SerializeNotifier(notifier *types.Notifier) string {
 	return fmt.Sprintf("<@%s>", notifier.UserID)
+}
+
+func (m *DiscordTemplateManager) SerializeDate(date time.Time) string {
+	return date.Format(time.RFC822)
 }

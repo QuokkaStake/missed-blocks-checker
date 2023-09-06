@@ -21,7 +21,7 @@ func (reporter *Reporter) HandleParams(c tele.Context) error {
 		Config:        reporter.Config,
 		BlockTime:     blockTime,
 		MaxTimeToJail: maxTimeToJail,
-	}, constants.FormatTypeHTML)
+	})
 	if err != nil {
 		return err
 	}

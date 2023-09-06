@@ -57,24 +57,24 @@ func (reporter *Reporter) GetStatusCommand() *Command {
 				if validator.Jailed {
 					sb.WriteString(fmt.Sprintf(
 						"**%s:** jailed\n",
-						reporter.SerializeLink(link),
+						reporter.TemplatesManager.SerializeLink(link),
 					))
 				} else if !validator.Active() {
 					sb.WriteString(fmt.Sprintf(
 						"**%s:** not in the active set\n",
-						reporter.SerializeLink(link),
+						reporter.TemplatesManager.SerializeLink(link),
 					))
 				} else {
 					if signatureInfo, err := reporter.Manager.GetValidatorMissedBlocks(validator); err != nil {
 						sb.WriteString(fmt.Sprintf(
 							"**%s:**: error getting validators missed blocks: %s",
-							reporter.SerializeLink(link),
+							reporter.TemplatesManager.SerializeLink(link),
 							err,
 						))
 					} else {
 						sb.WriteString(fmt.Sprintf(
 							"**%s:** %d missed blocks (%.2f%%)\n",
-							reporter.SerializeLink(link),
+							reporter.TemplatesManager.SerializeLink(link),
 							signatureInfo.GetNotSigned(),
 							float64(signatureInfo.GetNotSigned())/float64(reporter.Config.BlocksWindow)*100,
 						))

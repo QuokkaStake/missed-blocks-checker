@@ -9,7 +9,6 @@ import (
 	reportPkg "main/pkg/report"
 	statePkg "main/pkg/state"
 	templatesPkg "main/pkg/templates"
-	"main/pkg/types"
 	"main/pkg/utils"
 	"strings"
 	"sync"
@@ -29,7 +28,7 @@ type Reporter struct {
 	Config           *config.ChainConfig
 	Manager          *statePkg.Manager
 	MetricsManager   *metrics.Manager
-	TemplatesManager *templatesPkg.Manager
+	TemplatesManager templatesPkg.Manager
 	Commands         map[string]*Command
 }
 
@@ -38,7 +37,6 @@ func NewReporter(
 	logger zerolog.Logger,
 	manager *statePkg.Manager,
 	metricsManager *metrics.Manager,
-	templatesManager *templatesPkg.Manager,
 ) *Reporter {
 	return &Reporter{
 		Token:            chainConfig.DiscordConfig.Token,
@@ -48,7 +46,7 @@ func NewReporter(
 		Logger:           logger.With().Str("component", "discord_reporter").Logger(),
 		Manager:          manager,
 		MetricsManager:   metricsManager,
-		TemplatesManager: templatesManager,
+		TemplatesManager: templatesPkg.NewManager(logger, constants.DiscordReporterName),
 		Commands:         make(map[string]*Command, 0),
 	}
 }
@@ -179,7 +177,7 @@ func (reporter *Reporter) Send(report *reportPkg.Report) error {
 func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.Entry) string {
 	validator := rawEntry.GetValidator()
 	notifiers := reporter.Manager.GetNotifiersForReporter(validator.OperatorAddress, reporter.Name())
-	notifiersSerialized := " " + reporter.SerializeNotifiers(notifiers)
+	notifiersSerialized := " " + reporter.TemplatesManager.SerializeNotifiers(notifiers)
 
 	switch entry := rawEntry.(type) {
 	case events.ValidatorGroupChanged:
@@ -194,7 +192,7 @@ func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.Entry) string {
 			// a string like "🟡 <validator> is skipping blocks (> 1.0%)  (XXX till jail) <notifier> <notifier2>"
 			"**%s %s %s**%s%s",
 			entry.GetEmoji(),
-			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			reporter.TemplatesManager.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 			entry.GetDescription(),
 			timeToJailStr,
 			notifiersSerialized,
@@ -202,37 +200,37 @@ func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.Entry) string {
 	case events.ValidatorJailed:
 		return fmt.Sprintf(
 			"**❌ %s was jailed**%s",
-			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			reporter.TemplatesManager.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 			notifiersSerialized,
 		)
 	case events.ValidatorUnjailed:
 		return fmt.Sprintf(
 			"**👌 %s was unjailed**%s",
-			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			reporter.TemplatesManager.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 			notifiersSerialized,
 		)
 	case events.ValidatorInactive:
 		return fmt.Sprintf(
 			"😔 **%s is now not in the active set**%s",
-			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			reporter.TemplatesManager.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 			notifiersSerialized,
 		)
 	case events.ValidatorActive:
 		return fmt.Sprintf(
 			"✅ **%s is now in the active set**%s",
-			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			reporter.TemplatesManager.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 			notifiersSerialized,
 		)
 	case events.ValidatorTombstoned:
 		return fmt.Sprintf(
 			"**💀 %s was tombstoned**%s",
-			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			reporter.TemplatesManager.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 			notifiersSerialized,
 		)
 	case events.ValidatorCreated:
 		return fmt.Sprintf(
 			"**💡New validator created: %s**",
-			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			reporter.TemplatesManager.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 		)
 	default:
 		return fmt.Sprintf("Unsupported event %+v\n", entry)
@@ -254,16 +252,4 @@ func (reporter *Reporter) BotRespond(s *discordgo.Session, i *discordgo.Interact
 
 func (reporter *Reporter) SerializeDate(date time.Time) string {
 	return date.Format(time.RFC822)
-}
-
-func (reporter *Reporter) SerializeLink(link types.Link) string {
-	return reporter.TemplatesManager.SerializeMarkdownLink(link)
-}
-
-func (reporter *Reporter) SerializeNotifiers(notifiers []*types.Notifier) string {
-	return reporter.TemplatesManager.SerializeMarkdownNotifiers(notifiers)
-}
-
-func (reporter *Reporter) SerializeNotifier(notifier *types.Notifier) string {
-	return reporter.TemplatesManager.SerializeMarkdownNotifier(notifier)
 }

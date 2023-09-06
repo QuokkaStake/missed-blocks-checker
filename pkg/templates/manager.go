@@ -1,44 +1,32 @@
 package templates
 
 import (
-	"fmt"
+	"html/template"
 	"main/pkg/constants"
+	"main/pkg/types"
+	"time"
 
 	"github.com/rs/zerolog"
 )
 
-type Manager struct {
-	Logger    zerolog.Logger
-	Templates map[string]interface{}
+type Manager interface {
+	Render(string, interface{}) (string, error)
+	SerializeLink(link types.Link) template.HTML
+	SerializeDate(date time.Time) string
+	SerializeNotifiers(notifiers types.Notifiers) string
+	SerializeNotifier(notifier *types.Notifier) string
 }
 
-func NewManager(logger zerolog.Logger) *Manager {
-	return &Manager{
-		Logger:    logger.With().Str("component", "templates_manager").Logger(),
-		Templates: make(map[string]interface{}, 0),
-	}
-}
-
-func (m *Manager) Render(
-	templateName string,
-	data interface{},
-	formatType constants.FormatType,
-) (string, error) {
-	return m.RenderWithSerializers(templateName, data, formatType, make(map[string]any, 0))
-}
-
-func (m *Manager) RenderWithSerializers(
-	templateName string,
-	data interface{},
-	formatType constants.FormatType,
-	serializers map[string]any,
-) (string, error) {
-	switch formatType {
-	case constants.FormatTypeHTML:
-		return m.RenderHTML(templateName, data, serializers)
-	case constants.FormatTypeMarkdown:
-		return m.RenderMarkdown(templateName, data, serializers)
+func NewManager(logger zerolog.Logger, reporterType constants.ReporterName) Manager {
+	switch reporterType {
+	case constants.TelegramReporterName:
+		return NewTelegramTemplateManager(logger)
+	case constants.DiscordReporterName:
+		return NewDiscordTemplateManager(logger)
+	case constants.TestReporterName:
+		fallthrough
 	default:
-		return "", fmt.Errorf("unknown format type: %s", formatType)
+		logger.Fatal().Str("type", string(reporterType)).Msg("Unknown reporter type")
+		return nil
 	}
 }
