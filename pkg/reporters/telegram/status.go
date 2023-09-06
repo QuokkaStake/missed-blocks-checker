@@ -2,9 +2,10 @@ package telegram
 
 import (
 	"fmt"
-	tele "gopkg.in/telebot.v3"
 	"main/pkg/constants"
 	"strconv"
+
+	tele "gopkg.in/telebot.v3"
 )
 
 func (reporter *Reporter) HandleStatus(c tele.Context) error {

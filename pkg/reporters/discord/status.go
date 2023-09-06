@@ -2,8 +2,9 @@ package discord
 
 import (
 	"fmt"
-	"github.com/bwmarrin/discordgo"
 	"main/pkg/constants"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 func (reporter *Reporter) GetStatusCommand() *Command {
