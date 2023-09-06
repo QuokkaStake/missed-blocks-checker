@@ -2,11 +2,9 @@ package telegram
 
 import (
 	"fmt"
+	tele "gopkg.in/telebot.v3"
 	"main/pkg/constants"
 	"strconv"
-	"strings"
-
-	tele "gopkg.in/telebot.v3"
 )
 
 func (reporter *Reporter) HandleStatus(c tele.Context) error {
@@ -24,12 +22,6 @@ func (reporter *Reporter) HandleStatus(c tele.Context) error {
 			reporter.Config.GetName(),
 		))
 	}
-
-	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf(
-		"You are subscribed to the following validators' updates on %s:\n",
-		reporter.Config.GetName(),
-	))
 
 	entries := make([]statusEntry, len(operatorAddresses))
 

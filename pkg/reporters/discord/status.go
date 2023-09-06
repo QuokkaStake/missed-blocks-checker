@@ -2,10 +2,8 @@ package discord
 
 import (
 	"fmt"
-	"main/pkg/constants"
-	"strings"
-
 	"github.com/bwmarrin/discordgo"
+	"main/pkg/constants"
 )
 
 func (reporter *Reporter) GetStatusCommand() *Command {
@@ -35,54 +33,40 @@ func (reporter *Reporter) GetStatusCommand() *Command {
 				return
 			}
 
-			var sb strings.Builder
-			sb.WriteString(fmt.Sprintf(
-				"You are subscribed to the following validators' updates on %s:\n",
-				reporter.Config.GetName(),
-			))
+			entries := make([]statusEntry, len(operatorAddresses))
 
-			for _, operatorAddress := range operatorAddresses {
+			for index, operatorAddress := range operatorAddresses {
 				validator, found := reporter.Manager.GetValidator(operatorAddress)
 				if !found {
 					reporter.BotRespond(s, i, fmt.Sprintf(
-						"Could not find a validator with address `%s` on %s",
+						"Could not find a validator with address <code>%s</code> on %s",
 						operatorAddress,
 						reporter.Config.GetName(),
 					))
 					return
 				}
 
-				link := reporter.Config.ExplorerConfig.GetValidatorLink(validator)
+				entries[index] = statusEntry{
+					Validator: validator,
+					Link:      reporter.Config.ExplorerConfig.GetValidatorLink(validator),
+				}
 
-				if validator.Jailed {
-					sb.WriteString(fmt.Sprintf(
-						"**%s:** jailed\n",
-						reporter.TemplatesManager.SerializeLink(link),
-					))
-				} else if !validator.Active() {
-					sb.WriteString(fmt.Sprintf(
-						"**%s:** not in the active set\n",
-						reporter.TemplatesManager.SerializeLink(link),
-					))
-				} else {
-					if signatureInfo, err := reporter.Manager.GetValidatorMissedBlocks(validator); err != nil {
-						sb.WriteString(fmt.Sprintf(
-							"**%s:**: error getting validators missed blocks: %s",
-							reporter.TemplatesManager.SerializeLink(link),
-							err,
-						))
-					} else {
-						sb.WriteString(fmt.Sprintf(
-							"**%s:** %d missed blocks (%.2f%%)\n",
-							reporter.TemplatesManager.SerializeLink(link),
-							signatureInfo.GetNotSigned(),
-							float64(signatureInfo.GetNotSigned())/float64(reporter.Config.BlocksWindow)*100,
-						))
-					}
+				if validator.Active() && !validator.Jailed {
+					signatureInfo, err := reporter.Manager.GetValidatorMissedBlocks(validator)
+					entries[index].Error = err
+					entries[index].SigningInfo = signatureInfo
 				}
 			}
 
-			reporter.BotRespond(s, i, sb.String())
+			template, err := reporter.TemplatesManager.Render("Status", statusRender{
+				ChainConfig: reporter.Config,
+				Entries:     entries,
+			})
+			if err != nil {
+				reporter.BotRespond(s, i, "Could not render template")
+				return
+			}
+			reporter.BotRespond(s, i, template)
 		},
 	}
 }
