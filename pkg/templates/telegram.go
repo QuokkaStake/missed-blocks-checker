@@ -9,9 +9,26 @@ import (
 	"main/templates"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog"
 )
 
-func (m *Manager) GetHTMLTemplate(name string, serializers map[string]any) (*template.Template, error) {
+type TelegramTemplateManager struct {
+	Logger    zerolog.Logger
+	Templates map[string]interface{}
+}
+
+func NewTelegramTemplateManager(logger zerolog.Logger) *TelegramTemplateManager {
+	return &TelegramTemplateManager{
+		Logger: logger.With().
+			Str("component", "templates_manager").
+			Str("reporter", "telegram").
+			Logger(),
+		Templates: make(map[string]interface{}, 0),
+	}
+}
+
+func (m *TelegramTemplateManager) GetHTMLTemplate(name string) (*template.Template, error) {
 	if cachedTemplate, ok := m.Templates[name]; ok {
 		m.Logger.Trace().Str("type", name).Msg("Using cached template")
 		if convertedTemplate, ok := cachedTemplate.(*template.Template); !ok {
@@ -30,10 +47,6 @@ func (m *Manager) GetHTMLTemplate(name string, serializers map[string]any) (*tem
 		"SerializeNotifiers": m.SerializeNotifiers,
 	}
 
-	for key, serializer := range serializers {
-		allSerializers[key] = serializer
-	}
-
 	t, err := template.New(name+".html").
 		Funcs(allSerializers).
 		ParseFS(templates.TemplatesFs, "telegram/"+name+".html")
@@ -46,12 +59,8 @@ func (m *Manager) GetHTMLTemplate(name string, serializers map[string]any) (*tem
 	return t, nil
 }
 
-func (m *Manager) RenderHTML(
-	templateName string,
-	data interface{},
-	serializers map[string]any,
-) (string, error) {
-	templateToRender, err := m.GetHTMLTemplate(templateName, serializers)
+func (m *TelegramTemplateManager) Render(templateName string, data interface{}) (string, error) {
+	templateToRender, err := m.GetHTMLTemplate(templateName)
 	if err != nil {
 		m.Logger.Error().Err(err).Str("type", templateName).Msg("Error loading template")
 		return "", err
@@ -67,11 +76,11 @@ func (m *Manager) RenderHTML(
 	return buffer.String(), err
 }
 
-func (m *Manager) SerializeDate(date time.Time) string {
+func (m *TelegramTemplateManager) SerializeDate(date time.Time) string {
 	return date.Format(time.RFC822)
 }
 
-func (m *Manager) SerializeLink(link types.Link) template.HTML {
+func (m *TelegramTemplateManager) SerializeLink(link types.Link) template.HTML {
 	if link.Href == "" {
 		return template.HTML(link.Text)
 	}
@@ -79,13 +88,13 @@ func (m *Manager) SerializeLink(link types.Link) template.HTML {
 	return template.HTML(fmt.Sprintf("<a href='%s'>%s</a>", link.Href, link.Text))
 }
 
-func (m *Manager) SerializeNotifiers(notifiers types.Notifiers) string {
+func (m *TelegramTemplateManager) SerializeNotifiers(notifiers types.Notifiers) string {
 	notifiersNormalized := utils.Map(notifiers, m.SerializeNotifier)
 
 	return strings.Join(notifiersNormalized, " ")
 }
 
-func (m *Manager) SerializeNotifier(notifier *types.Notifier) string {
+func (m *TelegramTemplateManager) SerializeNotifier(notifier *types.Notifier) string {
 	if strings.HasPrefix(notifier.UserName, "@") {
 		return notifier.UserName
 	}

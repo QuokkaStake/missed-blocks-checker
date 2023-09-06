@@ -33,7 +33,7 @@ func (reporter *Reporter) HandleNotifiers(c tele.Context) error {
 	template, err := reporter.TemplatesManager.Render("Notifiers", notifierRender{
 		Entries: entries,
 		Config:  reporter.Config,
-	}, constants.FormatTypeHTML)
+	})
 	if err != nil {
 		return err
 	}

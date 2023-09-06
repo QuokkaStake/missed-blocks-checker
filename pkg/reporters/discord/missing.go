@@ -64,7 +64,7 @@ func (reporter *Reporter) GetMissingCommand() *Command {
 				}),
 			}
 
-			template, err := reporter.TemplatesManager.Render("Missing", render, constants.FormatTypeMarkdown)
+			template, err := reporter.TemplatesManager.Render("Missing", render)
 			if err != nil {
 				reporter.Logger.Error().Err(err).Msg("Error rendering missing")
 				return

@@ -35,7 +35,7 @@ func (reporter *Reporter) GetNotifiersCommand() *Command {
 			template, err := reporter.TemplatesManager.Render("Notifiers", notifierRender{
 				Entries: entries,
 				Config:  reporter.Config,
-			}, constants.FormatTypeMarkdown)
+			})
 			if err != nil {
 				reporter.BotRespond(s, i, "Error rendering notifiers template")
 				return

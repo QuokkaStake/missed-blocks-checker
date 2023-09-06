@@ -3,14 +3,12 @@ package telegram
 import (
 	"fmt"
 	"html"
-	"html/template"
 	"main/pkg/constants"
 	"main/pkg/events"
 	"main/pkg/metrics"
 	reportPkg "main/pkg/report"
 	statePkg "main/pkg/state"
 	templatesPkg "main/pkg/templates"
-	"main/pkg/types"
 	"strings"
 	"time"
 
@@ -32,7 +30,7 @@ type Reporter struct {
 	Config           *config.ChainConfig
 	Manager          *statePkg.Manager
 	MetricsManager   *metrics.Manager
-	TemplatesManager *templatesPkg.Manager
+	TemplatesManager templatesPkg.Manager
 }
 
 const (
@@ -44,7 +42,6 @@ func NewReporter(
 	logger zerolog.Logger,
 	manager *statePkg.Manager,
 	metricsManager *metrics.Manager,
-	templatesManager *templatesPkg.Manager,
 ) *Reporter {
 	return &Reporter{
 		Token:            chainConfig.TelegramConfig.Token,
@@ -54,7 +51,7 @@ func NewReporter(
 		Logger:           logger.With().Str("component", "telegram_reporter").Logger(),
 		Manager:          manager,
 		MetricsManager:   metricsManager,
-		TemplatesManager: templatesManager,
+		TemplatesManager: templatesPkg.NewManager(logger, constants.TelegramReporterName),
 	}
 }
 
@@ -115,7 +112,7 @@ func (reporter *Reporter) Enabled() bool {
 func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.Entry) string {
 	validator := rawEntry.GetValidator()
 	notifiers := reporter.Manager.GetNotifiersForReporter(validator.OperatorAddress, reporter.Name())
-	notifiersSerialized := " " + reporter.SerializeNotifiers(notifiers)
+	notifiersSerialized := " " + reporter.TemplatesManager.SerializeNotifiers(notifiers)
 
 	switch entry := rawEntry.(type) {
 	case events.ValidatorGroupChanged:
@@ -130,7 +127,7 @@ func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.Entry) string {
 			// a string like "🟡 <validator> is skipping blocks (> 1.0%)  (XXX till jail) <notifier> <notifier2>"
 			"<strong>%s %s %s</strong>%s%s",
 			entry.GetEmoji(),
-			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			reporter.TemplatesManager.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 			html.EscapeString(entry.GetDescription()),
 			timeToJailStr,
 			notifiersSerialized,
@@ -138,37 +135,37 @@ func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.Entry) string {
 	case events.ValidatorJailed:
 		return fmt.Sprintf(
 			"<strong>❌ %s was jailed</strong>%s",
-			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			reporter.TemplatesManager.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 			notifiersSerialized,
 		)
 	case events.ValidatorUnjailed:
 		return fmt.Sprintf(
 			"<strong>👌 %s was unjailed</strong>%s",
-			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			reporter.TemplatesManager.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 			notifiersSerialized,
 		)
 	case events.ValidatorInactive:
 		return fmt.Sprintf(
 			"😔 <strong>%s is now not in the active set</strong>%s",
-			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			reporter.TemplatesManager.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 			notifiersSerialized,
 		)
 	case events.ValidatorActive:
 		return fmt.Sprintf(
 			"✅ <strong>%s is now in the active set</strong>%s",
-			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			reporter.TemplatesManager.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 			notifiersSerialized,
 		)
 	case events.ValidatorTombstoned:
 		return fmt.Sprintf(
 			"<strong>💀 %s was tombstoned</strong>%s",
-			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			reporter.TemplatesManager.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 			notifiersSerialized,
 		)
 	case events.ValidatorCreated:
 		return fmt.Sprintf(
 			"<strong>💡New validator created: %s</strong>",
-			reporter.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			reporter.TemplatesManager.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
 		)
 	default:
 		return fmt.Sprintf("Unsupported event %+v\n", entry)
@@ -232,16 +229,4 @@ func (reporter *Reporter) BotReply(c tele.Context, msg string) error {
 
 func (reporter *Reporter) SerializeDate(date time.Time) string {
 	return date.Format(time.RFC822)
-}
-
-func (reporter *Reporter) SerializeLink(link types.Link) template.HTML {
-	return reporter.TemplatesManager.SerializeLink(link)
-}
-
-func (reporter *Reporter) SerializeNotifiers(notifiers []*types.Notifier) string {
-	return reporter.TemplatesManager.SerializeNotifiers(notifiers)
-}
-
-func (reporter *Reporter) SerializeNotifier(notifier *types.Notifier) string {
-	return reporter.TemplatesManager.SerializeNotifier(notifier)
 }
