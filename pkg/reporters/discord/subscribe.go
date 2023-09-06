@@ -2,8 +2,9 @@ package discord
 
 import (
 	"fmt"
-	"github.com/bwmarrin/discordgo"
 	"main/pkg/constants"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 func (reporter *Reporter) GetSubscribeCommand() *Command {
@@ -24,7 +25,7 @@ func (reporter *Reporter) GetSubscribeCommand() *Command {
 			reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.DiscordReporterName, "subscribe")
 
 			options := i.ApplicationCommandData().Options
-			address := options[0].Value.(string)
+			address, _ := options[0].Value.(string)
 
 			user := i.User
 			if user == nil {

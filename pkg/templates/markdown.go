@@ -74,6 +74,8 @@ func (m *Manager) SerializeMarkdownLink(link types.Link) string {
 		return link.Text
 	}
 
+	// using <> to prevent auto-embed links, taken from here:
+	// https://support.discord.com/hc/en-us/articles/206342858--How-do-I-disable-auto-embed-
 	return fmt.Sprintf("[%s](<%s>)", link.Text, link.Href)
 }
 

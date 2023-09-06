@@ -13,6 +13,7 @@ import (
 	"main/pkg/utils"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
@@ -176,10 +177,9 @@ func (reporter *Reporter) Send(report *reportPkg.Report) error {
 }
 
 func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.Entry) string {
-	// validator := rawEntry.GetValidator()
-	// notifiers := reporter.Manager.GetNotifiersForReporter(validator.OperatorAddress, reporter.Name())
-	// notifiersSerialized := " " + reporter.SerializeNotifiers(notifiers)
-	notifiersSerialized := " "
+	validator := rawEntry.GetValidator()
+	notifiers := reporter.Manager.GetNotifiersForReporter(validator.OperatorAddress, reporter.Name())
+	notifiersSerialized := " " + reporter.SerializeNotifiers(notifiers)
 
 	switch entry := rawEntry.(type) {
 	case events.ValidatorGroupChanged:
@@ -239,16 +239,6 @@ func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.Entry) string {
 	}
 }
 
-func (reporter *Reporter) SerializeLink(link types.Link) string {
-	if link.Href == "" {
-		return link.Text
-	}
-
-	// using <> to prevent auto-embed links, taken from here:
-	// https://support.discord.com/hc/en-us/articles/206342858--How-do-I-disable-auto-embed-
-	return fmt.Sprintf("[%s](<%s>)", link.Text, link.Href)
-}
-
 func (reporter *Reporter) BotRespond(s *discordgo.Session, i *discordgo.InteractionCreate, text string) {
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -260,4 +250,20 @@ func (reporter *Reporter) BotRespond(s *discordgo.Session, i *discordgo.Interact
 	if err != nil {
 		reporter.Logger.Error().Err(err).Msg("Error sending response")
 	}
+}
+
+func (reporter *Reporter) SerializeDate(date time.Time) string {
+	return date.Format(time.RFC822)
+}
+
+func (reporter *Reporter) SerializeLink(link types.Link) string {
+	return reporter.TemplatesManager.SerializeMarkdownLink(link)
+}
+
+func (reporter *Reporter) SerializeNotifiers(notifiers []*types.Notifier) string {
+	return reporter.TemplatesManager.SerializeMarkdownNotifiers(notifiers)
+}
+
+func (reporter *Reporter) SerializeNotifier(notifier *types.Notifier) string {
+	return reporter.TemplatesManager.SerializeMarkdownNotifier(notifier)
 }
