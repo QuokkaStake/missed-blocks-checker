@@ -106,7 +106,7 @@ func (m *DiscordTemplateManager) SerializeDate(date time.Time) string {
 }
 
 func (m *DiscordTemplateManager) SerializeEntry(
-	rawEntry types.ReportEntry,
+	rawEntry types.ReportEvent,
 	stateManager *statePkg.Manager,
 	chainConfig *configPkg.ChainConfig,
 ) string {

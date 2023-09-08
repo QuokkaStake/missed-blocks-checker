@@ -4,15 +4,15 @@ import (
 	"main/pkg/constants"
 )
 
-type ReportEntry interface {
+type ReportEvent interface {
 	Type() constants.EventName
 	GetValidator() *Validator
 }
 
 type Report struct {
-	Entries []ReportEntry
+	Events []ReportEvent
 }
 
 func (d *Report) Empty() bool {
-	return len(d.Entries) == 0
+	return len(d.Events) == 0
 }

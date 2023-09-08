@@ -239,11 +239,11 @@ func (m *Manager) LogReport(chain string, report *types.Report) {
 		With(prometheus.Labels{"chain": chain}).
 		Inc()
 
-	for _, entry := range report.Entries {
+	for _, event := range report.Events {
 		m.reportEntriesCounter.
 			With(prometheus.Labels{
 				"chain": chain,
-				"type":  string(entry.Type()),
+				"type":  string(event.Type()),
 			}).
 			Inc()
 	}

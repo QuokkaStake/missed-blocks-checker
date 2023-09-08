@@ -108,7 +108,7 @@ func (m *TelegramTemplateManager) SerializeNotifier(notifier *types.Notifier) st
 }
 
 func (m *TelegramTemplateManager) SerializeEntry(
-	rawEntry types.ReportEntry,
+	rawEntry types.ReportEvent,
 	stateManager *statePkg.Manager,
 	chainConfig *configPkg.ChainConfig,
 ) string {

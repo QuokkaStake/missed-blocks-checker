@@ -365,7 +365,7 @@ func (d *Database) SetSnapshot(chain string, snapshot *snapshotPkg.Info) error {
 	return nil
 }
 
-func (d *Database) InsertEvent(chain string, entry types.ReportEntry) error {
+func (d *Database) InsertEvent(chain string, entry types.ReportEvent) error {
 	d.MaybeMutexLock()
 	defer d.MaybeMutexUnlock()
 

@@ -39,7 +39,7 @@ func (snapshot *Snapshot) GetReport(
 	olderSnapshot Snapshot,
 	chainConfig *config.ChainConfig,
 ) (*types.Report, error) {
-	var entries []types.ReportEntry
+	var entries []types.ReportEvent
 
 	for valoper, entry := range snapshot.Entries {
 		olderEntry, ok := olderSnapshot.Entries[valoper]
@@ -149,7 +149,7 @@ func (snapshot *Snapshot) GetReport(
 		return firstPriority < secondPriority
 	})
 
-	return &types.Report{Entries: entries}, nil
+	return &types.Report{Events: entries}, nil
 }
 
 type Info struct {

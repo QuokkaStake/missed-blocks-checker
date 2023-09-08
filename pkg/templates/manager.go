@@ -17,7 +17,7 @@ type Manager interface {
 	SerializeDate(date time.Time) string
 	SerializeNotifiers(notifiers types.Notifiers) string
 	SerializeNotifier(notifier *types.Notifier) string
-	SerializeEntry(types.ReportEntry, *statePkg.Manager, *configPkg.ChainConfig) string
+	SerializeEntry(types.ReportEvent, *statePkg.Manager, *configPkg.ChainConfig) string
 }
 
 func NewManager(logger zerolog.Logger, reporterType constants.ReporterName) Manager {

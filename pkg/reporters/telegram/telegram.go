@@ -111,8 +111,8 @@ func (reporter *Reporter) Send(report *reportPkg.Report) error {
 
 	var sb strings.Builder
 
-	for _, entry := range report.Entries {
-		sb.WriteString(reporter.TemplatesManager.SerializeEntry(entry, reporter.Manager, reporter.Config) + "\n")
+	for _, event := range report.Events {
+		sb.WriteString(reporter.TemplatesManager.SerializeEntry(event, reporter.Manager, reporter.Config) + "\n")
 	}
 
 	reportString := sb.String()
