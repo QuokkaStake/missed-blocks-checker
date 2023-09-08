@@ -4,10 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	htmlTemplate "html/template"
-	configPkg "main/pkg/config"
-	"main/pkg/constants"
 	"main/pkg/events"
-	statePkg "main/pkg/state"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"main/templates"
@@ -105,29 +102,22 @@ func (m *DiscordTemplateManager) SerializeDate(date time.Time) string {
 	return date.Format(time.RFC822)
 }
 
-func (m *DiscordTemplateManager) SerializeEntry(
-	rawEntry types.ReportEvent,
-	stateManager *statePkg.Manager,
-	chainConfig *configPkg.ChainConfig,
-) string {
-	validator := rawEntry.GetValidator()
-	notifiers := stateManager.GetNotifiersForReporter(validator.OperatorAddress, constants.DiscordReporterName)
-	notifiersSerialized := " " + m.SerializeNotifiers(notifiers)
+func (m *DiscordTemplateManager) SerializeEvent(event types.RenderEventItem) string {
+	notifiersSerialized := " " + m.SerializeNotifiers(event.Notifiers)
 
-	switch entry := rawEntry.(type) {
+	switch entry := event.Event.(type) {
 	case events.ValidatorGroupChanged:
 		timeToJailStr := ""
 
 		if entry.IsIncreasing() {
-			timeToJail := stateManager.GetTimeTillJail(entry.MissedBlocksAfter)
-			timeToJailStr = fmt.Sprintf(" (%s till jail)", utils.FormatDuration(timeToJail))
+			timeToJailStr = fmt.Sprintf(" (%s till jail)", utils.FormatDuration(event.TimeToJail))
 		}
 
 		return fmt.Sprintf(
 			// a string like "🟡 <validator> is skipping blocks (> 1.0%)  (XXX till jail) <notifier> <notifier2>"
 			"**%s %s %s**%s%s",
 			entry.GetEmoji(),
-			m.SerializeLink(chainConfig.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			m.SerializeLink(event.ValidatorLink),
 			entry.GetDescription(),
 			timeToJailStr,
 			notifiersSerialized,
@@ -135,37 +125,37 @@ func (m *DiscordTemplateManager) SerializeEntry(
 	case events.ValidatorJailed:
 		return fmt.Sprintf(
 			"**❌ %s was jailed**%s",
-			m.SerializeLink(chainConfig.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			m.SerializeLink(event.ValidatorLink),
 			notifiersSerialized,
 		)
 	case events.ValidatorUnjailed:
 		return fmt.Sprintf(
 			"**👌 %s was unjailed**%s",
-			m.SerializeLink(chainConfig.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			m.SerializeLink(event.ValidatorLink),
 			notifiersSerialized,
 		)
 	case events.ValidatorInactive:
 		return fmt.Sprintf(
 			"😔 **%s is now not in the active set**%s",
-			m.SerializeLink(chainConfig.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			m.SerializeLink(event.ValidatorLink),
 			notifiersSerialized,
 		)
 	case events.ValidatorActive:
 		return fmt.Sprintf(
 			"✅ **%s is now in the active set**%s",
-			m.SerializeLink(chainConfig.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			m.SerializeLink(event.ValidatorLink),
 			notifiersSerialized,
 		)
 	case events.ValidatorTombstoned:
 		return fmt.Sprintf(
 			"**💀 %s was tombstoned**%s",
-			m.SerializeLink(chainConfig.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			m.SerializeLink(event.ValidatorLink),
 			notifiersSerialized,
 		)
 	case events.ValidatorCreated:
 		return fmt.Sprintf(
 			"**💡New validator created: %s**",
-			m.SerializeLink(chainConfig.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			m.SerializeLink(event.ValidatorLink),
 		)
 	default:
 		return fmt.Sprintf("Unsupported event %+v\n", entry)

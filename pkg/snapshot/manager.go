@@ -3,7 +3,7 @@ package snapshot
 import (
 	configPkg "main/pkg/config"
 	"main/pkg/metrics"
-	reportPkg "main/pkg/types"
+	"main/pkg/types"
 
 	"github.com/rs/zerolog"
 )
@@ -50,6 +50,6 @@ func (m *Manager) GetOlderHeight() int64 {
 	return m.olderSnapshot.Height
 }
 
-func (m *Manager) GetReport() (*reportPkg.Report, error) {
+func (m *Manager) GetReport() (*types.Report, error) {
 	return m.newerSnapshot.Snapshot.GetReport(m.olderSnapshot.Snapshot, m.config)
 }

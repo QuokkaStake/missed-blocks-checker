@@ -3,10 +3,11 @@ package discord
 import (
 	"main/pkg/config"
 	"main/pkg/constants"
+	"main/pkg/events"
 	"main/pkg/metrics"
 	statePkg "main/pkg/state"
 	templatesPkg "main/pkg/templates"
-	reportPkg "main/pkg/types"
+	types "main/pkg/types"
 	"strings"
 	"sync"
 	"time"
@@ -151,13 +152,31 @@ func (reporter *Reporter) Name() constants.ReporterName {
 	return constants.DiscordReporterName
 }
 
-func (reporter *Reporter) Send(report *reportPkg.Report) error {
+func (reporter *Reporter) SerializeEvent(event types.ReportEvent) types.RenderEventItem {
+	validator := event.GetValidator()
+	notifiers := reporter.Manager.GetNotifiersForReporter(validator.OperatorAddress, constants.DiscordReporterName)
+
+	eventToRender := types.RenderEventItem{
+		Event:         event,
+		Notifiers:     notifiers,
+		ValidatorLink: reporter.Config.ExplorerConfig.GetValidatorLink(validator),
+	}
+
+	if eventChanged, ok := event.(events.ValidatorGroupChanged); ok && eventChanged.IsIncreasing() {
+		eventToRender.TimeToJail = reporter.Manager.GetTimeTillJail(eventChanged.MissedBlocksAfter)
+	}
+
+	return eventToRender
+}
+
+func (reporter *Reporter) Send(report *types.Report) error {
 	reporter.MetricsManager.LogReport(reporter.Config.Name, report)
 
 	var sb strings.Builder
 
 	for _, event := range report.Events {
-		sb.WriteString(reporter.TemplatesManager.SerializeEntry(event, reporter.Manager, reporter.Config) + "\n")
+		eventToRender := reporter.SerializeEvent(event)
+		sb.WriteString(reporter.TemplatesManager.SerializeEvent(eventToRender) + "\n")
 	}
 
 	reportString := sb.String()
