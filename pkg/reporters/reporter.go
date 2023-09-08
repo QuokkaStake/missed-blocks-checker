@@ -2,7 +2,7 @@ package reporters
 
 import (
 	"main/pkg/constants"
-	reportPkg "main/pkg/report"
+	reportPkg "main/pkg/types"
 )
 
 type Reporter interface {

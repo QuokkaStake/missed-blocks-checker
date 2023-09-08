@@ -21,7 +21,7 @@ func TestValidatorCreated(t *testing.T) {
 	report, err := newerSnapshot.GetReport(olderSnapshot, nil)
 	assert.Nil(t, err, "Error should not be present!")
 	assert.Len(t, report.Entries, 1, "Report should have 1 entry!")
-	assert.Equal(t, report.Entries[0].Type(), constants.EventValidatorCreated, 1, "Entry type mismatch!")
+	assert.Equal(t, report.Entries[0].Type(), constants.EventValidatorCreated, 1, "ReportEntry type mismatch!")
 }
 
 func TestValidatorGroupChanged(t *testing.T) {
@@ -51,7 +51,7 @@ func TestValidatorGroupChanged(t *testing.T) {
 	assert.Nil(t, err, "Error should not be present!")
 	assert.NotEmpty(t, report.Entries, "Report should not be empty!")
 	assert.Len(t, report.Entries, 1, "Report should have exactly 1 entry!")
-	assert.Equal(t, report.Entries[0].Type(), constants.EventValidatorGroupChanged, 1, "Entry type mismatch!")
+	assert.Equal(t, report.Entries[0].Type(), constants.EventValidatorGroupChanged, 1, "ReportEntry type mismatch!")
 }
 
 func TestValidatorTombstoned(t *testing.T) {
@@ -82,7 +82,7 @@ func TestValidatorTombstoned(t *testing.T) {
 
 	assert.NotEmpty(t, report.Entries, "Report should not be empty!")
 	assert.Len(t, report.Entries, 1, "Report should have exactly 1 entry!")
-	assert.Equal(t, report.Entries[0].Type(), constants.EventValidatorTombstoned, 1, "Entry type mismatch!")
+	assert.Equal(t, report.Entries[0].Type(), constants.EventValidatorTombstoned, 1, "ReportEntry type mismatch!")
 }
 
 func TestValidatorJailed(t *testing.T) {
@@ -151,7 +151,7 @@ func TestValidatorUnjailed(t *testing.T) {
 
 	assert.NotEmpty(t, report.Entries, "Report should not be empty!")
 	assert.Len(t, report.Entries, 1, "Report should have exactly 1 entry!")
-	assert.Equal(t, report.Entries[0].Type(), constants.EventValidatorUnjailed, 1, "Entry type mismatch!")
+	assert.Equal(t, report.Entries[0].Type(), constants.EventValidatorUnjailed, 1, "ReportEntry type mismatch!")
 }
 
 func TestValidatorInactive(t *testing.T) {
@@ -181,7 +181,7 @@ func TestValidatorInactive(t *testing.T) {
 	assert.Nil(t, err, "Error should not be present!")
 	assert.NotEmpty(t, report.Entries, "Report should not be empty!")
 	assert.Len(t, report.Entries, 1, "Report should have exactly 1 entry!")
-	assert.Equal(t, report.Entries[0].Type(), constants.EventValidatorInactive, 1, "Entry type mismatch!")
+	assert.Equal(t, report.Entries[0].Type(), constants.EventValidatorInactive, 1, "ReportEntry type mismatch!")
 }
 
 func TestValidatorActive(t *testing.T) {
@@ -211,7 +211,7 @@ func TestValidatorActive(t *testing.T) {
 	assert.Nil(t, err, "Error should not be present!")
 	assert.NotEmpty(t, report.Entries, "Report should not be empty!")
 	assert.Len(t, report.Entries, 1, "Report should have exactly 1 entry!")
-	assert.Equal(t, report.Entries[0].Type(), constants.EventValidatorActive, 1, "Entry type mismatch!")
+	assert.Equal(t, report.Entries[0].Type(), constants.EventValidatorActive, 1, "ReportEntry type mismatch!")
 }
 
 func TestValidatorJailedAndChangedGroup(t *testing.T) {
@@ -389,9 +389,9 @@ func TestSorting(t *testing.T) {
 	assert.Nil(t, err, "Error should not be present!")
 	assert.NotNil(t, report, "Report should be present!")
 	assert.Len(t, report.Entries, 3, "Slice should have exactly 3 entries!")
-	assert.Equal(t, report.Entries[0].Type(), constants.EventValidatorTombstoned, "Entry type mismatch!")
-	assert.Equal(t, report.Entries[1].Type(), constants.EventValidatorJailed, "Entry type mismatch!")
-	assert.Equal(t, report.Entries[2].Type(), constants.EventValidatorGroupChanged, "Entry type mismatch!")
+	assert.Equal(t, report.Entries[0].Type(), constants.EventValidatorTombstoned, "ReportEntry type mismatch!")
+	assert.Equal(t, report.Entries[1].Type(), constants.EventValidatorJailed, "ReportEntry type mismatch!")
+	assert.Equal(t, report.Entries[2].Type(), constants.EventValidatorGroupChanged, "ReportEntry type mismatch!")
 }
 
 func TestSortingMissedBlocksGroups(t *testing.T) {

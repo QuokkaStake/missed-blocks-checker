@@ -1,17 +1,16 @@
-package report
+package types
 
 import (
 	"main/pkg/constants"
-	"main/pkg/types"
 )
 
-type Entry interface {
+type ReportEntry interface {
 	Type() constants.EventName
-	GetValidator() *types.Validator
+	GetValidator() *Validator
 }
 
 type Report struct {
-	Entries []Entry
+	Entries []ReportEntry
 }
 
 func (d *Report) Empty() bool {

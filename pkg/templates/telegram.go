@@ -8,7 +8,6 @@ import (
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/events"
-	reportPkg "main/pkg/report"
 	statePkg "main/pkg/state"
 	"main/pkg/types"
 	"main/pkg/utils"
@@ -109,7 +108,7 @@ func (m *TelegramTemplateManager) SerializeNotifier(notifier *types.Notifier) st
 }
 
 func (m *TelegramTemplateManager) SerializeEntry(
-	rawEntry reportPkg.Entry,
+	rawEntry types.ReportEntry,
 	stateManager *statePkg.Manager,
 	chainConfig *configPkg.ChainConfig,
 ) string {

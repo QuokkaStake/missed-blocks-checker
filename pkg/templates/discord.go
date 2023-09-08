@@ -7,7 +7,6 @@ import (
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/events"
-	reportPkg "main/pkg/report"
 	statePkg "main/pkg/state"
 	"main/pkg/types"
 	"main/pkg/utils"
@@ -107,7 +106,7 @@ func (m *DiscordTemplateManager) SerializeDate(date time.Time) string {
 }
 
 func (m *DiscordTemplateManager) SerializeEntry(
-	rawEntry reportPkg.Entry,
+	rawEntry types.ReportEntry,
 	stateManager *statePkg.Manager,
 	chainConfig *configPkg.ChainConfig,
 ) string {

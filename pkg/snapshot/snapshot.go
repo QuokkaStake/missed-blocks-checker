@@ -4,7 +4,6 @@ import (
 	"main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/events"
-	"main/pkg/report"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"math"
@@ -39,8 +38,8 @@ type Snapshot struct {
 func (snapshot *Snapshot) GetReport(
 	olderSnapshot Snapshot,
 	chainConfig *config.ChainConfig,
-) (*report.Report, error) {
-	var entries []report.Entry
+) (*types.Report, error) {
+	var entries []types.ReportEntry
 
 	for valoper, entry := range snapshot.Entries {
 		olderEntry, ok := olderSnapshot.Entries[valoper]
@@ -150,7 +149,7 @@ func (snapshot *Snapshot) GetReport(
 		return firstPriority < secondPriority
 	})
 
-	return &report.Report{Entries: entries}, nil
+	return &types.Report{Entries: entries}, nil
 }
 
 type Info struct {

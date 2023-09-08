@@ -3,9 +3,9 @@ package telegram
 import (
 	"main/pkg/constants"
 	"main/pkg/metrics"
-	reportPkg "main/pkg/report"
 	statePkg "main/pkg/state"
 	templatesPkg "main/pkg/templates"
+	reportPkg "main/pkg/types"
 	"strings"
 	"time"
 

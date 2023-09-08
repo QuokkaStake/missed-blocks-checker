@@ -3,7 +3,7 @@ package snapshot
 import (
 	configPkg "main/pkg/config"
 	"main/pkg/metrics"
-	reportPkg "main/pkg/report"
+	reportPkg "main/pkg/types"
 
 	"github.com/rs/zerolog"
 )
