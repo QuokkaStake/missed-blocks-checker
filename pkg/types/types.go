@@ -13,9 +13,6 @@ type BlocksMap map[int64]*Block
 type Validators []*Validator
 type ValidatorsMap map[string]*Validator
 
-type HistoricalValidators map[string]bool
-type HistoricalValidatorsMap map[int64]HistoricalValidators
-
 func (validators Validators) ToMap() ValidatorsMap {
 	validatorsMap := make(ValidatorsMap, len(validators))
 
