@@ -4,6 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	htmlTemplate "html/template"
+	configPkg "main/pkg/config"
+	"main/pkg/constants"
+	"main/pkg/events"
+	reportPkg "main/pkg/report"
+	statePkg "main/pkg/state"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"main/templates"
@@ -99,4 +104,71 @@ func (m *DiscordTemplateManager) SerializeNotifier(notifier *types.Notifier) str
 
 func (m *DiscordTemplateManager) SerializeDate(date time.Time) string {
 	return date.Format(time.RFC822)
+}
+
+func (m *DiscordTemplateManager) SerializeEntry(
+	rawEntry reportPkg.Entry,
+	stateManager *statePkg.Manager,
+	chainConfig *configPkg.ChainConfig,
+) string {
+	validator := rawEntry.GetValidator()
+	notifiers := stateManager.GetNotifiersForReporter(validator.OperatorAddress, constants.DiscordReporterName)
+	notifiersSerialized := " " + m.SerializeNotifiers(notifiers)
+
+	switch entry := rawEntry.(type) {
+	case events.ValidatorGroupChanged:
+		timeToJailStr := ""
+
+		if entry.IsIncreasing() {
+			timeToJail := stateManager.GetTimeTillJail(entry.MissedBlocksAfter)
+			timeToJailStr = fmt.Sprintf(" (%s till jail)", utils.FormatDuration(timeToJail))
+		}
+
+		return fmt.Sprintf(
+			// a string like "🟡 <validator> is skipping blocks (> 1.0%)  (XXX till jail) <notifier> <notifier2>"
+			"**%s %s %s**%s%s",
+			entry.GetEmoji(),
+			m.SerializeLink(chainConfig.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			entry.GetDescription(),
+			timeToJailStr,
+			notifiersSerialized,
+		)
+	case events.ValidatorJailed:
+		return fmt.Sprintf(
+			"**❌ %s was jailed**%s",
+			m.SerializeLink(chainConfig.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			notifiersSerialized,
+		)
+	case events.ValidatorUnjailed:
+		return fmt.Sprintf(
+			"**👌 %s was unjailed**%s",
+			m.SerializeLink(chainConfig.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			notifiersSerialized,
+		)
+	case events.ValidatorInactive:
+		return fmt.Sprintf(
+			"😔 **%s is now not in the active set**%s",
+			m.SerializeLink(chainConfig.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			notifiersSerialized,
+		)
+	case events.ValidatorActive:
+		return fmt.Sprintf(
+			"✅ **%s is now in the active set**%s",
+			m.SerializeLink(chainConfig.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			notifiersSerialized,
+		)
+	case events.ValidatorTombstoned:
+		return fmt.Sprintf(
+			"**💀 %s was tombstoned**%s",
+			m.SerializeLink(chainConfig.ExplorerConfig.GetValidatorLink(entry.Validator)),
+			notifiersSerialized,
+		)
+	case events.ValidatorCreated:
+		return fmt.Sprintf(
+			"**💡New validator created: %s**",
+			m.SerializeLink(chainConfig.ExplorerConfig.GetValidatorLink(entry.Validator)),
+		)
+	default:
+		return fmt.Sprintf("Unsupported event %+v\n", entry)
+	}
 }

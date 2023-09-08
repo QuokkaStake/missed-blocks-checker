@@ -10,5 +10,4 @@ type Reporter interface {
 	Name() constants.ReporterName
 	Enabled() bool
 	Send(*reportPkg.Report) error
-	SerializeEntry(reportPkg.Entry) string
 }

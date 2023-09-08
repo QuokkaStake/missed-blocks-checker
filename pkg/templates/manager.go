@@ -2,7 +2,10 @@ package templates
 
 import (
 	"html/template"
+	configPkg "main/pkg/config"
 	"main/pkg/constants"
+	reportPkg "main/pkg/report"
+	statePkg "main/pkg/state"
 	"main/pkg/types"
 	"time"
 
@@ -15,6 +18,7 @@ type Manager interface {
 	SerializeDate(date time.Time) string
 	SerializeNotifiers(notifiers types.Notifiers) string
 	SerializeNotifier(notifier *types.Notifier) string
+	SerializeEntry(reportPkg.Entry, *statePkg.Manager, *configPkg.ChainConfig) string
 }
 
 func NewManager(logger zerolog.Logger, reporterType constants.ReporterName) Manager {
