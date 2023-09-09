@@ -2,13 +2,13 @@ package reporters
 
 import (
 	"main/pkg/constants"
-	reportPkg "main/pkg/report"
+	"main/pkg/types"
 )
 
 type Reporter interface {
 	Init()
 	Name() constants.ReporterName
 	Enabled() bool
-	Send(*reportPkg.Report) error
-	SerializeEntry(reportPkg.Entry) string
+	SerializeEvent(event types.ReportEvent) types.RenderEventItem
+	Send(*types.Report) error
 }

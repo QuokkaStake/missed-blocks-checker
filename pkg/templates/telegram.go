@@ -3,7 +3,9 @@ package templates
 import (
 	"bytes"
 	"fmt"
+	"html"
 	"html/template"
+	"main/pkg/events"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"main/templates"
@@ -24,7 +26,7 @@ func NewTelegramTemplateManager(logger zerolog.Logger) *TelegramTemplateManager 
 			Str("component", "templates_manager").
 			Str("reporter", "telegram").
 			Logger(),
-		Templates: make(map[string]interface{}, 0),
+		Templates: make(map[string]interface{}),
 	}
 }
 
@@ -100,4 +102,64 @@ func (m *TelegramTemplateManager) SerializeNotifier(notifier *types.Notifier) st
 	}
 
 	return "@" + notifier.UserName
+}
+
+func (m *TelegramTemplateManager) SerializeEvent(event types.RenderEventItem) string {
+	notifiersSerialized := " " + m.SerializeNotifiers(event.Notifiers)
+
+	switch entry := event.Event.(type) {
+	case events.ValidatorGroupChanged:
+		timeToJailStr := ""
+
+		if entry.IsIncreasing() {
+			timeToJailStr = fmt.Sprintf(" (%s till jail)", utils.FormatDuration(event.TimeToJail))
+		}
+
+		return fmt.Sprintf(
+			// a string like "🟡 <validator> is skipping blocks (> 1.0%)  (XXX till jail) <notifier> <notifier2>"
+			"<strong>%s %s %s</strong>%s%s",
+			entry.GetEmoji(),
+			m.SerializeLink(event.ValidatorLink),
+			html.EscapeString(entry.GetDescription()),
+			timeToJailStr,
+			notifiersSerialized,
+		)
+	case events.ValidatorJailed:
+		return fmt.Sprintf(
+			"<strong>❌ %s was jailed</strong>%s",
+			m.SerializeLink(event.ValidatorLink),
+			notifiersSerialized,
+		)
+	case events.ValidatorUnjailed:
+		return fmt.Sprintf(
+			"<strong>👌 %s was unjailed</strong>%s",
+			m.SerializeLink(event.ValidatorLink),
+			notifiersSerialized,
+		)
+	case events.ValidatorInactive:
+		return fmt.Sprintf(
+			"😔 <strong>%s is now not in the active set</strong>%s",
+			m.SerializeLink(event.ValidatorLink),
+			notifiersSerialized,
+		)
+	case events.ValidatorActive:
+		return fmt.Sprintf(
+			"✅ <strong>%s is now in the active set</strong>%s",
+			m.SerializeLink(event.ValidatorLink),
+			notifiersSerialized,
+		)
+	case events.ValidatorTombstoned:
+		return fmt.Sprintf(
+			"<strong>💀 %s was tombstoned</strong>%s",
+			m.SerializeLink(event.ValidatorLink),
+			notifiersSerialized,
+		)
+	case events.ValidatorCreated:
+		return fmt.Sprintf(
+			"<strong>💡New validator created: %s</strong>",
+			m.SerializeLink(event.ValidatorLink),
+		)
+	default:
+		return fmt.Sprintf("Unsupported event %+v\n", entry)
+	}
 }

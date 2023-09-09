@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	htmlTemplate "html/template"
+	"main/pkg/events"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"main/templates"
@@ -99,4 +100,64 @@ func (m *DiscordTemplateManager) SerializeNotifier(notifier *types.Notifier) str
 
 func (m *DiscordTemplateManager) SerializeDate(date time.Time) string {
 	return date.Format(time.RFC822)
+}
+
+func (m *DiscordTemplateManager) SerializeEvent(event types.RenderEventItem) string {
+	notifiersSerialized := " " + m.SerializeNotifiers(event.Notifiers)
+
+	switch entry := event.Event.(type) {
+	case events.ValidatorGroupChanged:
+		timeToJailStr := ""
+
+		if entry.IsIncreasing() {
+			timeToJailStr = fmt.Sprintf(" (%s till jail)", utils.FormatDuration(event.TimeToJail))
+		}
+
+		return fmt.Sprintf(
+			// a string like "🟡 <validator> is skipping blocks (> 1.0%)  (XXX till jail) <notifier> <notifier2>"
+			"**%s %s %s**%s%s",
+			entry.GetEmoji(),
+			m.SerializeLink(event.ValidatorLink),
+			entry.GetDescription(),
+			timeToJailStr,
+			notifiersSerialized,
+		)
+	case events.ValidatorJailed:
+		return fmt.Sprintf(
+			"**❌ %s was jailed**%s",
+			m.SerializeLink(event.ValidatorLink),
+			notifiersSerialized,
+		)
+	case events.ValidatorUnjailed:
+		return fmt.Sprintf(
+			"**👌 %s was unjailed**%s",
+			m.SerializeLink(event.ValidatorLink),
+			notifiersSerialized,
+		)
+	case events.ValidatorInactive:
+		return fmt.Sprintf(
+			"😔 **%s is now not in the active set**%s",
+			m.SerializeLink(event.ValidatorLink),
+			notifiersSerialized,
+		)
+	case events.ValidatorActive:
+		return fmt.Sprintf(
+			"✅ **%s is now in the active set**%s",
+			m.SerializeLink(event.ValidatorLink),
+			notifiersSerialized,
+		)
+	case events.ValidatorTombstoned:
+		return fmt.Sprintf(
+			"**💀 %s was tombstoned**%s",
+			m.SerializeLink(event.ValidatorLink),
+			notifiersSerialized,
+		)
+	case events.ValidatorCreated:
+		return fmt.Sprintf(
+			"**💡New validator created: %s**",
+			m.SerializeLink(event.ValidatorLink),
+		)
+	default:
+		return fmt.Sprintf("Unsupported event %+v\n", entry)
+	}
 }

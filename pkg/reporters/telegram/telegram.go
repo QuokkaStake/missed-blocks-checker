@@ -1,14 +1,12 @@
 package telegram
 
 import (
-	"fmt"
-	"html"
 	"main/pkg/constants"
 	"main/pkg/events"
 	"main/pkg/metrics"
-	reportPkg "main/pkg/report"
 	statePkg "main/pkg/state"
 	templatesPkg "main/pkg/templates"
+	"main/pkg/types"
 	"strings"
 	"time"
 
@@ -109,76 +107,35 @@ func (reporter *Reporter) Enabled() bool {
 	return reporter.Token != "" && reporter.Chat != 0
 }
 
-func (reporter *Reporter) SerializeEntry(rawEntry reportPkg.Entry) string {
-	validator := rawEntry.GetValidator()
-	notifiers := reporter.Manager.GetNotifiersForReporter(validator.OperatorAddress, reporter.Name())
-	notifiersSerialized := " " + reporter.TemplatesManager.SerializeNotifiers(notifiers)
-
-	switch entry := rawEntry.(type) {
-	case events.ValidatorGroupChanged:
-		timeToJailStr := ""
-
-		if entry.IsIncreasing() {
-			timeToJail := reporter.Manager.GetTimeTillJail(entry.MissedBlocksAfter)
-			timeToJailStr = fmt.Sprintf(" (%s till jail)", utils.FormatDuration(timeToJail))
-		}
-
-		return fmt.Sprintf(
-			// a string like "🟡 <validator> is skipping blocks (> 1.0%)  (XXX till jail) <notifier> <notifier2>"
-			"<strong>%s %s %s</strong>%s%s",
-			entry.GetEmoji(),
-			reporter.TemplatesManager.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
-			html.EscapeString(entry.GetDescription()),
-			timeToJailStr,
-			notifiersSerialized,
-		)
-	case events.ValidatorJailed:
-		return fmt.Sprintf(
-			"<strong>❌ %s was jailed</strong>%s",
-			reporter.TemplatesManager.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
-			notifiersSerialized,
-		)
-	case events.ValidatorUnjailed:
-		return fmt.Sprintf(
-			"<strong>👌 %s was unjailed</strong>%s",
-			reporter.TemplatesManager.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
-			notifiersSerialized,
-		)
-	case events.ValidatorInactive:
-		return fmt.Sprintf(
-			"😔 <strong>%s is now not in the active set</strong>%s",
-			reporter.TemplatesManager.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
-			notifiersSerialized,
-		)
-	case events.ValidatorActive:
-		return fmt.Sprintf(
-			"✅ <strong>%s is now in the active set</strong>%s",
-			reporter.TemplatesManager.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
-			notifiersSerialized,
-		)
-	case events.ValidatorTombstoned:
-		return fmt.Sprintf(
-			"<strong>💀 %s was tombstoned</strong>%s",
-			reporter.TemplatesManager.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
-			notifiersSerialized,
-		)
-	case events.ValidatorCreated:
-		return fmt.Sprintf(
-			"<strong>💡New validator created: %s</strong>",
-			reporter.TemplatesManager.SerializeLink(reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator)),
-		)
-	default:
-		return fmt.Sprintf("Unsupported event %+v\n", entry)
-	}
+func (reporter *Reporter) GetStateManager() *statePkg.Manager {
+	return reporter.Manager
 }
 
-func (reporter *Reporter) Send(report *reportPkg.Report) error {
+func (reporter *Reporter) SerializeEvent(event types.ReportEvent) types.RenderEventItem {
+	validator := event.GetValidator()
+	notifiers := reporter.Manager.GetNotifiersForReporter(validator.OperatorAddress, constants.DiscordReporterName)
+
+	eventToRender := types.RenderEventItem{
+		Event:         event,
+		Notifiers:     notifiers,
+		ValidatorLink: reporter.Config.ExplorerConfig.GetValidatorLink(validator),
+	}
+
+	if eventChanged, ok := event.(events.ValidatorGroupChanged); ok && eventChanged.IsIncreasing() {
+		eventToRender.TimeToJail = reporter.Manager.GetTimeTillJail(eventChanged.MissedBlocksAfter)
+	}
+
+	return eventToRender
+}
+
+func (reporter *Reporter) Send(report *types.Report) error {
 	reporter.MetricsManager.LogReport(reporter.Config.Name, report)
 
 	var sb strings.Builder
 
-	for _, entry := range report.Entries {
-		sb.WriteString(reporter.SerializeEntry(entry) + "\n")
+	for _, event := range report.Events {
+		eventToRender := reporter.SerializeEvent(event)
+		sb.WriteString(reporter.TemplatesManager.SerializeEvent(eventToRender) + "\n")
 	}
 
 	reportString := sb.String()

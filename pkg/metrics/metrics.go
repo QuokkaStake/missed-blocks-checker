@@ -3,7 +3,6 @@ package metrics
 import (
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
-	"main/pkg/report"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"net/http"
@@ -235,16 +234,16 @@ func (m *Manager) LogTendermintQuery(chain string, query types.QueryInfo) {
 	}
 }
 
-func (m *Manager) LogReport(chain string, report *report.Report) {
+func (m *Manager) LogReport(chain string, report *types.Report) {
 	m.reportsCounter.
 		With(prometheus.Labels{"chain": chain}).
 		Inc()
 
-	for _, entry := range report.Entries {
+	for _, event := range report.Events {
 		m.reportEntriesCounter.
 			With(prometheus.Labels{
 				"chain": chain,
-				"type":  string(entry.Type()),
+				"type":  string(event.Type()),
 			}).
 			Inc()
 	}

@@ -221,10 +221,10 @@ func (a *AppManager) ProcessEvent(emittable types.WebsocketEmittable) {
 		return
 	}
 
-	for _, entry := range report.Entries {
+	for _, event := range report.Events {
 		a.Logger.Info().
-			Str("entry", fmt.Sprintf("%+v", entry)).
-			Msg("Report entry")
+			Str("event", fmt.Sprintf("%+v", event)).
+			Msg("Report entries")
 	}
 
 	if err := a.StateManager.SaveReport(report); err != nil {

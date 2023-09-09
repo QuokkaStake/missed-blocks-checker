@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
-	"main/pkg/report"
 	snapshotPkg "main/pkg/snapshot"
 	"main/pkg/types"
 	migrationsPkg "main/sql"
@@ -366,7 +365,7 @@ func (d *Database) SetSnapshot(chain string, snapshot *snapshotPkg.Info) error {
 	return nil
 }
 
-func (d *Database) InsertEvent(chain string, entry report.Entry) error {
+func (d *Database) InsertEvent(chain string, entry types.ReportEvent) error {
 	d.MaybeMutexLock()
 	defer d.MaybeMutexUnlock()
 
