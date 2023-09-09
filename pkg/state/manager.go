@@ -225,9 +225,9 @@ func (m *Manager) GetEarliestBlock() *types.Block {
 	return m.state.GetEarliestBlock()
 }
 
-func (m *Manager) SaveReport(report *types.Report) error {
+func (m *Manager) SaveReport(height int64, report *types.Report) error {
 	for _, event := range report.Events {
-		if err := m.database.InsertEvent(m.config.Name, event); err != nil {
+		if err := m.database.InsertEvent(m.config.Name, height, event); err != nil {
 			return err
 		}
 	}
