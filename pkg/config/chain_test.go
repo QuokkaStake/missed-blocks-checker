@@ -29,6 +29,13 @@ func TestGetChainBlocksSignCount(t *testing.T) {
 	assert.Equal(t, config.GetBlocksSignCount(), int64(9500), "Blocks sign count does not match!")
 }
 
+func TestGetChainBlocksMissCount(t *testing.T) {
+	t.Parallel()
+
+	config := &ChainConfig{BlocksWindow: 10000, MinSignedPerWindow: 0.05}
+	assert.Equal(t, config.GetBlocksMissCount(), int64(500), "Blocks miss count does not match!")
+}
+
 func TestValidateChainWithoutName(t *testing.T) {
 	t.Parallel()
 
