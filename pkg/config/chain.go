@@ -50,6 +50,10 @@ func (c *ChainConfig) GetBlocksSignCount() int64 {
 	return int64(float64(c.BlocksWindow) * (1 - c.MinSignedPerWindow))
 }
 
+func (c *ChainConfig) GetBlocksMissCount() int64 {
+	return int64(float64(c.BlocksWindow) * c.MinSignedPerWindow)
+}
+
 func (c *ChainConfig) Validate() error {
 	if c.Name == "" {
 		return fmt.Errorf("chain name is not provided")
