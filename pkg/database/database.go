@@ -365,7 +365,7 @@ func (d *Database) SetSnapshot(chain string, snapshot *snapshotPkg.Info) error {
 	return nil
 }
 
-func (d *Database) InsertEvent(chain string, entry types.ReportEvent) error {
+func (d *Database) InsertEvent(chain string, height int64, entry types.ReportEvent) error {
 	d.MaybeMutexLock()
 	defer d.MaybeMutexUnlock()
 
@@ -376,9 +376,10 @@ func (d *Database) InsertEvent(chain string, entry types.ReportEvent) error {
 	}
 
 	_, err = d.client.Exec(
-		"INSERT INTO events (chain, event, validator, payload, time) VALUES ($1, $2, $3, $4, NOW())",
+		"INSERT INTO events (chain, event, height, validator, payload, time) VALUES ($1, $2, $3, $4, $5, NOW())",
 		chain,
 		entry.Type(),
+		height,
 		entry.GetValidator().OperatorAddress,
 		payloadBytes,
 	)

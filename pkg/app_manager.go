@@ -227,7 +227,7 @@ func (a *AppManager) ProcessEvent(emittable types.WebsocketEmittable) {
 			Msg("Report entries")
 	}
 
-	if err := a.StateManager.SaveReport(report); err != nil {
+	if err := a.StateManager.SaveReport(block.Height, report); err != nil {
 		a.Logger.Error().
 			Err(err).
 			Msg("Error saving report to database")
