@@ -6,7 +6,7 @@ You are subscribed to the following validators' updates on {{ .ChainConfig.GetNa
 {{- else if not .Validator.Active -}}
 <strong>{{ SerializeLink .Link }}:</strong> not in the active set
 {{- else if .Error -}}
-<strong>{{ SerializeLink .Link }}:</strong>: error getting validators missed blocks: {{ .Error }}
+<strong>{{ SerializeLink .Link }}:</strong> error getting validators missed blocks: {{ .Error }}
 {{- else -}}
 <strong>{{ SerializeLink .Link }}:</strong> {{ .SigningInfo.GetNotSigned }} missed blocks ({{ $render.FormatNotSignedPercent . }}%)
 {{- end -}}
