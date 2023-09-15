@@ -97,6 +97,18 @@ func TestBlocksGetMissingSinceLatest(t *testing.T) {
 	assert.Contains(t, missing, int64(4), "Blocks mismatch!")
 }
 
+func TestBlocksGetMissingSinceLatestNotEnoughBlocks(t *testing.T) {
+	t.Parallel()
+
+	state := NewState()
+	state.AddBlock(&types.Block{Height: 1})
+	state.AddBlock(&types.Block{Height: 3})
+
+	missing := state.GetMissingBlocksSinceLatest(5)
+	assert.Len(t, missing, 1, "There should be 2 blocks!")
+	assert.Contains(t, missing, int64(2), "Blocks mismatch!")
+}
+
 func TestBlocksSetBlocks(t *testing.T) {
 	t.Parallel()
 

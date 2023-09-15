@@ -162,12 +162,13 @@ func (a *AppManager) ProcessEvent(emittable types.WebsocketEmittable) {
 
 	blocksCount := a.StateManager.GetBlocksCountSinceLatest(a.Config.BlocksWindow)
 
-	hasEnoughBlocks := blocksCount >= a.Config.BlocksWindow
+	neededBlocks := utils.MinInt64(a.Config.BlocksWindow, a.StateManager.GetLastBlockHeight())
+	hasEnoughBlocks := blocksCount >= neededBlocks
 
 	if !hasEnoughBlocks {
 		a.Logger.Info().
 			Int64("blocks_count", blocksCount).
-			Int64("expected", a.Config.BlocksWindow).
+			Int64("expected", neededBlocks).
 			Msg("Not enough data for producing a snapshot, skipping")
 		return
 	}
