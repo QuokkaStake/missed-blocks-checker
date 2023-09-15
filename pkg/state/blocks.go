@@ -101,7 +101,7 @@ func (b *Blocks) GetCountSinceLatest(expected int64) int64 {
 func (b *Blocks) GetMissingSinceLatest(expected int64) []int64 {
 	var missed []int64
 
-	earliestBlock := utils.MaxInt64(b.lastHeight-expected, 1)
+	earliestBlock := utils.MaxInt64(b.lastHeight-expected, 0)
 
 	for height := b.lastHeight; height > earliestBlock; height-- {
 		if !b.HasBlockAtHeight(height) {
