@@ -213,7 +213,8 @@ func (m *Manager) GetBlockTime() time.Duration {
 }
 
 func (m *Manager) GetValidatorMissedBlocks(validator *types.Validator) (types.SignatureInto, error) {
-	return m.state.GetValidatorMissedBlocks(validator, m.config.BlocksWindow)
+	blocksToCheck := utils.MinInt64(m.config.BlocksWindow, m.GetLastBlockHeight())
+	return m.state.GetValidatorMissedBlocks(validator, blocksToCheck)
 }
 
 func (m *Manager) SetValidators(validators types.ValidatorsMap) {
