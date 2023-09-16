@@ -45,3 +45,8 @@ linters:
     - gofmt
     - ireturn
     - depguard
+    - nosnakecase
+    - ifshort
+    - structcheck
+    - deadcode
+    - varcheck

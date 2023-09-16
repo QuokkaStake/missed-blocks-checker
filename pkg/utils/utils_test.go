@@ -216,3 +216,10 @@ func TestMaxInt64(t *testing.T) {
 	assert.Equal(t, MaxInt64(1, 2), int64(2), "Value mismatch!")
 	assert.Equal(t, MaxInt64(2, 1), int64(2), "Value mismatch!")
 }
+
+func TestMinInt64(t *testing.T) {
+	t.Parallel()
+
+	assert.Equal(t, MinInt64(1, 2), int64(1), "Value mismatch!")
+	assert.Equal(t, MinInt64(2, 1), int64(1), "Value mismatch!")
+}
