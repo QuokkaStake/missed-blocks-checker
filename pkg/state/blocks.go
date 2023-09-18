@@ -2,6 +2,7 @@ package state
 
 import (
 	"main/pkg/types"
+	"main/pkg/utils"
 	"sync"
 )
 
@@ -100,7 +101,9 @@ func (b *Blocks) GetCountSinceLatest(expected int64) int64 {
 func (b *Blocks) GetMissingSinceLatest(expected int64) []int64 {
 	var missed []int64
 
-	for height := b.lastHeight; height > b.lastHeight-expected; height-- {
+	earliestBlock := utils.MaxInt64(b.lastHeight-expected, 0)
+
+	for height := b.lastHeight; height > earliestBlock; height-- {
 		if !b.HasBlockAtHeight(height) {
 			missed = append(missed, height)
 		}

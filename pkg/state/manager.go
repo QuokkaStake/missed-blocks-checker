@@ -7,6 +7,7 @@ import (
 	"main/pkg/metrics"
 	snapshotPkg "main/pkg/snapshot"
 	"main/pkg/types"
+	"main/pkg/utils"
 	"sync"
 	"time"
 
@@ -137,8 +138,10 @@ func (m *Manager) GetSnapshot() (snapshotPkg.Snapshot, error) {
 	validators := m.state.GetValidators()
 	entries := make(map[string]snapshotPkg.Entry, len(validators))
 
+	neededBlocks := utils.MinInt64(m.config.BlocksWindow, m.GetLastBlockHeight())
+
 	for _, validator := range validators {
-		signatureInfo, err := m.state.GetValidatorMissedBlocks(validator, m.config.BlocksWindow)
+		signatureInfo, err := m.state.GetValidatorMissedBlocks(validator, neededBlocks)
 		if err != nil {
 			return snapshotPkg.Snapshot{}, err
 		}
@@ -210,7 +213,8 @@ func (m *Manager) GetBlockTime() time.Duration {
 }
 
 func (m *Manager) GetValidatorMissedBlocks(validator *types.Validator) (types.SignatureInto, error) {
-	return m.state.GetValidatorMissedBlocks(validator, m.config.BlocksWindow)
+	blocksToCheck := utils.MinInt64(m.config.BlocksWindow, m.GetLastBlockHeight())
+	return m.state.GetValidatorMissedBlocks(validator, blocksToCheck)
 }
 
 func (m *Manager) SetValidators(validators types.ValidatorsMap) {
