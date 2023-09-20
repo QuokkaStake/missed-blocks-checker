@@ -110,7 +110,7 @@ func (m *DiscordTemplateManager) SerializeEvent(event types.RenderEventItem) str
 		event.ValidatorLink.Text,
 		m.SerializeLink(types.Link{
 			Href: event.ValidatorLink.Href,
-			Text: event.ValidatorLink.Text,
+			Text: "link",
 		}),
 	)
 
