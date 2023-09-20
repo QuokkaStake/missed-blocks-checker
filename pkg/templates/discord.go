@@ -105,6 +105,15 @@ func (m *DiscordTemplateManager) SerializeDate(date time.Time) string {
 func (m *DiscordTemplateManager) SerializeEvent(event types.RenderEventItem) string {
 	notifiersSerialized := " " + m.SerializeNotifiers(event.Notifiers)
 
+	validatorLink := fmt.Sprintf(
+		"%s (%s)",
+		event.ValidatorLink.Text,
+		m.SerializeLink(types.Link{
+			Href: event.ValidatorLink.Href,
+			Text: "link",
+		}),
+	)
+
 	switch entry := event.Event.(type) {
 	case events.ValidatorGroupChanged:
 		timeToJailStr := ""
@@ -114,10 +123,10 @@ func (m *DiscordTemplateManager) SerializeEvent(event types.RenderEventItem) str
 		}
 
 		return fmt.Sprintf(
-			// a string like "🟡 <validator> is skipping blocks (> 1.0%)  (XXX till jail) <notifier> <notifier2>"
+			// a string like "🟡 <validator> (link) is skipping blocks (> 1.0%)  (XXX till jail) <notifier> <notifier2>"
 			"**%s %s %s**%s%s",
 			entry.GetEmoji(),
-			m.SerializeLink(event.ValidatorLink),
+			validatorLink,
 			entry.GetDescription(),
 			timeToJailStr,
 			notifiersSerialized,
@@ -125,37 +134,37 @@ func (m *DiscordTemplateManager) SerializeEvent(event types.RenderEventItem) str
 	case events.ValidatorJailed:
 		return fmt.Sprintf(
 			"**❌ %s was jailed**%s",
-			m.SerializeLink(event.ValidatorLink),
+			validatorLink,
 			notifiersSerialized,
 		)
 	case events.ValidatorUnjailed:
 		return fmt.Sprintf(
 			"**👌 %s was unjailed**%s",
-			m.SerializeLink(event.ValidatorLink),
+			validatorLink,
 			notifiersSerialized,
 		)
 	case events.ValidatorInactive:
 		return fmt.Sprintf(
 			"😔 **%s is now not in the active set**%s",
-			m.SerializeLink(event.ValidatorLink),
+			validatorLink,
 			notifiersSerialized,
 		)
 	case events.ValidatorActive:
 		return fmt.Sprintf(
 			"✅ **%s is now in the active set**%s",
-			m.SerializeLink(event.ValidatorLink),
+			validatorLink,
 			notifiersSerialized,
 		)
 	case events.ValidatorTombstoned:
 		return fmt.Sprintf(
 			"**💀 %s was tombstoned**%s",
-			m.SerializeLink(event.ValidatorLink),
+			validatorLink,
 			notifiersSerialized,
 		)
 	case events.ValidatorCreated:
 		return fmt.Sprintf(
 			"**💡New validator created: %s**",
-			m.SerializeLink(event.ValidatorLink),
+			validatorLink,
 		)
 	default:
 		return fmt.Sprintf("Unsupported event %+v\n", entry)
