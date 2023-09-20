@@ -20,7 +20,11 @@ func (reporter *Reporter) HandleMissingValidators(c tele.Context) error {
 
 	snapshot, err := reporter.Manager.GetSnapshot()
 	if err != nil {
-		return reporter.BotReply(c, fmt.Sprintf("Error rendering missing validators: %s", err))
+		reporter.Logger.Info().
+			Str("sender", c.Sender().Username).
+			Str("text", c.Text()).
+			Err(err).
+			Msg("Not enough blocks on telegram missing query!")
 	}
 
 	validatorEntries := snapshot.Entries.ToSlice()

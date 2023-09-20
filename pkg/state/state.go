@@ -143,10 +143,13 @@ func (s *State) GetValidatorMissedBlocks(
 ) (types.SignatureInto, error) {
 	signatureInfo := types.SignatureInto{}
 
+	errors := 0
+
 	for height := s.blocks.lastHeight; height > s.blocks.lastHeight-blocksToCheck; height-- {
 		block, exists := s.blocks.GetBlock(height)
 		if !exists {
-			return signatureInfo, fmt.Errorf("could not get info on block with height %d", height)
+			errors += 1
+			continue
 		}
 
 		signatureInfo.BlocksCount++
@@ -180,6 +183,10 @@ func (s *State) GetValidatorMissedBlocks(
 		signatureInfo.NoSignature = 0
 		signatureInfo.NotSigned = validator.SigningInfo.MissedBlocksCounter
 		signatureInfo.Signed = blocksToCheck - validator.SigningInfo.MissedBlocksCounter
+	}
+
+	if errors > 0 {
+		return signatureInfo, fmt.Errorf("could not get info on %d blocks", errors)
 	}
 
 	return signatureInfo, nil

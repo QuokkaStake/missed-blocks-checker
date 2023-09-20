@@ -301,7 +301,7 @@ func (a *AppManager) PopulateInBackground() {
 
 	go a.PopulateBlocks()
 
-	blocksTicker := time.NewTicker(60 * time.Second)
+	blocksTicker := time.NewTicker(30 * time.Second)
 	latestBlockTimer := time.NewTicker(120 * time.Second)
 	trimTimer := time.NewTicker(300 * time.Second)
 	slashingParamsTimer := time.NewTicker(300 * time.Second)
