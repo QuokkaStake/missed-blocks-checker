@@ -20,8 +20,8 @@ type ChainConfig struct {
 	BlocksWindow         int64           `default:"10000"      toml:"blocks-window"`
 	MinSignedPerWindow   float64         `default:"0.05"       toml:"min-signed-per-window"`
 	QueryEachSigningInfo null.Bool       `default:"false"      toml:"query-each-signing-info"`
-	QuerySlashingParams  null.Bool       `default:"true"       toml:"query-slashing-params"`
 	Pagination           ChainPagination `toml:"pagination"`
+	Intervals            IntervalsConfig `toml:"intervals"`
 
 	IsConsumer              null.Bool `default:"false"                  toml:"consumer"`
 	ProviderRPCEndpoints    []string  `toml:"provider-rpc-endpoints"`

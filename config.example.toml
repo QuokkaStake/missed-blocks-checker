@@ -62,10 +62,24 @@ store-blocks = 20000
 blocks-window = 10000
 # How much blocks a validator needs to sign in any specific window. Defaults to 0.05 (5%)
 min-signed-per-window = 0.05
-# Whether to query slashing params from chain. If yes, local store-blocks and min-signed-per-window
-# will be overriden on chain startup with the actual values from chain, and will be periodically updated.
-# Defaults to true
-query-slashing-params = true
+# Periodical intervals check params.
+[[chains.intervals]]
+# Interval to fetch blocks missed in the local state from chain.
+# Setting it to 0 would disable automatic blocks fetching, which is not desired.
+# You can set it to something smaller if your websocket connection is lagging.
+# Defaults to 30.
+blocks = 30
+# Internval to fetch latest block from chain.
+# Setting it to 0 would disable automatic blocks fetching, which is not desired.
+# Defaults to 120.
+latest-block = 120
+# Interval to fetch slashing params from chain. Set to 0 to disable fetching slashing params from chain
+# and use local blocks-window and min-signed-per-window.
+# Defaults to 300.
+slashing-params = 300
+# Interval to trim local database. Set it to 0 to disable database trimming.
+# Defaults to 300.
+slashing-params = 300
 # Queries pagination params.
 [[chains.pagination]]
 # How many historical validators to query at once. Why you might need this:
