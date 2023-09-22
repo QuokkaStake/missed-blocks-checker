@@ -50,3 +50,4 @@ linters:
     - structcheck
     - deadcode
     - varcheck
+    - durationcheck
