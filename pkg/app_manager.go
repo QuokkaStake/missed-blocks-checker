@@ -54,8 +54,8 @@ func NewAppManager(
 	websocketManager := tendermint.NewWebsocketManager(managerLogger, config, metricsManager)
 
 	reporters := []reportersPkg.Reporter{
-		telegram.NewReporter(config, managerLogger, stateManager, metricsManager),
-		discord.NewReporter(config, managerLogger, stateManager, metricsManager),
+		telegram.NewReporter(config, managerLogger, stateManager, metricsManager, snapshotManager),
+		discord.NewReporter(config, managerLogger, stateManager, metricsManager, snapshotManager),
 	}
 
 	return &AppManager{

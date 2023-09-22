@@ -5,6 +5,7 @@ import (
 	"main/pkg/constants"
 	"main/pkg/events"
 	"main/pkg/metrics"
+	snapshotPkg "main/pkg/snapshot"
 	statePkg "main/pkg/state"
 	templatesPkg "main/pkg/templates"
 	types "main/pkg/types"
@@ -26,6 +27,7 @@ type Reporter struct {
 	Config           *config.ChainConfig
 	Manager          *statePkg.Manager
 	MetricsManager   *metrics.Manager
+	SnapshotManager  *snapshotPkg.Manager
 	TemplatesManager templatesPkg.Manager
 	Commands         map[string]*Command
 }
@@ -35,6 +37,7 @@ func NewReporter(
 	logger zerolog.Logger,
 	manager *statePkg.Manager,
 	metricsManager *metrics.Manager,
+	snapshotManager *snapshotPkg.Manager,
 ) *Reporter {
 	return &Reporter{
 		Token:            chainConfig.DiscordConfig.Token,
@@ -44,6 +47,7 @@ func NewReporter(
 		Logger:           logger.With().Str("component", "discord_reporter").Logger(),
 		Manager:          manager,
 		MetricsManager:   metricsManager,
+		SnapshotManager:  snapshotManager,
 		TemplatesManager: templatesPkg.NewManager(logger, constants.DiscordReporterName),
 		Commands:         make(map[string]*Command, 0),
 	}

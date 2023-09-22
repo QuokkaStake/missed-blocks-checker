@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/rs/zerolog"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -18,6 +17,8 @@ import (
 type Manager struct {
 	logger zerolog.Logger
 	config configPkg.MetricsConfig
+
+	registry *prometheus.Registry
 
 	lastBlockHeightCollector   *prometheus.GaugeVec
 	lastBlockTimeCollector     *prometheus.GaugeVec
@@ -51,101 +52,152 @@ type Manager struct {
 }
 
 func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager {
+	registry := prometheus.NewRegistry()
+
+	lastBlockHeightCollector := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: constants.PrometheusMetricsPrefix + "last_height",
+		Help: "Height of the last block processed",
+	}, []string{"chain"})
+	lastBlockTimeCollector := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: constants.PrometheusMetricsPrefix + "last_time",
+		Help: "Time of the last block processed",
+	}, []string{"chain"})
+	nodeConnectedCollector := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: constants.PrometheusMetricsPrefix + "node_connected",
+		Help: "Whether the node is successfully connected (1 if yes, 0 if no)",
+	}, []string{"chain", "node"})
+	successfulQueriesCollector := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: constants.PrometheusMetricsPrefix + "node_successful_queries_total",
+		Help: "Counter of successful node queries",
+	}, []string{"chain", "node", "type"})
+	failedQueriesCollector := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: constants.PrometheusMetricsPrefix + "node_failed_queries_total",
+		Help: "Counter of failed node queries",
+	}, []string{"chain", "node", "type"})
+	reportsCounter := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: constants.PrometheusMetricsPrefix + "node_reports",
+		Help: "Counter of reports to send",
+	}, []string{"chain"})
+	reportEntriesCounter := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: constants.PrometheusMetricsPrefix + "node_report_entries_total",
+		Help: "Counter of report entries send",
+	}, []string{"chain", "type"})
+	totalBlocksGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: constants.PrometheusMetricsPrefix + "node_blocks",
+		Help: "Total amount of blocks stored",
+	}, []string{"chain"})
+	reporterEnabledGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: constants.PrometheusMetricsPrefix + "reporter_enabled",
+		Help: "Whether the reporter is enabled (1 if yes, 0 if no)",
+	}, []string{"chain", "name"})
+	reporterQueriesCounter := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: constants.PrometheusMetricsPrefix + "reporter_queries",
+		Help: "Reporters' queries count ",
+	}, []string{"chain", "name", "query"})
+	appVersionGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: constants.PrometheusMetricsPrefix + "version",
+		Help: "App version",
+	}, []string{"version"})
+	eventsCounter := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: constants.PrometheusMetricsPrefix + "events_total",
+		Help: "WebSocket events received by node",
+	}, []string{"chain", "node"})
+	reconnectsCounter := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: constants.PrometheusMetricsPrefix + "reconnects_total",
+		Help: "Node reconnects count",
+	}, []string{"chain", "node"})
+	missingBlocksGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: constants.PrometheusMetricsPrefix + "missed_blocks",
+		Help: "Validators' missed blocks count",
+	}, []string{"chain", "moniker", "address"})
+	activeBlocksGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: constants.PrometheusMetricsPrefix + "active_blocks",
+		Help: "Count of each validator's blocks during which they were active",
+	}, []string{"chain", "moniker", "address"})
+	notActiveBlocksGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: constants.PrometheusMetricsPrefix + "not_active_blocks",
+		Help: "Count of each validator's blocks during which they were not active",
+	}, []string{"chain", "moniker", "address"})
+	isActiveGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: constants.PrometheusMetricsPrefix + "active",
+		Help: "Whether the validator is active",
+	}, []string{"chain", "moniker", "address"})
+	isJailedGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: constants.PrometheusMetricsPrefix + "jailed",
+		Help: "Whether the validator is jailed",
+	}, []string{"chain", "moniker", "address"})
+	isTombstonedGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: constants.PrometheusMetricsPrefix + "tombstoned",
+		Help: "Whether the validator is tombstoned",
+	}, []string{"chain", "moniker", "address"})
+	signedBlocksWindowGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: constants.PrometheusMetricsPrefix + "window",
+		Help: "A window in which validator needs to sign blocks",
+	}, []string{"chain"})
+	storeBlocksGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: constants.PrometheusMetricsPrefix + "store_blocks",
+		Help: "How much blocks at max should be stored in a database",
+	}, []string{"chain"})
+	minSignedPerWindowGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: constants.PrometheusMetricsPrefix + "min_signed",
+		Help: "A % of blocks validator needs to sign within window",
+	}, []string{"chain"})
+	chainInfoGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: constants.PrometheusMetricsPrefix + "chain_info",
+		Help: "Chain info, with constant 1 as value and pretty_name and chain as labels",
+	}, []string{"chain", "pretty_name"})
+
+	registry.MustRegister(lastBlockHeightCollector)
+	registry.MustRegister(lastBlockTimeCollector)
+	registry.MustRegister(nodeConnectedCollector)
+	registry.MustRegister(successfulQueriesCollector)
+	registry.MustRegister(failedQueriesCollector)
+	registry.MustRegister(reportsCounter)
+	registry.MustRegister(reportEntriesCounter)
+	registry.MustRegister(totalBlocksGauge)
+	registry.MustRegister(reporterEnabledGauge)
+	registry.MustRegister(reporterQueriesCounter)
+	registry.MustRegister(appVersionGauge)
+	registry.MustRegister(eventsCounter)
+	registry.MustRegister(reconnectsCounter)
+	registry.MustRegister(missingBlocksGauge)
+	registry.MustRegister(activeBlocksGauge)
+	registry.MustRegister(notActiveBlocksGauge)
+	registry.MustRegister(isActiveGauge)
+	registry.MustRegister(isJailedGauge)
+	registry.MustRegister(isTombstonedGauge)
+	registry.MustRegister(signedBlocksWindowGauge)
+	registry.MustRegister(storeBlocksGauge)
+	registry.MustRegister(minSignedPerWindowGauge)
+	registry.MustRegister(chainInfoGauge)
+
 	return &Manager{
-		logger: logger.With().Str("component", "metrics").Logger(),
-		config: config,
-		lastBlockHeightCollector: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: constants.PrometheusMetricsPrefix + "last_height",
-			Help: "Height of the last block processed",
-		}, []string{"chain"}),
-		lastBlockTimeCollector: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: constants.PrometheusMetricsPrefix + "last_time",
-			Help: "Time of the last block processed",
-		}, []string{"chain"}),
-		nodeConnectedCollector: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: constants.PrometheusMetricsPrefix + "node_connected",
-			Help: "Whether the node is successfully connected (1 if yes, 0 if no)",
-		}, []string{"chain", "node"}),
-		successfulQueriesCollector: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: constants.PrometheusMetricsPrefix + "node_successful_queries_total",
-			Help: "Counter of successful node queries",
-		}, []string{"chain", "node", "type"}),
-		failedQueriesCollector: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: constants.PrometheusMetricsPrefix + "node_failed_queries_total",
-			Help: "Counter of failed node queries",
-		}, []string{"chain", "node", "type"}),
-		reportsCounter: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: constants.PrometheusMetricsPrefix + "node_reports",
-			Help: "Counter of reports to send",
-		}, []string{"chain"}),
-		reportEntriesCounter: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: constants.PrometheusMetricsPrefix + "node_report_entries_total",
-			Help: "Counter of report entries send",
-		}, []string{"chain", "type"}),
-		totalBlocksGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: constants.PrometheusMetricsPrefix + "node_blocks",
-			Help: "Total amount of blocks stored",
-		}, []string{"chain"}),
-		reporterEnabledGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: constants.PrometheusMetricsPrefix + "reporter_enabled",
-			Help: "Whether the reporter is enabled (1 if yes, 0 if no)",
-		}, []string{"chain", "name"}),
-		reporterQueriesCounter: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: constants.PrometheusMetricsPrefix + "reporter_queries",
-			Help: "Reporters' queries count ",
-		}, []string{"chain", "name", "query"}),
-		appVersionGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: constants.PrometheusMetricsPrefix + "version",
-			Help: "App version",
-		}, []string{"version"}),
-		eventsCounter: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: constants.PrometheusMetricsPrefix + "events_total",
-			Help: "WebSocket events received by node",
-		}, []string{"chain", "node"}),
-		reconnectsCounter: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: constants.PrometheusMetricsPrefix + "reconnects_total",
-			Help: "Node reconnects count",
-		}, []string{"chain", "node"}),
-		missingBlocksGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: constants.PrometheusMetricsPrefix + "missed_blocks",
-			Help: "Validators' missed blocks count",
-		}, []string{"chain", "moniker", "address"}),
-		activeBlocksGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: constants.PrometheusMetricsPrefix + "active_blocks",
-			Help: "Count of each validator's blocks during which they were active",
-		}, []string{"chain", "moniker", "address"}),
-		notActiveBlocksGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: constants.PrometheusMetricsPrefix + "not_active_blocks",
-			Help: "Count of each validator's blocks during which they were not active",
-		}, []string{"chain", "moniker", "address"}),
-		isActiveGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: constants.PrometheusMetricsPrefix + "active",
-			Help: "Whether the validator is active",
-		}, []string{"chain", "moniker", "address"}),
-		isJailedGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: constants.PrometheusMetricsPrefix + "jailed",
-			Help: "Whether the validator is jailed",
-		}, []string{"chain", "moniker", "address"}),
-		isTombstonedGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: constants.PrometheusMetricsPrefix + "tombstoned",
-			Help: "Whether the validator is tombstoned",
-		}, []string{"chain", "moniker", "address"}),
-		signedBlocksWindowGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: constants.PrometheusMetricsPrefix + "window",
-			Help: "A window in which validator needs to sign blocks",
-		}, []string{"chain"}),
-		storeBlocksGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: constants.PrometheusMetricsPrefix + "store_blocks",
-			Help: "How much blocks at max should be stored in a database",
-		}, []string{"chain"}),
-		minSignedPerWindowGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: constants.PrometheusMetricsPrefix + "min_signed",
-			Help: "A % of blocks validator needs to sign within window",
-		}, []string{"chain"}),
-		chainInfoGauge: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: constants.PrometheusMetricsPrefix + "chain_info",
-			Help: "Chain info, with constant 1 as value and pretty_name and chain as labels",
-		}, []string{"chain", "pretty_name"}),
+		logger:                     logger.With().Str("component", "metrics").Logger(),
+		config:                     config,
+		registry:                   registry,
+		lastBlockHeightCollector:   lastBlockHeightCollector,
+		lastBlockTimeCollector:     lastBlockTimeCollector,
+		nodeConnectedCollector:     nodeConnectedCollector,
+		successfulQueriesCollector: successfulQueriesCollector,
+		failedQueriesCollector:     failedQueriesCollector,
+		reportsCounter:             reportsCounter,
+		reportEntriesCounter:       reportEntriesCounter,
+		totalBlocksGauge:           totalBlocksGauge,
+		reporterEnabledGauge:       reporterEnabledGauge,
+		reporterQueriesCounter:     reporterQueriesCounter,
+		appVersionGauge:            appVersionGauge,
+		eventsCounter:              eventsCounter,
+		reconnectsCounter:          reconnectsCounter,
+		missingBlocksGauge:         missingBlocksGauge,
+		activeBlocksGauge:          activeBlocksGauge,
+		notActiveBlocksGauge:       notActiveBlocksGauge,
+		isActiveGauge:              isActiveGauge,
+		isJailedGauge:              isJailedGauge,
+		isTombstonedGauge:          isTombstonedGauge,
+		signedBlocksWindowGauge:    signedBlocksWindowGauge,
+		storeBlocksGauge:           storeBlocksGauge,
+		minSignedPerWindowGauge:    minSignedPerWindowGauge,
+		chainInfoGauge:             chainInfoGauge,
 	}
 }
 
@@ -191,7 +243,7 @@ func (m *Manager) Start() {
 		Str("addr", m.config.ListenAddr).
 		Msg("Metrics handler listening")
 
-	http.Handle("/metrics", promhttp.Handler())
+	http.Handle("/metrics", promhttp.HandlerFor(m.registry, promhttp.HandlerOpts{Registry: m.registry}))
 	if err := http.ListenAndServe(m.config.ListenAddr, nil); err != nil {
 		m.logger.Fatal().
 			Err(err).

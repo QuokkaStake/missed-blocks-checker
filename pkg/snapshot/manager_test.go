@@ -53,3 +53,33 @@ func TestManagerCommitNewSnapshot(t *testing.T) {
 	assert.Nil(t, err, "Error should not be presented!")
 	assert.True(t, report.Empty(), "Report should be empty!")
 }
+
+func TestManagerGetNewerSnapshot(t *testing.T) {
+	t.Parallel()
+
+	log := logger.GetDefaultLogger()
+	config := &configPkg.ChainConfig{
+		StoreBlocks: 10,
+		Thresholds:  []float64{0, 100},
+		EmojisStart: []string{"x"},
+		EmojisEnd:   []string{"x"},
+	}
+	config.RecalculateMissedBlocksGroups()
+
+	metricsManager := metrics.NewManager(*log, configPkg.MetricsConfig{Enabled: null.BoolFrom(true)})
+	manager := NewManager(*log, config, metricsManager)
+
+	firstSnapshot, found := manager.GetNewerSnapshot()
+	assert.False(t, found, "Snapshot should not be presented!")
+	assert.Nil(t, firstSnapshot, "Snapshot should not be presented!")
+
+	manager.CommitNewSnapshot(20, Snapshot{
+		Entries: map[string]Entry{
+			"validator": {Validator: &types.Validator{}},
+		},
+	})
+
+	secondSnapshot, foundLater := manager.GetNewerSnapshot()
+	assert.True(t, foundLater, "Snapshot should be presented!")
+	assert.NotNil(t, secondSnapshot, "Snapshot should be presented!")
+}

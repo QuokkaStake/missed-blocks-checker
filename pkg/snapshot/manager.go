@@ -53,3 +53,11 @@ func (m *Manager) GetOlderHeight() int64 {
 func (m *Manager) GetReport() (*types.Report, error) {
 	return m.newerSnapshot.Snapshot.GetReport(m.olderSnapshot.Snapshot, m.config)
 }
+
+func (m *Manager) GetNewerSnapshot() (*Snapshot, bool) {
+	if m.newerSnapshot == nil {
+		return nil, false
+	}
+
+	return &m.newerSnapshot.Snapshot, true
+}

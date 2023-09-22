@@ -4,6 +4,7 @@ import (
 	"main/pkg/constants"
 	"main/pkg/events"
 	"main/pkg/metrics"
+	snapshotPkg "main/pkg/snapshot"
 	statePkg "main/pkg/state"
 	templatesPkg "main/pkg/templates"
 	"main/pkg/types"
@@ -27,6 +28,7 @@ type Reporter struct {
 	Logger           zerolog.Logger
 	Config           *config.ChainConfig
 	Manager          *statePkg.Manager
+	SnapshotManager  *snapshotPkg.Manager
 	MetricsManager   *metrics.Manager
 	TemplatesManager templatesPkg.Manager
 }
@@ -40,6 +42,7 @@ func NewReporter(
 	logger zerolog.Logger,
 	manager *statePkg.Manager,
 	metricsManager *metrics.Manager,
+	snapshotManager *snapshotPkg.Manager,
 ) *Reporter {
 	return &Reporter{
 		Token:            chainConfig.TelegramConfig.Token,
@@ -49,6 +52,7 @@ func NewReporter(
 		Logger:           logger.With().Str("component", "telegram_reporter").Logger(),
 		Manager:          manager,
 		MetricsManager:   metricsManager,
+		SnapshotManager:  snapshotManager,
 		TemplatesManager: templatesPkg.NewManager(logger, constants.TelegramReporterName),
 	}
 }
