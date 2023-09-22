@@ -21,14 +21,9 @@ func (reporter *Reporter) GetMissingCommand() *Command {
 
 			snapshot, err := reporter.Manager.GetSnapshot()
 			if err != nil {
-				if reportErr := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-					Type: discordgo.InteractionResponseChannelMessageWithSource,
-					Data: &discordgo.InteractionResponseData{
-						Content: fmt.Sprintf("Error rendering missing validators: %s", err),
-					},
-				}); err != nil {
-					reporter.Logger.Error().Err(reportErr).Msg("Error sending missing")
-				}
+				reporter.Logger.Info().
+					Err(err).
+					Msg("Not enough blocks on discord missing query!")
 			}
 
 			validatorEntries := snapshot.Entries.ToSlice()
