@@ -247,7 +247,7 @@ func (a *AppManager) ProcessEvent(emittable types.WebsocketEmittable) {
 }
 
 func (a *AppManager) PopulateSlashingParams() {
-	if !a.Config.QuerySlashingParams.Bool {
+	if a.Config.Intervals.SlashingParams == 0 {
 		return
 	}
 
@@ -299,32 +299,79 @@ func (a *AppManager) PopulateInBackground() {
 	a.PopulateLatestBlock()
 	a.PopulateSlashingParams()
 
+	// Start populating blocks in background
 	go a.PopulateBlocks()
 
-	blocksTicker := time.NewTicker(30 * time.Second)
-	latestBlockTimer := time.NewTicker(120 * time.Second)
-	trimTimer := time.NewTicker(300 * time.Second)
-	slashingParamsTimer := time.NewTicker(300 * time.Second)
+	// Setting timers
+	go a.SyncBlocks()
+	go a.SyncLatestBlock()
+	go a.SyncSlashingParams()
+	go a.SyncTrim()
+}
 
-	quit := make(chan struct{})
+func (a *AppManager) SyncBlocks() {
+	if a.Config.Intervals.Blocks == 0 {
+		a.Logger.Info().Msg("Blocks continuous population is disabled.")
+		return
+	}
 
+	blocksTicker := time.NewTicker(a.Config.Intervals.Blocks * time.Second)
 	for {
 		select {
 		case <-blocksTicker.C:
 			a.PopulateBlocks()
+		}
+	}
+}
+
+func (a *AppManager) SyncLatestBlock() {
+	if a.Config.Intervals.Blocks == 0 {
+		a.Logger.Info().Msg("Latest block continuous population is disabled.")
+		return
+	}
+
+	latestBlockTimer := time.NewTicker(a.Config.Intervals.LatestBlock * time.Second)
+
+	for {
+		select {
 		case <-latestBlockTimer.C:
 			a.PopulateLatestBlock()
+		}
+	}
+}
+
+func (a *AppManager) SyncSlashingParams() {
+	if a.Config.Intervals.SlashingParams == 0 {
+		a.Logger.Info().Msg("Slashing params continuous population is disabled.")
+		return
+	}
+
+	slashingParamsTimer := time.NewTicker(a.Config.Intervals.SlashingParams * time.Second)
+
+	for {
+		select {
 		case <-slashingParamsTimer.C:
 			a.PopulateSlashingParams()
+		}
+	}
+}
+
+func (a *AppManager) SyncTrim() {
+	if a.Config.Intervals.Trim == 0 {
+		a.Logger.Info().Msg("Trim continuous population is disabled.")
+		return
+	}
+
+	trimTimer := time.NewTicker(a.Config.Intervals.Trim * time.Second)
+
+	for {
+		select {
 		case <-trimTimer.C:
 			{
 				if err := a.StateManager.TrimBlocks(); err != nil {
 					a.Logger.Error().Err(err).Msg("Error trimming blocks")
 				}
 			}
-		case <-quit:
-			blocksTicker.Stop()
-			return
 		}
 	}
 }
