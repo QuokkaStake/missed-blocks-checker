@@ -19,11 +19,12 @@ func (reporter *Reporter) GetMissingCommand() *Command {
 		Handler: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, "missing")
 
-			snapshot, err := reporter.Manager.GetSnapshot()
-			if err != nil {
+			snapshot, found := reporter.SnapshotManager.GetNewerSnapshot()
+			if !found {
 				reporter.Logger.Info().
-					Err(err).
-					Msg("Not enough blocks on discord missing query!")
+					Msg("No older snapshot on discord missing query!")
+				reporter.BotRespond(s, i, "Error getting validators list")
+				return
 			}
 
 			validatorEntries := snapshot.Entries.ToSlice()

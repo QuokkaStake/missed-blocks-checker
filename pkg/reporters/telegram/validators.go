@@ -18,13 +18,13 @@ func (reporter *Reporter) HandleListValidators(c tele.Context) error {
 
 	reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, "validators")
 
-	snapshot, err := reporter.Manager.GetSnapshot()
-	if err != nil {
+	snapshot, found := reporter.SnapshotManager.GetNewerSnapshot()
+	if !found {
 		reporter.Logger.Info().
 			Str("sender", c.Sender().Username).
 			Str("text", c.Text()).
-			Err(err).
-			Msg("Not enough blocks on telegram validators query!")
+			Msg("No older snapshot on telegram validators query!")
+		return reporter.BotReply(c, "Error getting validators list")
 	}
 
 	validatorEntries := snapshot.Entries.ToSlice()
