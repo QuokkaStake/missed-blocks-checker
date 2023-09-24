@@ -118,6 +118,19 @@ config - See chain and config params
 
 Then add a Telegram config to your config file (see `config.example.toml` for reference).
 
+2) Discord
+To configure a Discord bot, you need 3 params: bot token, server ID and channel ID.
+Here's how to set it up:
+- Create a new Discord bot and write down its token
+- Generate a link for server owner to add this bot to their server (see [this](https://www.youtube.com/watch?v=4XswiJ1iUaw) for reference)
+- If the channel the bot is supposed to report is private, ask the server owner to add it there
+- Get the ID of the server and the channel it's going to report to (see [this](https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-) for reference)
+- Put them into your chain config of your TOML config file (see `config.example.toml` as a reference)
+- You're all set!
+
+The bot would delete and create its command each time the binary is restarted.
+
+
 ## How can I contribute?
 
 Bug reports and feature requests are always welcome! If you want to contribute, feel free to open issues or PRs.
