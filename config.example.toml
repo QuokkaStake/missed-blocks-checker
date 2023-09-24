@@ -47,6 +47,9 @@ rpc-endpoints = [
 query-each-signing-info = true
 # Telegram reporter configuration. Needs token and chat. See README.md on how to set it up
 telegram = { token = "xxx:yyy", chat = 12345 }
+# Discord reporter configuration. Needs token, server ID (aka guild) and channel ID.
+# See README.md on how to set it up.
+discord = { token = "xxx", guild = 12345, channel = 67890 }
 # Explorer configuration, to generate links to validators.
 # Currently supported explorers are: Mintscan and Ping.pub, but you can use
 # a custom link pattern to generate custom links.
