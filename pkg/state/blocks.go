@@ -54,6 +54,16 @@ func (b *Blocks) SetBlocks(blocks map[int64]*types.Block) {
 	defer b.mutex.Unlock()
 
 	b.blocks = blocks
+
+	var lastHeight int64 = 0
+
+	for height := range b.blocks {
+		if height > lastHeight {
+			lastHeight = height
+		}
+	}
+
+	b.lastHeight = lastHeight
 }
 
 func (b *Blocks) GetBlock(height int64) (*types.Block, bool) {
