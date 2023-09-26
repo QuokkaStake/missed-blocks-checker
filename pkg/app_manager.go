@@ -123,10 +123,13 @@ func (a *AppManager) ProcessEvent(emittable types.WebsocketEmittable) {
 		return
 	}
 
-	if a.StateManager.HasBlockAtHeight(block.Height) {
+	latestHeight := a.StateManager.GetLastBlockHeight()
+
+	if latestHeight > block.Height {
 		a.Logger.Info().
+			Int64("last_height", latestHeight).
 			Int64("height", block.Height).
-			Msg("Already have block at this height, not generating report")
+			Msg("Trying to generate a report for a block that was processed before")
 		return
 	}
 
