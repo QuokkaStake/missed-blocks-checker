@@ -392,6 +392,15 @@ func (a *AppManager) PopulateLatestBlock() {
 		return
 	}
 
+	lastStateHeight := a.StateManager.GetLastBlockHeight()
+	if lastStateHeight > block.Height {
+		a.Logger.Info().
+			Int64("last_height", lastStateHeight).
+			Int64("height", block.Height).
+			Msg("Got older block when populating latest height, not proceeding further.")
+		return
+	}
+
 	a.Logger.Info().
 		Int64("height", block.Height).
 		Msg("Last block height")
