@@ -315,7 +315,7 @@ func (rpc *RPC) Get(
 
 		if predicateErr := predicate(target); predicateErr != nil {
 			rpc.logger.Warn().Str("url", fullURL).Err(predicateErr).Msg("LCD precondition failed")
-			errors[index] = fmt.Errorf("precondition failed: %s", err)
+			errors[index] = fmt.Errorf("precondition failed: %s", predicateErr)
 			continue
 		}
 
