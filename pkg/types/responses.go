@@ -1,13 +1,55 @@
 package types
 
 import (
+	"encoding/json"
 	"strconv"
 	"time"
 )
 
+func (s *SingleBlockResponse) UnmarshalJSON(data []byte) error {
+	var v map[string]interface{}
+	if err := json.Unmarshal(data, &v); err != nil {
+		return err
+	}
+
+	if result, ok := v["result"]; !ok {
+		s.Result = nil
+	} else {
+		rawBytes, err := json.Marshal(result)
+		if err != nil {
+			return err
+		}
+
+		var resultParsed SingleBlockResult
+		if err := json.Unmarshal(rawBytes, &resultParsed); err != nil {
+			return err
+		}
+
+		s.Result = &resultParsed
+	}
+
+	if responseError, ok := v["error"]; !ok {
+		s.Error = nil
+	} else {
+		rawBytes, err := json.Marshal(responseError)
+		if err != nil {
+			return err
+		}
+
+		var errorParsed ResponseError
+		if err := json.Unmarshal(rawBytes, &errorParsed); err != nil {
+			return err
+		}
+
+		s.Error = &errorParsed
+	}
+
+	return nil
+}
+
 type SingleBlockResponse struct {
-	Result SingleBlockResult `json:"result"`
-	Error  *ResponseError    `json:"error"`
+	Result *SingleBlockResult `json:"result"`
+	Error  *ResponseError     `json:"error,omitempty"`
 }
 
 type SingleBlockResult struct {
