@@ -117,7 +117,7 @@ func (reporter *Reporter) GetStateManager() *statePkg.Manager {
 
 func (reporter *Reporter) SerializeEvent(event types.ReportEvent) types.RenderEventItem {
 	validator := event.GetValidator()
-	notifiers := reporter.Manager.GetNotifiersForReporter(validator.OperatorAddress, constants.DiscordReporterName)
+	notifiers := reporter.Manager.GetNotifiersForReporter(validator.OperatorAddress, constants.TelegramReporterName)
 
 	eventToRender := types.RenderEventItem{
 		Event:         event,
