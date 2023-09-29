@@ -1,7 +1,8 @@
-package types
+package responses
 
 import (
 	"encoding/json"
+	"main/pkg/types"
 	"strconv"
 	"time"
 )
@@ -80,7 +81,7 @@ type BlockSignature struct {
 	ValidatorAddress string `json:"validator_address"`
 }
 
-func (b *TendermintBlock) ToBlock() (*Block, error) {
+func (b *TendermintBlock) ToBlock() (*types.Block, error) {
 	height, err := strconv.ParseInt(b.Header.Height, 10, 64)
 	if err != nil {
 		return nil, err
@@ -92,49 +93,10 @@ func (b *TendermintBlock) ToBlock() (*Block, error) {
 		signatures[signature.ValidatorAddress] = int32(signature.BlockIDFlag)
 	}
 
-	return &Block{
+	return &types.Block{
 		Height:     height,
 		Time:       b.Header.Time,
 		Proposer:   b.Header.Proposer,
 		Signatures: signatures,
 	}, nil
-}
-
-type EventResult struct {
-	Query string    `json:"query"`
-	Data  EventData `json:"data"`
-}
-
-type EventData struct {
-	Type  string                 `json:"type"`
-	Value map[string]interface{} `json:"value"`
-}
-
-type AbciQueryResponse struct {
-	Result AbciQueryResult `json:"result"`
-}
-
-type AbciQueryResult struct {
-	Response AbciResponse `json:"response"`
-}
-
-type AbciResponse struct {
-	Code  int    `json:"code"`
-	Log   string `json:"log"`
-	Value []byte `json:"value"`
-}
-
-type ValidatorsResponse struct {
-	Result ValidatorsResult `json:"result"`
-	Error  *ResponseError   `json:"error"`
-}
-
-type ValidatorsResult struct {
-	Validators []HistoricalValidator `json:"validators"`
-	Count      string                `json:"count"`
-	Total      string                `json:"total"`
-}
-
-type HistoricalValidator struct {
-	Address string `json:"address"`
 }

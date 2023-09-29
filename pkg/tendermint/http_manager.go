@@ -3,7 +3,7 @@ package tendermint
 import (
 	configPkg "main/pkg/config"
 	"main/pkg/metrics"
-	"main/pkg/types"
+	"main/pkg/types/responses"
 	"sync"
 
 	providerTypes "github.com/cosmos/interchain-security/x/ccv/provider/types"
@@ -23,7 +23,7 @@ func NewRPCManager(config *configPkg.ChainConfig, logger zerolog.Logger, metrics
 	return &RPCManager{rpc: rpc}
 }
 
-func (manager *RPCManager) GetBlock(height int64) (*types.SingleBlockResponse, error) {
+func (manager *RPCManager) GetBlock(height int64) (*responses.SingleBlockResponse, error) {
 	return manager.rpc.GetBlock(height)
 }
 
@@ -55,11 +55,11 @@ func (manager *RPCManager) GetActiveSetAtBlock(height int64) (map[string]bool, e
 }
 
 func (manager *RPCManager) GetBlocksAndValidatorsAtHeights(heights []int64) (
-	map[int64]*types.SingleBlockResponse,
+	map[int64]*responses.SingleBlockResponse,
 	map[int64]map[string]bool,
 	[]error,
 ) {
-	blocksMap := make(map[int64]*types.SingleBlockResponse)
+	blocksMap := make(map[int64]*responses.SingleBlockResponse)
 	activeSetsMap := make(map[int64]map[string]bool)
 	errors := make([]error, 0)
 
