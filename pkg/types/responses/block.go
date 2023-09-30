@@ -50,7 +50,7 @@ func (s *SingleBlockResponse) UnmarshalJSON(data []byte) error {
 
 type SingleBlockResponse struct {
 	Result *SingleBlockResult `json:"result"`
-	Error  *ResponseError     `json:"error,omitempty"`
+	Error  *ResponseError     `json:"error"`
 }
 
 type SingleBlockResult struct {
