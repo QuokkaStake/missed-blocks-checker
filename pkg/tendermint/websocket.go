@@ -6,6 +6,7 @@ import (
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/metrics"
+	"main/pkg/types/responses"
 	"reflect"
 	"strings"
 	"time"
@@ -188,7 +189,7 @@ func (t *WebsocketClient) ProcessEvent(event rpcTypes.RPCResponse) {
 	t.metricsManager.LogWSEvent(t.config.Name, t.url)
 	t.lastEventTime = time.Now()
 
-	var resultEvent types.EventResult
+	var resultEvent responses.EventResult
 	if err := json.Unmarshal(event.Result, &resultEvent); err != nil {
 		t.logger.Error().Err(err).Msg("Failed to parse event")
 		t.Channel <- &types.WSError{Error: err}
@@ -211,7 +212,7 @@ func (t *WebsocketClient) ProcessEvent(event rpcTypes.RPCResponse) {
 		return
 	}
 
-	var blockData types.SingleBlockResult
+	var blockData responses.SingleBlockResult
 	if err := json.Unmarshal(blockDataStr, &blockData); err != nil {
 		t.logger.Error().Err(err).Msg("Failed to unmarshall event")
 		return

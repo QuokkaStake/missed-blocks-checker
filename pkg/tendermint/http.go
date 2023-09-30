@@ -6,6 +6,7 @@ import (
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/metrics"
+	"main/pkg/types/responses"
 	"main/pkg/utils"
 	"net/http"
 	"net/url"
@@ -46,15 +47,15 @@ func (rpc *RPC) GetConsumerOrProviderHosts() []string {
 	return rpc.config.RPCEndpoints
 }
 
-func (rpc *RPC) GetBlock(height int64) (*types.SingleBlockResponse, error) {
+func (rpc *RPC) GetBlock(height int64) (*responses.SingleBlockResponse, error) {
 	queryURL := "/block"
 	if height != 0 {
 		queryURL = fmt.Sprintf("/block?height=%d", height)
 	}
 
-	var response types.SingleBlockResponse
+	var response responses.SingleBlockResponse
 	if err := rpc.Get(queryURL, constants.QueryTypeBlock, &response, rpc.config.RPCEndpoints, func(v interface{}) error {
-		response, ok := v.(*types.SingleBlockResponse)
+		response, ok := v.(*responses.SingleBlockResponse)
 		if !ok {
 			return fmt.Errorf("error converting block")
 		}
@@ -99,9 +100,9 @@ func (rpc *RPC) AbciQuery(
 		queryURL += fmt.Sprintf("&height=%d", height)
 	}
 
-	var response types.AbciQueryResponse
+	var response responses.AbciQueryResponse
 	if err := rpc.Get(queryURL, constants.QueryType("abci_"+string(queryType)), &response, hosts, func(v interface{}) error {
-		response, ok := v.(*types.AbciQueryResponse)
+		response, ok := v.(*responses.AbciQueryResponse)
 		if !ok {
 			return fmt.Errorf("error converting ABCI response")
 		}
@@ -244,9 +245,9 @@ func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 			page,
 		)
 
-		var response types.ValidatorsResponse
+		var response responses.ValidatorsResponse
 		if err := rpc.Get(queryURL, constants.QueryTypeHistoricalValidators, &response, rpc.config.RPCEndpoints, func(v interface{}) error {
-			response, ok := v.(*types.ValidatorsResponse)
+			response, ok := v.(*responses.ValidatorsResponse)
 			if !ok {
 				return fmt.Errorf("error converting validators")
 			}
@@ -287,10 +288,15 @@ func (rpc *RPC) Get(
 ) error {
 	errors := make([]error, len(hosts))
 
-	indexes := utils.MakeShuffledArray(len(hosts))
+	indexesShuffled := utils.MakeShuffledArray(len(hosts))
+	hostsShuffled := make([]string, len(hosts))
 
-	for _, index := range indexes {
-		lcd := hosts[index]
+	for index, indexShuffled := range indexesShuffled {
+		hostsShuffled[index] = hosts[indexShuffled]
+	}
+
+	for index := range indexesShuffled {
+		lcd := hostsShuffled[index]
 
 		fullURL := lcd + url
 		rpc.logger.Trace().Str("url", fullURL).Msg("Trying making request to LCD")
@@ -310,7 +316,7 @@ func (rpc *RPC) Get(
 
 		if predicateErr := predicate(target); predicateErr != nil {
 			rpc.logger.Warn().Str("url", fullURL).Err(predicateErr).Msg("LCD precondition failed")
-			errors[index] = fmt.Errorf("precondition failed")
+			errors[index] = fmt.Errorf("precondition failed: %s", predicateErr)
 			continue
 		}
 
@@ -322,7 +328,7 @@ func (rpc *RPC) Get(
 	var sb strings.Builder
 
 	sb.WriteString("All LCD requests failed:\n")
-	for index, nodeURL := range hosts {
+	for index, nodeURL := range hostsShuffled {
 		sb.WriteString(fmt.Sprintf("#%d: %s -> %s\n", index+1, nodeURL, errors[index]))
 	}
 
@@ -334,7 +340,7 @@ func (rpc *RPC) GetFull(
 	queryType constants.QueryType,
 	target interface{},
 ) error {
-	client := &http.Client{Timeout: 10 * 1000000000}
+	client := &http.Client{Timeout: 10 * time.Second}
 	start := time.Now()
 
 	fullURL := host + url
