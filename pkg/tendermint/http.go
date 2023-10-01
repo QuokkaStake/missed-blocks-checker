@@ -10,6 +10,7 @@ import (
 	"main/pkg/utils"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -239,9 +240,8 @@ func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 
 	for {
 		queryURL := fmt.Sprintf(
-			"/validators?height=%d&per_page=%d&page=%d",
+			"/validators?height=%d&per_page=100&page=%d",
 			height,
-			rpc.config.Pagination.HistoricalValidators,
 			page,
 		)
 
@@ -265,11 +265,19 @@ func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 			return nil, err
 		}
 
+		validatorsCount, err := strconv.Atoi(response.Result.Total)
+		if err != nil {
+			rpc.logger.Warn().
+				Err(err).
+				Msg("Error parsing validators count from response")
+			return nil, err
+		}
+
 		for _, validator := range response.Result.Validators {
 			activeSetMap[validator.Address] = true
 		}
 
-		if len(response.Result.Validators) < rpc.config.Pagination.HistoricalValidators {
+		if len(activeSetMap) >= validatorsCount {
 			break
 		}
 

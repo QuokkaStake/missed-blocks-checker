@@ -7,10 +7,9 @@ import (
 )
 
 type ChainPagination struct {
-	HistoricalValidators int    `default:"100"  toml:"historical-validators"`
-	BlocksSearch         int    `default:"100"  toml:"blocks-search"`
-	ValidatorsList       uint64 `default:"1000" toml:"validators-list"`
-	SigningInfos         uint64 `default:"1000" toml:"signing-infos"`
+	BlocksSearch   int    `default:"100"  toml:"blocks-search"`
+	ValidatorsList uint64 `default:"1000" toml:"validators-list"`
+	SigningInfos   uint64 `default:"1000" toml:"signing-infos"`
 }
 type ChainConfig struct {
 	Name                 string          `toml:"name"`
