@@ -5,6 +5,8 @@ import (
 	"main/pkg/constants"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"main/pkg/types"
 
 	"github.com/stretchr/testify/assert"
@@ -19,9 +21,9 @@ func TestValidatorCreated(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, nil)
-	assert.Nil(t, err, "Error should not be present!")
+	require.NoError(t, err, "Error should not be present!")
 	assert.Len(t, report.Events, 1, "Report should have 1 entry!")
-	assert.Equal(t, report.Events[0].Type(), constants.EventValidatorCreated, 1, "ReportEvent type mismatch!")
+	assert.Equal(t, constants.EventValidatorCreated, report.Events[0].Type(), 1, "ReportEvent type mismatch!")
 }
 
 func TestValidatorGroupChanged(t *testing.T) {
@@ -48,10 +50,10 @@ func TestValidatorGroupChanged(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	assert.Nil(t, err, "Error should not be present!")
+	require.NoError(t, err, "Error should not be present!")
 	assert.NotEmpty(t, report.Events, "Report should not be empty!")
 	assert.Len(t, report.Events, 1, "Report should have exactly 1 entry!")
-	assert.Equal(t, report.Events[0].Type(), constants.EventValidatorGroupChanged, 1, "ReportEvent type mismatch!")
+	assert.Equal(t, constants.EventValidatorGroupChanged, report.Events[0].Type(), 1, "ReportEvent type mismatch!")
 }
 
 func TestValidatorTombstoned(t *testing.T) {
@@ -78,11 +80,11 @@ func TestValidatorTombstoned(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	assert.Nil(t, err, "Error should not be present!")
+	require.NoError(t, err, "Error should not be present!")
 
 	assert.NotEmpty(t, report.Events, "Report should not be empty!")
 	assert.Len(t, report.Events, 1, "Report should have exactly 1 entry!")
-	assert.Equal(t, report.Events[0].Type(), constants.EventValidatorTombstoned, 1, "ReportEvent type mismatch!")
+	assert.Equal(t, constants.EventValidatorTombstoned, report.Events[0].Type(), 1, "ReportEvent type mismatch!")
 }
 
 func TestValidatorJailed(t *testing.T) {
@@ -109,7 +111,7 @@ func TestValidatorJailed(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	assert.Nil(t, err, "Error should not be present!")
+	require.NoError(t, err, "Error should not be present!")
 
 	assert.NotEmpty(t, report.Events, "Report should not be empty!")
 	assert.Len(t, report.Events, 2, "Report should have exactly 2 entries!")
@@ -147,11 +149,11 @@ func TestValidatorUnjailed(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	assert.Nil(t, err, "Error should not be present!")
+	require.NoError(t, err, "Error should not be present!")
 
 	assert.NotEmpty(t, report.Events, "Report should not be empty!")
 	assert.Len(t, report.Events, 1, "Report should have exactly 1 entry!")
-	assert.Equal(t, report.Events[0].Type(), constants.EventValidatorUnjailed, 1, "ReportEvent type mismatch!")
+	assert.Equal(t, constants.EventValidatorUnjailed, report.Events[0].Type(), 1, "ReportEvent type mismatch!")
 }
 
 func TestValidatorInactive(t *testing.T) {
@@ -178,10 +180,10 @@ func TestValidatorInactive(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	assert.Nil(t, err, "Error should not be present!")
+	require.NoError(t, err, "Error should not be present!")
 	assert.NotEmpty(t, report.Events, "Report should not be empty!")
 	assert.Len(t, report.Events, 1, "Report should have exactly 1 entry!")
-	assert.Equal(t, report.Events[0].Type(), constants.EventValidatorInactive, 1, "ReportEvent type mismatch!")
+	assert.Equal(t, constants.EventValidatorInactive, report.Events[0].Type(), 1, "ReportEvent type mismatch!")
 }
 
 func TestValidatorActive(t *testing.T) {
@@ -208,10 +210,10 @@ func TestValidatorActive(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	assert.Nil(t, err, "Error should not be present!")
+	require.NoError(t, err, "Error should not be present!")
 	assert.NotEmpty(t, report.Events, "Report should not be empty!")
 	assert.Len(t, report.Events, 1, "Report should have exactly 1 entry!")
-	assert.Equal(t, report.Events[0].Type(), constants.EventValidatorActive, 1, "ReportEvent type mismatch!")
+	assert.Equal(t, constants.EventValidatorActive, report.Events[0].Type(), 1, "ReportEvent type mismatch!")
 }
 
 func TestValidatorJailedAndChangedGroup(t *testing.T) {
@@ -238,7 +240,7 @@ func TestValidatorJailedAndChangedGroup(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	assert.Nil(t, err, "Error should not be present!")
+	require.NoError(t, err, "Error should not be present!")
 	assert.Empty(t, report.Events, "Report should be empty!")
 }
 
@@ -270,7 +272,7 @@ func TestTombstonedAndNoPreviousSigningInfo(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	assert.Nil(t, err, "Error should not be present!")
+	require.NoError(t, err, "Error should not be present!")
 	assert.Empty(t, report.Events, "Report should be empty!")
 }
 
@@ -287,7 +289,7 @@ func TestToSlice(t *testing.T) {
 	slice := entries.ToSlice()
 	assert.NotEmpty(t, slice, "Slice should not be empty!")
 	assert.Len(t, slice, 1, "Slice should have exactly 1 entry!")
-	assert.Equal(t, slice[0].Validator.Moniker, "test", 1, "Validator name mismatch!")
+	assert.Equal(t, "test", slice[0].Validator.Moniker, 1, "Validator name mismatch!")
 }
 
 func TestNewMissedBlocksGroupNotPresent(t *testing.T) {
@@ -314,7 +316,7 @@ func TestNewMissedBlocksGroupNotPresent(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	assert.NotNil(t, err, "Error should be present!")
+	require.Error(t, err, "Error should be present!")
 	assert.Nil(t, report, "Report should not be present!")
 }
 
@@ -342,7 +344,7 @@ func TestOldMissedBlocksGroupNotPresent(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	assert.NotNil(t, err, "Error should be present!")
+	require.Error(t, err, "Error should be present!")
 	assert.Nil(t, report, "Report should not be present!")
 }
 
@@ -386,12 +388,12 @@ func TestSorting(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	assert.Nil(t, err, "Error should not be present!")
+	require.NoError(t, err, "Error should not be present!")
 	assert.NotNil(t, report, "Report should be present!")
 	assert.Len(t, report.Events, 3, "Slice should have exactly 3 entries!")
-	assert.Equal(t, report.Events[0].Type(), constants.EventValidatorTombstoned, "ReportEvent type mismatch!")
-	assert.Equal(t, report.Events[1].Type(), constants.EventValidatorJailed, "ReportEvent type mismatch!")
-	assert.Equal(t, report.Events[2].Type(), constants.EventValidatorGroupChanged, "ReportEvent type mismatch!")
+	assert.Equal(t, constants.EventValidatorTombstoned, report.Events[0].Type(), "ReportEvent type mismatch!")
+	assert.Equal(t, constants.EventValidatorJailed, report.Events[1].Type(), "ReportEvent type mismatch!")
+	assert.Equal(t, constants.EventValidatorGroupChanged, report.Events[2].Type(), "ReportEvent type mismatch!")
 }
 
 func TestSortingMissedBlocksGroups(t *testing.T) {
@@ -453,11 +455,11 @@ func TestSortingMissedBlocksGroups(t *testing.T) {
 	// 4) validator4 recovering 75 -> 25
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	assert.Nil(t, err, "Error should not be present!")
+	require.NoError(t, err, "Error should not be present!")
 	assert.NotNil(t, report, "Report should be present!")
 	assert.Len(t, report.Events, 4, "Slice should have exactly 4 entries!")
-	assert.Equal(t, report.Events[0].GetValidator().OperatorAddress, "validator2", "Wrong validator!")
-	assert.Equal(t, report.Events[1].GetValidator().OperatorAddress, "validator1", "Wrong validator!")
-	assert.Equal(t, report.Events[2].GetValidator().OperatorAddress, "validator3", "Wrong validator!")
-	assert.Equal(t, report.Events[3].GetValidator().OperatorAddress, "validator4", "Wrong validator!")
+	assert.Equal(t, "validator2", report.Events[0].GetValidator().OperatorAddress, "Wrong validator!")
+	assert.Equal(t, "validator1", report.Events[1].GetValidator().OperatorAddress, "Wrong validator!")
+	assert.Equal(t, "validator3", report.Events[2].GetValidator().OperatorAddress, "Wrong validator!")
+	assert.Equal(t, "validator4", report.Events[3].GetValidator().OperatorAddress, "Wrong validator!")
 }

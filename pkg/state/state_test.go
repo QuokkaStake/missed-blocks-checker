@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,7 +17,7 @@ func TestStateGetAddAndLatestBlock(t *testing.T) {
 
 	state := NewState()
 	state.AddBlock(&types.Block{Height: 10})
-	assert.Equal(t, state.GetLastBlockHeight(), int64(10), "Height mismatch!")
+	assert.Equal(t, int64(10), state.GetLastBlockHeight(), "Height mismatch!")
 }
 
 func TestStateSetAndGetValidators(t *testing.T) {
@@ -31,12 +33,12 @@ func TestStateSetAndGetValidators(t *testing.T) {
 	validatorsFromState := state.GetValidators()
 
 	assert.Len(t, validatorsFromState, 1, "Length mismatch!")
-	assert.Equal(t, validatorsFromState["address"].Moniker, "moniker", "Validator mismatch!")
+	assert.Equal(t, "moniker", validatorsFromState["address"].Moniker, "Validator mismatch!")
 
 	validatorFromState, found := state.GetValidator("address")
 
-	assert.True(t, found, 1, "Validator should be present!")
-	assert.Equal(t, validatorFromState.Moniker, "moniker", "Validator mismatch!")
+	assert.True(t, found, "Validator should be present!")
+	assert.Equal(t, "moniker", validatorFromState.Moniker, "Validator mismatch!")
 }
 
 func TestAddNotifierIfExists(t *testing.T) {
@@ -55,7 +57,7 @@ func TestAddNotifierIfExists(t *testing.T) {
 	added := state.AddNotifier("address", constants.TelegramReporterName, "id", "notifier")
 
 	assert.False(t, added, "Notifiers should not be added")
-	assert.Equal(t, state.notifiers.Length(), 1, "New notifier should not be added!")
+	assert.Equal(t, 1, state.notifiers.Length(), "New notifier should not be added!")
 }
 
 func TestAddNotifierIfNotExists(t *testing.T) {
@@ -73,7 +75,7 @@ func TestAddNotifierIfNotExists(t *testing.T) {
 
 	added := state.AddNotifier("address", constants.TelegramReporterName, "id2", "newnotifier")
 	assert.True(t, added, "Notifiers should be added")
-	assert.Equal(t, state.notifiers.Length(), 2, "New notifier should be added!")
+	assert.Equal(t, 2, state.notifiers.Length(), "New notifier should be added!")
 }
 
 func TestGetNotifiersForReporter(t *testing.T) {
@@ -96,8 +98,8 @@ func TestGetNotifiersForReporter(t *testing.T) {
 	})
 
 	reporterNotifiers := state.GetNotifiersForReporter("address", constants.TestReporterName)
-	assert.Equal(t, len(reporterNotifiers), 1, "Should have 1 notifier")
-	assert.Equal(t, reporterNotifiers[0].UserName, "notifier2", "Should have 1 notifier")
+	assert.Len(t, reporterNotifiers, 1, "Should have 1 notifier")
+	assert.Equal(t, "notifier2", reporterNotifiers[0].UserName, "Should have 1 notifier")
 }
 
 func TestGetValidatorsForNotifier(t *testing.T) {
@@ -121,7 +123,7 @@ func TestGetValidatorsForNotifier(t *testing.T) {
 
 	validatorNotifiers := state.GetValidatorsForNotifier(constants.TestReporterName, "id1")
 	assert.Len(t, validatorNotifiers, 1, "Should have 1 notifier")
-	assert.Equal(t, validatorNotifiers[0], "address1", "Should have 1 notifier")
+	assert.Equal(t, "address1", validatorNotifiers[0], "Should have 1 notifier")
 }
 
 func TestRemoveNotifierIfNotExists(t *testing.T) {
@@ -139,7 +141,7 @@ func TestRemoveNotifierIfNotExists(t *testing.T) {
 
 	removed := state.RemoveNotifier("address", constants.TelegramReporterName, "id")
 	assert.False(t, removed, "Notifiers should not be removed")
-	assert.Equal(t, state.notifiers.Length(), 1, "New notifier should not be removed!")
+	assert.Equal(t, 1, state.notifiers.Length(), "New notifier should not be removed!")
 }
 
 func TestRemoveNotifierIfExists(t *testing.T) {
@@ -157,7 +159,7 @@ func TestRemoveNotifierIfExists(t *testing.T) {
 
 	removed := state.RemoveNotifier("address", constants.TelegramReporterName, "id")
 	assert.True(t, removed, "Notifiers should be removed")
-	assert.Equal(t, state.notifiers.Length(), 0, "New notifier should be removed!")
+	assert.Equal(t, 0, state.notifiers.Length(), "New notifier should be removed!")
 }
 
 func TestGetBlockTime(t *testing.T) {
@@ -176,7 +178,7 @@ func TestGetBlockTime(t *testing.T) {
 	})
 
 	blockTime := state.GetBlockTime()
-	assert.Equal(t, blockTime, 1500*time.Millisecond, "Wrong block time!")
+	assert.Equal(t, 1500*time.Millisecond, blockTime, "Wrong block time!")
 }
 
 func TestGetTimeToJail(t *testing.T) {
@@ -204,7 +206,7 @@ func TestGetTimeToJail(t *testing.T) {
 	// block_time = 1.5s
 	// validator missed 50 blocks and needs to skip 40 more to get jailed
 	// 40 * 1.5 = 60s
-	assert.Equal(t, blockTime, 60*time.Second, "Wrong jail time!")
+	assert.Equal(t, 60*time.Second, blockTime, "Wrong jail time!")
 }
 
 func TestValidatorsMissedBlocksNoBlocks(t *testing.T) {
@@ -213,11 +215,11 @@ func TestValidatorsMissedBlocksNoBlocks(t *testing.T) {
 	validator := &types.Validator{}
 	signature, err := state.GetValidatorMissedBlocks(validator, 5)
 
-	assert.NotNil(t, err, "Error should be present!")
-	assert.Equal(t, signature.Signed, int64(0), "Argument mismatch!")
-	assert.Equal(t, signature.NoSignature, int64(0), "Argument mismatch!")
-	assert.Equal(t, signature.NotSigned, int64(0), "Argument mismatch!")
-	assert.Equal(t, signature.NotActive, int64(0), "Argument mismatch!")
+	require.Error(t, err, "Error should be present!")
+	assert.Equal(t, int64(0), signature.Signed, "Argument mismatch!")
+	assert.Equal(t, int64(0), signature.NoSignature, "Argument mismatch!")
+	assert.Equal(t, int64(0), signature.NotSigned, "Argument mismatch!")
+	assert.Equal(t, int64(0), signature.NotActive, "Argument mismatch!")
 }
 
 func TestValidatorsMissedBlocksAllSigned(t *testing.T) {
@@ -234,12 +236,12 @@ func TestValidatorsMissedBlocksAllSigned(t *testing.T) {
 
 	signature, err := state.GetValidatorMissedBlocks(validator, 5)
 
-	assert.Nil(t, err, "Error should not be present!")
-	assert.Equal(t, signature.Signed, int64(5), "Argument mismatch!")
-	assert.Equal(t, signature.NoSignature, int64(0), "Argument mismatch!")
-	assert.Equal(t, signature.NotSigned, int64(0), "Argument mismatch!")
-	assert.Equal(t, signature.NotActive, int64(0), "Argument mismatch!")
-	assert.Equal(t, signature.Proposed, int64(1), "Argument mismatch!")
+	require.NoError(t, err, "Error should not be present!")
+	assert.Equal(t, int64(5), signature.Signed, "Argument mismatch!")
+	assert.Equal(t, int64(0), signature.NoSignature, "Argument mismatch!")
+	assert.Equal(t, int64(0), signature.NotSigned, "Argument mismatch!")
+	assert.Equal(t, int64(0), signature.NotActive, "Argument mismatch!")
+	assert.Equal(t, int64(1), signature.Proposed, "Argument mismatch!")
 }
 
 func TestValidatorsMissedBlocksAllMissed(t *testing.T) {
@@ -256,12 +258,12 @@ func TestValidatorsMissedBlocksAllMissed(t *testing.T) {
 
 	signature, err := state.GetValidatorMissedBlocks(validator, 5)
 
-	assert.Nil(t, err, "Error should not be present!")
-	assert.Equal(t, signature.Signed, int64(0), "Argument mismatch!")
-	assert.Equal(t, signature.NoSignature, int64(3), "Argument mismatch!")
-	assert.Equal(t, signature.NotSigned, int64(2), "Argument mismatch!")
-	assert.Equal(t, signature.NotActive, int64(0), "Argument mismatch!")
-	assert.Equal(t, signature.Proposed, int64(0), "Argument mismatch!")
+	require.NoError(t, err, "Error should not be present!")
+	assert.Equal(t, int64(0), signature.Signed, "Argument mismatch!")
+	assert.Equal(t, int64(3), signature.NoSignature, "Argument mismatch!")
+	assert.Equal(t, int64(2), signature.NotSigned, "Argument mismatch!")
+	assert.Equal(t, int64(0), signature.NotActive, "Argument mismatch!")
+	assert.Equal(t, int64(0), signature.Proposed, "Argument mismatch!")
 }
 
 func TestValidatorsMissedBlocksAllInactive(t *testing.T) {
@@ -278,12 +280,12 @@ func TestValidatorsMissedBlocksAllInactive(t *testing.T) {
 
 	signature, err := state.GetValidatorMissedBlocks(validator, 5)
 
-	assert.Nil(t, err, "Error should not be present!")
-	assert.Equal(t, signature.Signed, int64(0), "Argument mismatch!")
-	assert.Equal(t, signature.NoSignature, int64(0), "Argument mismatch!")
-	assert.Equal(t, signature.NotSigned, int64(0), "Argument mismatch!")
-	assert.Equal(t, signature.NotActive, int64(5), "Argument mismatch!")
-	assert.Equal(t, signature.Proposed, int64(0), "Argument mismatch!")
+	require.NoError(t, err, "Error should not be present!")
+	assert.Equal(t, int64(0), signature.Signed, "Argument mismatch!")
+	assert.Equal(t, int64(0), signature.NoSignature, "Argument mismatch!")
+	assert.Equal(t, int64(0), signature.NotSigned, "Argument mismatch!")
+	assert.Equal(t, int64(5), signature.NotActive, "Argument mismatch!")
+	assert.Equal(t, int64(0), signature.Proposed, "Argument mismatch!")
 }
 
 func TestValidatorsMissedBlocksSomeSkipped(t *testing.T) {
@@ -303,10 +305,10 @@ func TestValidatorsMissedBlocksSomeSkipped(t *testing.T) {
 
 	signature, err := state.GetValidatorMissedBlocks(validator, 5)
 
-	assert.Nil(t, err, "Error should not be present!")
-	assert.Equal(t, signature.Signed, int64(4), "Argument mismatch!")
-	assert.Equal(t, signature.NoSignature, int64(0), "Argument mismatch!")
-	assert.Equal(t, signature.NotSigned, int64(1), "Argument mismatch!")
-	assert.Equal(t, signature.NotActive, int64(1), "Argument mismatch!")
-	assert.Equal(t, signature.Proposed, int64(0), "Argument mismatch!")
+	require.NoError(t, err, "Error should not be present!")
+	assert.Equal(t, int64(4), signature.Signed, "Argument mismatch!")
+	assert.Equal(t, int64(0), signature.NoSignature, "Argument mismatch!")
+	assert.Equal(t, int64(1), signature.NotSigned, "Argument mismatch!")
+	assert.Equal(t, int64(1), signature.NotActive, "Argument mismatch!")
+	assert.Equal(t, int64(0), signature.Proposed, "Argument mismatch!")
 }

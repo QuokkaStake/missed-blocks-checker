@@ -7,3 +7,4 @@ cover.out
 missed-blocks-checker
 dist
 *.sqlite
+**/.DS_Store

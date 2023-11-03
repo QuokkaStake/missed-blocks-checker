@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,7 +17,7 @@ func TestToBlockInvalid(t *testing.T) {
 	}
 
 	block, err := blockRaw.ToBlock()
-	assert.NotNil(t, err, "Error should be presented!")
+	require.Error(t, err, "Error should be presented!")
 	assert.Nil(t, block, "Block should not be presented!")
 }
 
@@ -33,12 +35,12 @@ func TestToBlockValid(t *testing.T) {
 	}
 
 	block, err := blockRaw.ToBlock()
-	assert.Nil(t, err, "Error should not be presented!")
+	require.NoError(t, err, "Error should not be presented!")
 	assert.NotNil(t, block, "Block should be presented!")
-	assert.Equalf(t, block.Height, int64(100), "Block height mismatch!")
+	assert.Equalf(t, int64(100), block.Height, "Block height mismatch!")
 	assert.Len(t, block.Signatures, 2, "Block should have 2 signatures!")
-	assert.Equal(t, block.Signatures["first"], int32(1), "Block signature mismatch!")
-	assert.Equal(t, block.Signatures["second"], int32(2), "Block signature mismatch!")
+	assert.Equal(t, int32(1), block.Signatures["first"], "Block signature mismatch!")
+	assert.Equal(t, int32(2), block.Signatures["second"], "Block signature mismatch!")
 }
 
 func TestBlockResponseUnmarshalJson(t *testing.T) {
@@ -51,13 +53,13 @@ func TestBlockResponseUnmarshalJson(t *testing.T) {
 
 	err := json.Unmarshal([]byte(successJSON), &blockResponse)
 
-	assert.Nil(t, err, "Should not error unmarshalling JSON!")
+	require.NoError(t, err, "Should not error unmarshalling JSON!")
 	assert.Nil(t, blockResponse.Error, "Unmarshall mismatch!")
 	assert.NotNil(t, blockResponse.Result, "Unmarshall mismatch!")
 
 	err2 := json.Unmarshal([]byte(errorJSON), &blockResponse)
 
-	assert.Nil(t, err2, "Should not error unmarshalling JSON!")
+	require.NoError(t, err2, "Should not error unmarshalling JSON!")
 	assert.NotNil(t, blockResponse.Error, "Unmarshall mismatch!")
 	assert.Nil(t, blockResponse.Result, "Unmarshall mismatch!")
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html"
 	"main/pkg/constants"
+	"strconv"
 	"strings"
 
 	tele "gopkg.in/telebot.v3"
@@ -35,7 +36,7 @@ func (reporter *Reporter) HandleUnsubscribe(c tele.Context) error {
 		))
 	}
 
-	removed := reporter.Manager.RemoveNotifier(address, reporter.Name(), fmt.Sprintf("%d", c.Sender().ID))
+	removed := reporter.Manager.RemoveNotifier(address, reporter.Name(), strconv.FormatInt(c.Sender().ID, 10))
 
 	if !removed {
 		return reporter.BotReply(c, "You are not subscribed to this validator's notifications")

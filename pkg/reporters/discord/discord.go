@@ -22,6 +22,8 @@ type Reporter struct {
 	Guild   string
 	Channel string
 
+	Version string
+
 	DiscordSession   *discordgo.Session
 	Logger           zerolog.Logger
 	Config           *config.ChainConfig
@@ -34,6 +36,7 @@ type Reporter struct {
 
 func NewReporter(
 	chainConfig *config.ChainConfig,
+	version string,
 	logger zerolog.Logger,
 	manager *statePkg.Manager,
 	metricsManager *metrics.Manager,
@@ -50,6 +53,7 @@ func NewReporter(
 		SnapshotManager:  snapshotManager,
 		TemplatesManager: templatesPkg.NewManager(logger, constants.DiscordReporterName),
 		Commands:         make(map[string]*Command, 0),
+		Version:          version,
 	}
 }
 

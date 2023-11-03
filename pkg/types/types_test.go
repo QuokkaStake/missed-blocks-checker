@@ -16,8 +16,8 @@ func TestValidatorsToMap(t *testing.T) {
 
 	validatorsMap := validators.ToMap()
 	assert.Len(t, validatorsMap, 2, "Map should have 2 entries!")
-	assert.Equal(t, validatorsMap["firstaddr"].Moniker, "first", "Validator mismatch!")
-	assert.Equal(t, validatorsMap["secondaddr"].Moniker, "second", "Validator mismatch!")
+	assert.Equal(t, "first", validatorsMap["firstaddr"].Moniker, "Validator mismatch!")
+	assert.Equal(t, "second", validatorsMap["secondaddr"].Moniker, "Validator mismatch!")
 }
 
 func TestValidatorsToSlice(t *testing.T) {

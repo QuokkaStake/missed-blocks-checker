@@ -3,6 +3,8 @@ package config
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"gopkg.in/guregu/null.v4"
 
 	"github.com/stretchr/testify/assert"
@@ -12,28 +14,28 @@ func TestGetChainNameWithoutPrettyName(t *testing.T) {
 	t.Parallel()
 
 	config := &ChainConfig{Name: "test"}
-	assert.Equal(t, config.GetName(), "test", "Names do not match!")
+	assert.Equal(t, "test", config.GetName(), "Names do not match!")
 }
 
 func TestGetChainNameWithPrettyName(t *testing.T) {
 	t.Parallel()
 
 	config := &ChainConfig{Name: "test", PrettyName: "Test"}
-	assert.Equal(t, config.GetName(), "Test", "Names do not match!")
+	assert.Equal(t, "Test", config.GetName(), "Names do not match!")
 }
 
 func TestGetChainBlocksSignCount(t *testing.T) {
 	t.Parallel()
 
 	config := &ChainConfig{BlocksWindow: 10000, MinSignedPerWindow: 0.05}
-	assert.Equal(t, config.GetBlocksSignCount(), int64(9500), "Blocks sign count does not match!")
+	assert.Equal(t, int64(9500), config.GetBlocksSignCount(), "Blocks sign count does not match!")
 }
 
 func TestGetChainBlocksMissCount(t *testing.T) {
 	t.Parallel()
 
 	config := &ChainConfig{BlocksWindow: 10000, MinSignedPerWindow: 0.05}
-	assert.Equal(t, config.GetBlocksMissCount(), int64(500), "Blocks miss count does not match!")
+	assert.Equal(t, int64(500), config.GetBlocksMissCount(), "Blocks miss count does not match!")
 }
 
 func TestValidateChainWithoutName(t *testing.T) {
@@ -41,7 +43,7 @@ func TestValidateChainWithoutName(t *testing.T) {
 
 	config := &ChainConfig{}
 	err := config.Validate()
-	assert.NotNil(t, err, "Error should be present!")
+	require.Error(t, err, "Error should be present!")
 }
 
 func TestValidateChainWithoutRPCEndpoints(t *testing.T) {
@@ -49,7 +51,7 @@ func TestValidateChainWithoutRPCEndpoints(t *testing.T) {
 
 	config := &ChainConfig{Name: "chain"}
 	err := config.Validate()
-	assert.NotNil(t, err, "Error should be present!")
+	require.Error(t, err, "Error should be present!")
 }
 
 func TestValidateConsumerChainWithoutProviderEndpoints(t *testing.T) {
@@ -61,7 +63,7 @@ func TestValidateConsumerChainWithoutProviderEndpoints(t *testing.T) {
 		IsConsumer:   null.BoolFrom(true),
 	}
 	err := config.Validate()
-	assert.NotNil(t, err, "Error should be present!")
+	require.Error(t, err, "Error should be present!")
 }
 
 func TestValidateConsumerChainWithoutChainID(t *testing.T) {
@@ -74,7 +76,7 @@ func TestValidateConsumerChainWithoutChainID(t *testing.T) {
 		ProviderRPCEndpoints: []string{"endpoint"},
 	}
 	err := config.Validate()
-	assert.NotNil(t, err, "Error should be present!")
+	require.Error(t, err, "Error should be present!")
 }
 
 func TestValidateNotEnoughThresholds(t *testing.T) {
@@ -87,7 +89,7 @@ func TestValidateNotEnoughThresholds(t *testing.T) {
 		EmojisEnd:   []string{"x"},
 	}
 	err := config.Validate()
-	assert.NotNil(t, err, "Error should be present!")
+	require.Error(t, err, "Error should be present!")
 }
 
 func TestValidateNotEnoughStartEmojis(t *testing.T) {
@@ -100,7 +102,7 @@ func TestValidateNotEnoughStartEmojis(t *testing.T) {
 		EmojisEnd:   []string{"x", "y"},
 	}
 	err := config.Validate()
-	assert.NotNil(t, err, "Error should be present!")
+	require.Error(t, err, "Error should be present!")
 }
 
 func TestValidateNotEnoughEndEmojis(t *testing.T) {
@@ -113,7 +115,7 @@ func TestValidateNotEnoughEndEmojis(t *testing.T) {
 		EmojisEnd:   []string{"x"},
 	}
 	err := config.Validate()
-	assert.NotNil(t, err, "Error should be present!")
+	require.Error(t, err, "Error should be present!")
 }
 
 func TestValidateFirstThresholdNotZero(t *testing.T) {
@@ -126,7 +128,7 @@ func TestValidateFirstThresholdNotZero(t *testing.T) {
 		EmojisEnd:   []string{"x", "y"},
 	}
 	err := config.Validate()
-	assert.NotNil(t, err, "Error should be present!")
+	require.Error(t, err, "Error should be present!")
 }
 
 func TestValidateLastThresholdNotHundred(t *testing.T) {
@@ -139,7 +141,7 @@ func TestValidateLastThresholdNotHundred(t *testing.T) {
 		EmojisEnd:   []string{"x", "y"},
 	}
 	err := config.Validate()
-	assert.NotNil(t, err, "Error should be present!")
+	require.Error(t, err, "Error should be present!")
 }
 
 func TestValidateThresholdsInconsistent(t *testing.T) {
@@ -152,7 +154,7 @@ func TestValidateThresholdsInconsistent(t *testing.T) {
 		EmojisEnd:   []string{"x", "y", "z"},
 	}
 	err := config.Validate()
-	assert.NotNil(t, err, "Error should be present!")
+	require.Error(t, err, "Error should be present!")
 }
 
 func TestValidateChainValid(t *testing.T) {
@@ -165,7 +167,7 @@ func TestValidateChainValid(t *testing.T) {
 		EmojisEnd:   []string{"x", "y"},
 	}
 	err := config.Validate()
-	assert.Nil(t, err, "Error should not be present!")
+	require.NoError(t, err, "Error should not be present!")
 }
 
 func TestValidateConsumerChainWithoutEndpoints(t *testing.T) {
@@ -182,7 +184,7 @@ func TestValidateConsumerChainWithoutEndpoints(t *testing.T) {
 		EmojisEnd:            []string{"x", "y"},
 	}
 	err := config.Validate()
-	assert.NotNil(t, err, "Error should be present!")
+	require.Error(t, err, "Error should be present!")
 }
 
 func TestValidateConsumerChainWithoutChainId(t *testing.T) {
@@ -199,7 +201,7 @@ func TestValidateConsumerChainWithoutChainId(t *testing.T) {
 		EmojisEnd:            []string{"x", "y"},
 	}
 	err := config.Validate()
-	assert.NotNil(t, err, "Error should be present!")
+	require.Error(t, err, "Error should be present!")
 }
 
 func TestValidateConsumerChainValid(t *testing.T) {
@@ -216,5 +218,5 @@ func TestValidateConsumerChainValid(t *testing.T) {
 		EmojisEnd:            []string{"x", "y"},
 	}
 	err := config.Validate()
-	assert.Nil(t, err, "Error should not be present!")
+	require.NoError(t, err, "Error should not be present!")
 }

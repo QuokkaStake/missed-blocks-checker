@@ -10,12 +10,12 @@ import (
 )
 
 type Manager interface {
-	Render(string, interface{}) (string, error)
+	Render(templateName string, data interface{}) (string, error)
 	SerializeLink(link types.Link) template.HTML
 	SerializeDate(date time.Time) string
 	SerializeNotifiers(notifiers types.Notifiers) string
 	SerializeNotifier(notifier *types.Notifier) string
-	SerializeEvent(types.RenderEventItem) string
+	SerializeEvent(event types.RenderEventItem) string
 }
 
 func NewManager(logger zerolog.Logger, reporterType constants.ReporterName) Manager {

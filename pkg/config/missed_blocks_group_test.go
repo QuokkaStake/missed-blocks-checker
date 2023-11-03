@@ -3,7 +3,7 @@ package config
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMissedBlocksGroupEmpty(t *testing.T) {
@@ -11,7 +11,7 @@ func TestMissedBlocksGroupEmpty(t *testing.T) {
 
 	groups := MissedBlocksGroups{}
 	err := groups.Validate(10000)
-	assert.NotNil(t, err, "Error should be present!")
+	require.Error(t, err, "Error should be present!")
 }
 
 func TestMissedBlocksGroupMissingStart(t *testing.T) {
@@ -21,7 +21,7 @@ func TestMissedBlocksGroupMissingStart(t *testing.T) {
 		{Start: 5000, End: 10000},
 	}
 	err := groups.Validate(10000)
-	assert.NotNil(t, err, "Error should be present!")
+	require.Error(t, err, "Error should be present!")
 }
 
 func TestMissedBlocksGroupMissingEnd(t *testing.T) {
@@ -31,7 +31,7 @@ func TestMissedBlocksGroupMissingEnd(t *testing.T) {
 		{Start: 0, End: 5000},
 	}
 	err := groups.Validate(10000)
-	assert.NotNil(t, err, "Error should be present!")
+	require.Error(t, err, "Error should be present!")
 }
 
 func TestMissedBlocksGroupGaps(t *testing.T) {
@@ -42,7 +42,7 @@ func TestMissedBlocksGroupGaps(t *testing.T) {
 		{Start: 9000, End: 10000},
 	}
 	err := groups.Validate(10000)
-	assert.NotNil(t, err, "Error should be present!")
+	require.Error(t, err, "Error should be present!")
 }
 
 func TestMissedBlocksValid(t *testing.T) {
@@ -53,5 +53,5 @@ func TestMissedBlocksValid(t *testing.T) {
 		{Start: 5000, End: 10000},
 	}
 	err := groups.Validate(10000)
-	assert.Nil(t, err, "Error should not be present!")
+	require.NoError(t, err, "Error should not be present!")
 }

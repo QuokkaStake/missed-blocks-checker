@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,7 +29,7 @@ func TestFilter(t *testing.T) {
 	})
 
 	assert.Len(t, filtered, 1, "Array should have 1 entry!")
-	assert.Equal(t, filtered[0], "true", "Value mismatch!")
+	assert.Equal(t, "true", filtered[0], "Value mismatch!")
 }
 
 func TestMap(t *testing.T) {
@@ -39,8 +41,8 @@ func TestMap(t *testing.T) {
 	})
 
 	assert.Len(t, filtered, 2, "Array should have 2 entries!")
-	assert.Equal(t, filtered[0], 4, "Value mismatch!")
-	assert.Equal(t, filtered[1], 8, "Value mismatch!")
+	assert.Equal(t, 4, filtered[0], "Value mismatch!")
+	assert.Equal(t, 8, filtered[1], "Value mismatch!")
 }
 
 func TestContains(t *testing.T) {
@@ -81,15 +83,17 @@ func TestFormatDuration(t *testing.T) {
 
 	duration := 24*time.Hour + 2*time.Hour + 3*time.Minute + 4*time.Second
 	assert.Equal(
-		t, FormatDuration(duration),
+		t,
 		"1 day 2 hours 3 minutes 4 seconds",
+		FormatDuration(duration),
 		"Value mismatch!",
 	)
 
 	anotherDuration := 24 * time.Hour
 	assert.Equal(
-		t, FormatDuration(anotherDuration),
+		t,
 		"1 day",
+		FormatDuration(anotherDuration),
 		"Value mismatch!",
 	)
 }
@@ -105,14 +109,14 @@ func TestCompareTwoBech32FirstInvalid(t *testing.T) {
 	t.Parallel()
 
 	_, err := CompareTwoBech32("test", "cosmos1xqz9pemz5e5zycaa89kys5aw6m8rhgsvtp9lt2")
-	assert.NotNil(t, err, "Error should be present!")
+	require.Error(t, err, "Error should be present!")
 }
 
 func TestCompareTwoBech32SecondInvalid(t *testing.T) {
 	t.Parallel()
 
 	_, err := CompareTwoBech32("cosmos1xqz9pemz5e5zycaa89kys5aw6m8rhgsvtp9lt2", "test")
-	assert.NotNil(t, err, "Error should be present!")
+	require.Error(t, err, "Error should be present!")
 }
 
 func TestCompareTwoBech32SecondEqual(t *testing.T) {
@@ -122,7 +126,7 @@ func TestCompareTwoBech32SecondEqual(t *testing.T) {
 		"cosmos1xqz9pemz5e5zycaa89kys5aw6m8rhgsvtp9lt2",
 		"cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e",
 	)
-	assert.Nil(t, err, "Error should not be present!")
+	require.NoError(t, err, "Error should not be present!")
 	assert.True(t, equal, "Bech addresses should be equal!")
 }
 
@@ -133,14 +137,14 @@ func TestCompareTwoBech32SecondNotEqual(t *testing.T) {
 		"cosmos1xqz9pemz5e5zycaa89kys5aw6m8rhgsvtp9lt2",
 		"cosmos1c4k24jzduc365kywrsvf5ujz4ya6mwymy8vq4q",
 	)
-	assert.Nil(t, err, "Error should not be present!")
+	require.NoError(t, err, "Error should not be present!")
 	assert.False(t, equal, "Bech addresses should not be equal!")
 }
 
 func TestCompareBoolToFloat64(t *testing.T) {
 	t.Parallel()
-	assert.Equal(t, BoolToFloat64(true), float64(1), "Value mismatch!")
-	assert.Equal(t, BoolToFloat64(false), float64(0), "Value mismatch!")
+	assert.InDelta(t, BoolToFloat64(true), float64(1), 0.001, "Value mismatch!")
+	assert.InDelta(t, BoolToFloat64(false), float64(0), 0.001, "Value mismatch!")
 }
 
 func TestSplitIntoChunks(t *testing.T) {
@@ -150,13 +154,13 @@ func TestSplitIntoChunks(t *testing.T) {
 	chunks := SplitIntoChunks(array, 2)
 
 	assert.Len(t, chunks, 3, "There should be 3 chunks!")
-	assert.Equal(t, chunks[0], []int{1, 2}, "Value mismatch!")
-	assert.Equal(t, chunks[1], []int{3, 4}, "Value mismatch!")
-	assert.Equal(t, chunks[2], []int{5}, "Value mismatch!")
+	assert.Equal(t, []int{1, 2}, chunks[0], "Value mismatch!")
+	assert.Equal(t, []int{3, 4}, chunks[1], "Value mismatch!")
+	assert.Equal(t, []int{5}, chunks[2], "Value mismatch!")
 
 	anotherArray := []int{}
 	anotherChunks := SplitIntoChunks(anotherArray, 2)
-	assert.Len(t, anotherChunks, 0, "There should be 0 chunks!")
+	assert.Empty(t, anotherChunks, "There should be 0 chunks!")
 }
 
 func TestSplitStringIntoChunksLessThanOneChunk(t *testing.T) {
@@ -191,7 +195,7 @@ func TestConvertBech32PrefixInvalid(t *testing.T) {
 		"test",
 		"cosmosvaloper",
 	)
-	assert.NotNil(t, err, "Error should be present!")
+	require.Error(t, err, "Error should be present!")
 }
 
 func TestConvertBech32PrefixValid(t *testing.T) {
@@ -201,11 +205,11 @@ func TestConvertBech32PrefixValid(t *testing.T) {
 		"cosmos1xqz9pemz5e5zycaa89kys5aw6m8rhgsvtp9lt2",
 		"cosmosvaloper",
 	)
-	assert.Nil(t, err, "Error should not be present!")
+	require.NoError(t, err, "Error should not be present!")
 	assert.Equal(
 		t,
-		address,
 		"cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e",
+		address,
 		"Bech addresses should not be equal!",
 	)
 }
@@ -213,13 +217,13 @@ func TestConvertBech32PrefixValid(t *testing.T) {
 func TestMaxInt64(t *testing.T) {
 	t.Parallel()
 
-	assert.Equal(t, MaxInt64(1, 2), int64(2), "Value mismatch!")
-	assert.Equal(t, MaxInt64(2, 1), int64(2), "Value mismatch!")
+	assert.Equal(t, int64(2), MaxInt64(1, 2), "Value mismatch!")
+	assert.Equal(t, int64(2), MaxInt64(2, 1), "Value mismatch!")
 }
 
 func TestMinInt64(t *testing.T) {
 	t.Parallel()
 
-	assert.Equal(t, MinInt64(1, 2), int64(1), "Value mismatch!")
-	assert.Equal(t, MinInt64(2, 1), int64(1), "Value mismatch!")
+	assert.Equal(t, int64(1), MinInt64(1, 2), "Value mismatch!")
+	assert.Equal(t, int64(1), MinInt64(2, 1), "Value mismatch!")
 }

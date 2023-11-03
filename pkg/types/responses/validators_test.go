@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,13 +19,13 @@ func TestValidatorsResponseUnmarshalJson(t *testing.T) {
 
 	err := json.Unmarshal([]byte(successJSON), &validatorsResponse)
 
-	assert.Nil(t, err, "Should not error unmarshalling JSON!")
+	require.NoError(t, err, "Should not error unmarshalling JSON!")
 	assert.Nil(t, validatorsResponse.Error, "Unmarshall mismatch!")
 	assert.NotNil(t, validatorsResponse.Result, "Unmarshall mismatch!")
 
 	err2 := json.Unmarshal([]byte(errorJSON), &validatorsResponse)
 
-	assert.Nil(t, err2, "Should not error unmarshalling JSON!")
+	require.NoError(t, err2, "Should not error unmarshalling JSON!")
 	assert.NotNil(t, validatorsResponse.Error, "Unmarshall mismatch!")
 	assert.Nil(t, validatorsResponse.Result, "Unmarshall mismatch!")
 }
