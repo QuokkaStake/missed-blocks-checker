@@ -3,7 +3,7 @@ package config
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestValidateDatabaseConfigWithoutPath(t *testing.T) {
@@ -11,7 +11,7 @@ func TestValidateDatabaseConfigWithoutPath(t *testing.T) {
 
 	config := &DatabaseConfig{Type: "sqlite"}
 	err := config.Validate()
-	assert.NotNil(t, err, "Error should be present!")
+	require.Error(t, err, "Error should be present!")
 }
 
 func TestValidateDatabaseConfigWithoutType(t *testing.T) {
@@ -19,7 +19,7 @@ func TestValidateDatabaseConfigWithoutType(t *testing.T) {
 
 	config := &DatabaseConfig{Path: "path"}
 	err := config.Validate()
-	assert.NotNil(t, err, "Error should be present!")
+	require.Error(t, err, "Error should be present!")
 }
 
 func TestValidateDatabaseConfigOk(t *testing.T) {
@@ -27,5 +27,5 @@ func TestValidateDatabaseConfigOk(t *testing.T) {
 
 	config := &DatabaseConfig{Path: "path", Type: "sqlite"}
 	err := config.Validate()
-	assert.Nil(t, err, "Error should not be present!")
+	require.NoError(t, err, "Error should not be present!")
 }

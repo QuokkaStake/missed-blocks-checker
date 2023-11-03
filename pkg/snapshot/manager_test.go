@@ -7,6 +7,8 @@ import (
 	"main/pkg/types"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/guregu/null.v4"
 )
@@ -47,10 +49,10 @@ func TestManagerCommitNewSnapshot(t *testing.T) {
 	})
 
 	assert.True(t, manager.HasNewerSnapshot(), "Should not have older snapshot!")
-	assert.Equal(t, manager.GetOlderHeight(), int64(10), "Height mismatch!")
+	assert.Equal(t, int64(10), manager.GetOlderHeight(), "Height mismatch!")
 
 	report, err := manager.GetReport()
-	assert.Nil(t, err, "Error should not be presented!")
+	require.NoError(t, err, "Error should not be presented!")
 	assert.True(t, report.Empty(), "Report should be empty!")
 }
 

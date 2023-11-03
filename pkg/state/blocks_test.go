@@ -11,10 +11,10 @@ func TestBlocksAddBlock(t *testing.T) {
 	t.Parallel()
 
 	state := NewState()
-	assert.Len(t, state.blocks.blocks, 0, "Blocks should have 0 entries!")
+	assert.Empty(t, state.blocks.blocks, "Blocks should have 0 entries!")
 
 	state.AddBlock(&types.Block{Height: 10})
-	assert.Len(t, state.blocks.blocks, 1, "Blocks should have 1 entry!")
+	assert.NotEmpty(t, state.blocks.blocks, "Blocks should have 1 entry!")
 }
 
 func TestBlocksGetLatestBlock(t *testing.T) {
@@ -27,7 +27,7 @@ func TestBlocksGetLatestBlock(t *testing.T) {
 
 	latest := state.blocks.GetLatestBlock()
 
-	assert.Equal(t, latest.Height, int64(30), "Height mismatch!")
+	assert.Equal(t, int64(30), latest.Height, "Height mismatch!")
 }
 
 func TestBlocksGetEarliestBlock(t *testing.T) {
@@ -40,7 +40,7 @@ func TestBlocksGetEarliestBlock(t *testing.T) {
 
 	latest := state.GetEarliestBlock()
 
-	assert.Equal(t, latest.Height, int64(10), "Height mismatch!")
+	assert.Equal(t, int64(10), latest.Height, "Height mismatch!")
 }
 
 func TestBlocksGetBlock(t *testing.T) {
@@ -80,7 +80,7 @@ func TestBlocksGetCountSinceLatest(t *testing.T) {
 	state.AddBlock(&types.Block{Height: 5})
 
 	count := state.GetBlocksCountSinceLatest(5)
-	assert.Equal(t, count, int64(3), "There should be 3 blocks!")
+	assert.Equal(t, int64(3), count, "There should be 3 blocks!")
 }
 
 func TestBlocksGetMissingSinceLatest(t *testing.T) {
@@ -92,6 +92,7 @@ func TestBlocksGetMissingSinceLatest(t *testing.T) {
 	state.AddBlock(&types.Block{Height: 5})
 
 	missing := state.GetMissingBlocksSinceLatest(5)
+
 	assert.Len(t, missing, 2, "There should be 3 blocks!")
 	assert.Contains(t, missing, int64(2), "Blocks mismatch!")
 	assert.Contains(t, missing, int64(4), "Blocks mismatch!")

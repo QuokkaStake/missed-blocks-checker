@@ -10,5 +10,5 @@ type Reporter interface {
 	Name() constants.ReporterName
 	Enabled() bool
 	SerializeEvent(event types.ReportEvent) types.RenderEventItem
-	Send(*types.Report) error
+	Send(report *types.Report) error
 }
