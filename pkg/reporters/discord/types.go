@@ -85,3 +85,8 @@ type statusRender struct {
 func (s statusRender) FormatNotSignedPercent(entry statusEntry) string {
 	return fmt.Sprintf("%.2f", float64(entry.SigningInfo.GetNotSigned())/float64(s.ChainConfig.BlocksWindow)*100)
 }
+
+type helpRender struct {
+	Version  string
+	Commands map[string]*Command
+}

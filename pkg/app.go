@@ -46,6 +46,7 @@ func NewApp(configPath string, version string) *App {
 		appManagers[index] = NewAppManager(
 			logger,
 			chainConfig,
+			version,
 			metricsManager,
 			database,
 		)

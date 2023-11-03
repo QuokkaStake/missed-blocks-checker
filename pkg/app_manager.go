@@ -39,6 +39,7 @@ type AppManager struct {
 func NewAppManager(
 	logger zerolog.Logger,
 	config *configPkg.ChainConfig,
+	version string,
 	metricsManager *metrics.Manager,
 	database *databasePkg.Database,
 ) *AppManager {
@@ -54,8 +55,8 @@ func NewAppManager(
 	websocketManager := tendermint.NewWebsocketManager(managerLogger, config, metricsManager)
 
 	reporters := []reportersPkg.Reporter{
-		telegram.NewReporter(config, managerLogger, stateManager, metricsManager, snapshotManager),
-		discord.NewReporter(config, managerLogger, stateManager, metricsManager, snapshotManager),
+		telegram.NewReporter(config, version, managerLogger, stateManager, metricsManager, snapshotManager),
+		discord.NewReporter(config, version, managerLogger, stateManager, metricsManager, snapshotManager),
 	}
 
 	return &AppManager{

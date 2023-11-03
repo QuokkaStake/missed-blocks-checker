@@ -24,6 +24,8 @@ type Reporter struct {
 	Chat   int64
 	Admins []int64
 
+	Version string
+
 	TelegramBot      *tele.Bot
 	Logger           zerolog.Logger
 	Config           *config.ChainConfig
@@ -39,6 +41,7 @@ const (
 
 func NewReporter(
 	chainConfig *config.ChainConfig,
+	version string,
 	logger zerolog.Logger,
 	manager *statePkg.Manager,
 	metricsManager *metrics.Manager,
@@ -54,6 +57,7 @@ func NewReporter(
 		MetricsManager:   metricsManager,
 		SnapshotManager:  snapshotManager,
 		TemplatesManager: templatesPkg.NewManager(logger, constants.TelegramReporterName),
+		Version:          version,
 	}
 }
 
