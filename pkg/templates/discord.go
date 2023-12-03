@@ -133,31 +133,31 @@ func (m *DiscordTemplateManager) SerializeEvent(event types.RenderEventItem) str
 		)
 	case events.ValidatorJailed:
 		return fmt.Sprintf(
-			"**❌ %s was jailed**%s",
+			"**❌ %s has been jailed**%s",
 			validatorLink,
 			notifiersSerialized,
 		)
 	case events.ValidatorUnjailed:
 		return fmt.Sprintf(
-			"**👌 %s was unjailed**%s",
+			"**👌 %s has been unjailed**%s",
 			validatorLink,
 			notifiersSerialized,
 		)
 	case events.ValidatorInactive:
 		return fmt.Sprintf(
-			"😔 **%s is now not in the active set**%s",
+			"😔 **%s has left the active set**%s",
 			validatorLink,
 			notifiersSerialized,
 		)
 	case events.ValidatorActive:
 		return fmt.Sprintf(
-			"✅ **%s is now in the active set**%s",
+			"✅ **%s has joined the active set**%s",
 			validatorLink,
 			notifiersSerialized,
 		)
 	case events.ValidatorTombstoned:
 		return fmt.Sprintf(
-			"**💀 %s was tombstoned**%s",
+			"**💀 %s has been tombstoned**%s",
 			validatorLink,
 			notifiersSerialized,
 		)

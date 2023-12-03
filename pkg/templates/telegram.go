@@ -126,31 +126,31 @@ func (m *TelegramTemplateManager) SerializeEvent(event types.RenderEventItem) st
 		)
 	case events.ValidatorJailed:
 		return fmt.Sprintf(
-			"<strong>❌ %s was jailed</strong>%s",
+			"<strong>❌ %s has been jailed</strong>%s",
 			m.SerializeLink(event.ValidatorLink),
 			notifiersSerialized,
 		)
 	case events.ValidatorUnjailed:
 		return fmt.Sprintf(
-			"<strong>👌 %s was unjailed</strong>%s",
+			"<strong>👌 %s has been unjailed</strong>%s",
 			m.SerializeLink(event.ValidatorLink),
 			notifiersSerialized,
 		)
 	case events.ValidatorInactive:
 		return fmt.Sprintf(
-			"😔 <strong>%s is now not in the active set</strong>%s",
+			"😔 <strong>%s has left the active set</strong>%s",
 			m.SerializeLink(event.ValidatorLink),
 			notifiersSerialized,
 		)
 	case events.ValidatorActive:
 		return fmt.Sprintf(
-			"✅ <strong>%s is now in the active set</strong>%s",
+			"✅ <strong>%s has joined the active set</strong>%s",
 			m.SerializeLink(event.ValidatorLink),
 			notifiersSerialized,
 		)
 	case events.ValidatorTombstoned:
 		return fmt.Sprintf(
-			"<strong>💀 %s was tombstoned</strong>%s",
+			"<strong>💀 %s has been tombstoned</strong>%s",
 			m.SerializeLink(event.ValidatorLink),
 			notifiersSerialized,
 		)
