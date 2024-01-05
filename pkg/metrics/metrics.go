@@ -44,7 +44,9 @@ type Manager struct {
 	isJailedGauge     *prometheus.GaugeVec
 	isTombstonedGauge *prometheus.GaugeVec
 
-	appVersionGauge         *prometheus.GaugeVec
+	appVersionGauge *prometheus.GaugeVec
+	startTimeGauge  *prometheus.GaugeVec
+
 	chainInfoGauge          *prometheus.GaugeVec
 	signedBlocksWindowGauge *prometheus.GaugeVec
 	minSignedPerWindowGauge *prometheus.GaugeVec
@@ -98,6 +100,10 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 		Name: constants.PrometheusMetricsPrefix + "version",
 		Help: "App version",
 	}, []string{"version"})
+	startTimeGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: constants.PrometheusMetricsPrefix + "start_time",
+		Help: "Unix timestamp on when the app was started. Useful for annotations.",
+	}, []string{})
 	eventsCounter := prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: constants.PrometheusMetricsPrefix + "events_total",
 		Help: "WebSocket events received by node",
@@ -158,6 +164,7 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 	registry.MustRegister(reporterEnabledGauge)
 	registry.MustRegister(reporterQueriesCounter)
 	registry.MustRegister(appVersionGauge)
+	registry.MustRegister(startTimeGauge)
 	registry.MustRegister(eventsCounter)
 	registry.MustRegister(reconnectsCounter)
 	registry.MustRegister(missingBlocksGauge)
@@ -170,6 +177,10 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 	registry.MustRegister(storeBlocksGauge)
 	registry.MustRegister(minSignedPerWindowGauge)
 	registry.MustRegister(chainInfoGauge)
+
+	startTimeGauge.
+		With(prometheus.Labels{}).
+		Set(float64(time.Now().Unix()))
 
 	return &Manager{
 		logger:                     logger.With().Str("component", "metrics").Logger(),
@@ -186,6 +197,7 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 		reporterEnabledGauge:       reporterEnabledGauge,
 		reporterQueriesCounter:     reporterQueriesCounter,
 		appVersionGauge:            appVersionGauge,
+		startTimeGauge:             startTimeGauge,
 		eventsCounter:              eventsCounter,
 		reconnectsCounter:          reconnectsCounter,
 		missingBlocksGauge:         missingBlocksGauge,
