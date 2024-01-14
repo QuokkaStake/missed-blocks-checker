@@ -300,7 +300,6 @@ func (a *AppManager) UpdateValidators(height int64) []error {
 }
 
 func (a *AppManager) PopulateInBackground() {
-	a.PopulateLatestBlock()
 	a.PopulateSlashingParams()
 
 	// Start populating blocks in background
@@ -308,7 +307,6 @@ func (a *AppManager) PopulateInBackground() {
 
 	// Setting timers
 	go a.SyncBlocks()
-	go a.SyncLatestBlock()
 	go a.SyncSlashingParams()
 	go a.SyncTrim()
 }
@@ -324,22 +322,6 @@ func (a *AppManager) SyncBlocks() {
 		select {
 		case <-blocksTicker.C:
 			a.PopulateBlocks()
-		}
-	}
-}
-
-func (a *AppManager) SyncLatestBlock() {
-	if a.Config.Intervals.Blocks == 0 {
-		a.Logger.Info().Msg("Latest block continuous population is disabled.")
-		return
-	}
-
-	latestBlockTimer := time.NewTicker(a.Config.Intervals.LatestBlock * time.Second)
-
-	for {
-		select {
-		case <-latestBlockTimer.C:
-			a.PopulateLatestBlock()
 		}
 	}
 }
@@ -380,16 +362,28 @@ func (a *AppManager) SyncTrim() {
 	}
 }
 
-func (a *AppManager) PopulateLatestBlock() {
+func (a *AppManager) PopulateBlocks() {
+	if a.IsPopulatingBlocks {
+		a.Logger.Info().Msg("AppManager is populating blocks already, not populating again")
+		return
+	}
+
+	a.IsPopulatingBlocks = true
+
+	// Populating latest block
+	a.Logger.Info().Msg("Populating latest block...")
+
 	blockRaw, err := a.RPCManager.GetBlock(0)
 	if err != nil {
 		a.Logger.Error().Err(err).Msg("Error querying for last block")
+		a.IsPopulatingBlocks = false
 		return
 	}
 
 	block, err := blockRaw.Result.Block.ToBlock()
 	if err != nil {
 		a.Logger.Warn().Msg("Error parsing block")
+		a.IsPopulatingBlocks = false
 		return
 	}
 
@@ -399,6 +393,7 @@ func (a *AppManager) PopulateLatestBlock() {
 			Int64("last_height", lastStateHeight).
 			Int64("height", block.Height).
 			Msg("Got older block when populating latest height, not proceeding further.")
+		a.IsPopulatingBlocks = false
 		return
 	}
 
@@ -411,6 +406,7 @@ func (a *AppManager) PopulateLatestBlock() {
 		a.Logger.Error().
 			Err(err).
 			Msg("Error updating historical validators")
+		a.IsPopulatingBlocks = false
 		return
 	}
 
@@ -420,24 +416,18 @@ func (a *AppManager) PopulateLatestBlock() {
 		a.Logger.Error().
 			Err(err).
 			Msg("Error inserting last block")
-		return
-	}
-}
-
-func (a *AppManager) PopulateBlocks() {
-	if a.IsPopulatingBlocks {
-		a.Logger.Info().Msg("AppManager is populating blocks already, not populating again")
+		a.IsPopulatingBlocks = false
 		return
 	}
 
+	a.Logger.Info().Msg("Populating latest block...")
+
+	// Populating blocks
 	if a.StateManager.GetLastBlockHeight() == 0 {
 		a.Logger.Warn().Msg("Latest block is not set, cannot populate blocks.")
+		a.IsPopulatingBlocks = false
 		return
 	}
-
-	a.Logger.Info().Msg("Populating blocks...")
-
-	a.IsPopulatingBlocks = true
 
 	missingBlocks := a.StateManager.GetMissingBlocksSinceLatest(a.Config.StoreBlocks)
 	if len(missingBlocks) == 0 {
