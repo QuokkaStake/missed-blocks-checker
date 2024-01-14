@@ -72,10 +72,6 @@ min-signed-per-window = 0.05
 # You can set it to something smaller if your websocket connection is lagging.
 # Defaults to 30.
 blocks = 30
-# Internval to fetch latest block from chain.
-# Setting it to 0 would disable automatic blocks fetching, which is not desired.
-# Defaults to 120.
-latest-block = 120
 # Interval to fetch slashing params from chain. Set to 0 to disable fetching slashing params from chain
 # and use local blocks-window and min-signed-per-window.
 # Defaults to 300.
@@ -95,7 +91,7 @@ validators-list = 1000
 # How many signing infos to query at once.
 signing-infos = 1000
 
-# You can specify multiple chain. Each chain should have its own set of reporters
+# You can specify multiple chain. Each chain should have its own set of reporters,
 # and they should not overlap.
 [[chains]]
 name = "sentinel"
