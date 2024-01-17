@@ -33,7 +33,8 @@ type AppManager struct {
 	Reporters          []reportersPkg.Reporter
 	IsPopulatingBlocks bool
 
-	mutex sync.Mutex
+	mutex         sync.Mutex
+	snapshotMutex sync.Mutex
 }
 
 func NewAppManager(
@@ -157,6 +158,13 @@ func (a *AppManager) ProcessEvent(emittable types.WebsocketEmittable) {
 			Err(err).
 			Msg("Error inserting new block")
 	}
+
+	a.ProcessSnapshot(block)
+}
+
+func (a *AppManager) ProcessSnapshot(block *types.Block) {
+	a.snapshotMutex.Lock()
+	defer a.snapshotMutex.Unlock()
 
 	totalBlocksCount := a.StateManager.GetBlocksCountSinceLatest(a.Config.StoreBlocks)
 	a.Logger.Info().
@@ -399,6 +407,7 @@ func (a *AppManager) PopulateBlocks() {
 
 	a.Logger.Info().
 		Int64("height", block.Height).
+		Time("time", block.Time).
 		Msg("Last block height")
 
 	validators, err := a.RPCManager.GetActiveSetAtBlock(block.Height)
@@ -501,4 +510,16 @@ func (a *AppManager) PopulateBlocks() {
 	}
 
 	a.IsPopulatingBlocks = false
+
+	latestHeight := a.StateManager.GetLastBlockHeight()
+
+	if latestHeight > block.Height {
+		a.Logger.Info().
+			Int64("last_height", latestHeight).
+			Int64("height", block.Height).
+			Msg("Trying to generate a report for a block that was processed before")
+		return
+	}
+
+	a.ProcessSnapshot(block)
 }
