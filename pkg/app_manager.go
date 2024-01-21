@@ -521,5 +521,20 @@ func (a *AppManager) PopulateBlocks() {
 		return
 	}
 
+	if latestHeight > block.Height {
+		a.Logger.Info().
+			Int64("last_height", latestHeight).
+			Int64("height", block.Height).
+			Msg("Trying to generate a report for a block that was processed before")
+		return
+	}
+
+	if errs := a.UpdateValidators(latestHeight - 1); len(errs) > 0 {
+		a.Logger.Error().
+			Errs("errors", errs).
+			Msg("Error updating validators")
+		return
+	}
+
 	a.ProcessSnapshot(block)
 }
