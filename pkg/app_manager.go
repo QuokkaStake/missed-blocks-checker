@@ -33,7 +33,8 @@ type AppManager struct {
 	Reporters          []reportersPkg.Reporter
 	IsPopulatingBlocks bool
 
-	mutex sync.Mutex
+	mutex         sync.Mutex
+	snapshotMutex sync.Mutex
 }
 
 func NewAppManager(
@@ -127,7 +128,7 @@ func (a *AppManager) ProcessEvent(emittable types.WebsocketEmittable) {
 	latestHeight := a.StateManager.GetLastBlockHeight()
 
 	if latestHeight > block.Height {
-		a.Logger.Info().
+		a.Logger.Warn().
 			Int64("last_height", latestHeight).
 			Int64("height", block.Height).
 			Msg("Trying to generate a report for a block that was processed before")
@@ -157,6 +158,13 @@ func (a *AppManager) ProcessEvent(emittable types.WebsocketEmittable) {
 			Err(err).
 			Msg("Error inserting new block")
 	}
+
+	a.ProcessSnapshot(block)
+}
+
+func (a *AppManager) ProcessSnapshot(block *types.Block) {
+	a.snapshotMutex.Lock()
+	defer a.snapshotMutex.Unlock()
 
 	totalBlocksCount := a.StateManager.GetBlocksCountSinceLatest(a.Config.StoreBlocks)
 	a.Logger.Info().
@@ -210,6 +218,14 @@ func (a *AppManager) ProcessEvent(emittable types.WebsocketEmittable) {
 	}
 
 	olderHeight := a.SnapshotManager.GetOlderHeight()
+	if olderHeight >= block.Height {
+		a.Logger.Warn().
+			Int64("older_height", olderHeight).
+			Int64("height", block.Height).
+			Msg("Trying to generate the snapshot for the older height, skipping.")
+		return
+	}
+
 	a.Logger.Info().
 		Int64("older_height", olderHeight).
 		Int64("height", block.Height).
@@ -399,6 +415,7 @@ func (a *AppManager) PopulateBlocks() {
 
 	a.Logger.Info().
 		Int64("height", block.Height).
+		Time("time", block.Time).
 		Msg("Last block height")
 
 	validators, err := a.RPCManager.GetActiveSetAtBlock(block.Height)
@@ -501,4 +518,23 @@ func (a *AppManager) PopulateBlocks() {
 	}
 
 	a.IsPopulatingBlocks = false
+
+	latestHeight := a.StateManager.GetLastBlockHeight()
+
+	if latestHeight > block.Height {
+		a.Logger.Warn().
+			Int64("last_height", latestHeight).
+			Int64("height", block.Height).
+			Msg("Trying to generate a report for a block that was processed before")
+		return
+	}
+
+	if errs := a.UpdateValidators(latestHeight - 1); len(errs) > 0 {
+		a.Logger.Error().
+			Errs("errors", errs).
+			Msg("Error updating validators")
+		return
+	}
+
+	a.ProcessSnapshot(block)
 }
