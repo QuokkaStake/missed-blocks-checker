@@ -17,10 +17,15 @@ func (reporter *Reporter) HandleParams(c tele.Context) error {
 	blockTime := reporter.Manager.GetBlockTime()
 	maxTimeToJail := reporter.Manager.GetTimeTillJail(0)
 
+	validators := reporter.Manager.GetValidators().ToSlice().GetActive()
+	_, amount := validators.GetSoftOutOutThreshold(reporter.Config.ConsumerSoftOptOut)
+
 	template, err := reporter.TemplatesManager.Render("Params", paramsRender{
-		Config:        reporter.Config,
-		BlockTime:     blockTime,
-		MaxTimeToJail: maxTimeToJail,
+		Config:                   reporter.Config,
+		BlockTime:                blockTime,
+		MaxTimeToJail:            maxTimeToJail,
+		ConsumerOptOutValidators: amount,
+		Validators:               validators,
 	})
 	if err != nil {
 		return err

@@ -26,6 +26,7 @@ type ChainConfig struct {
 	ProviderRPCEndpoints    []string  `toml:"provider-rpc-endpoints"`
 	ConsumerValidatorPrefix string    `toml:"consumer-validator-prefix"`
 	ConsumerChainID         string    `toml:"consumer-chain-id"`
+	ConsumerSoftOptOut      float64   `default:"0.05"                   toml:"consumer-soft-opt-out"`
 
 	MissedBlocksGroups MissedBlocksGroups `toml:"-"`
 	Thresholds         []float64          `default:"[0, 0.5, 1, 5, 10, 25, 50, 75, 90, 100]"                                                    toml:"thresholds"`

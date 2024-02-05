@@ -2,6 +2,7 @@ package types
 
 import (
 	"main/pkg/constants"
+	"math/big"
 )
 
 type SigningInfo struct {
@@ -22,6 +23,7 @@ type Validator struct {
 	Status                  int32
 	Jailed                  bool
 	SigningInfo             *SigningInfo
+	VotingPower             *big.Float
 }
 
 func (v *Validator) Active() bool {

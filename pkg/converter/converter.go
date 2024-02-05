@@ -3,6 +3,7 @@ package converter
 import (
 	"fmt"
 	"main/pkg/types"
+	"math/big"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTyped "github.com/cosmos/cosmos-sdk/codec/types"
@@ -81,6 +82,7 @@ func (c *Converter) ValidatorFromCosmosValidator(
 		Status:                  int32(validator.Status),
 		Jailed:                  validator.Jailed,
 		SigningInfo:             valSigningInfo,
+		VotingPower:             big.NewFloat(0).SetInt(validator.DelegatorShares.BigInt()),
 	}
 }
 
