@@ -6,6 +6,8 @@ import (
 	"main/pkg/types/responses"
 	"sync"
 
+	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+
 	providerTypes "github.com/cosmos/interchain-security/x/ccv/provider/types"
 
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -48,6 +50,10 @@ func (manager *RPCManager) GetSigningInfo(valcons string, height int64) (*slashi
 
 func (manager *RPCManager) GetSlashingParams(height int64) (*slashingTypes.QueryParamsResponse, error) {
 	return manager.rpc.GetSlashingParams(height)
+}
+
+func (manager *RPCManager) GetConsumerSoftOutOutThreshold(height int64) (*paramsTypes.QueryParamsResponse, error) {
+	return manager.rpc.GetConsumerSoftOutOutThreshold(height)
 }
 
 func (manager *RPCManager) GetActiveSetAtBlock(height int64) (map[string]bool, error) {

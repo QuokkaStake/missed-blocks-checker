@@ -13,7 +13,7 @@ json = false
 type = "sqlite"
 # Where the database will be stored.
 # If it's a PostgreSQL database, a connection string is expected (like postgres://user:password@host:port/database)
-# If it a SQLite database, a path to the file storing a database is expected.
+# If it's a SQLite database, a path to the file storing a database is expected.
 path = "database.sqlite"
 
 # Prometheus metrics configuration
@@ -76,6 +76,12 @@ blocks = 30
 # and use local blocks-window and min-signed-per-window.
 # Defaults to 300.
 slashing-params = 300
+# Interval to fetch soft opt-out threshold from consumer chain.
+# (e.g. how much of voting power should sign blocks).
+# Set to 0 to disable and use local threshold.
+# This param is not used for sovereign chains.
+# Defaults to 300.
+soft-opt-out-threshold = 300
 # Interval to trim local database. Set it to 0 to disable database trimming.
 # Defaults to 300.
 trim = 300
