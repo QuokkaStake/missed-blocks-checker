@@ -1,6 +1,7 @@
 package tendermint
 
 import (
+	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	configPkg "main/pkg/config"
 	"main/pkg/metrics"
 	"main/pkg/types/responses"
@@ -48,6 +49,10 @@ func (manager *RPCManager) GetSigningInfo(valcons string, height int64) (*slashi
 
 func (manager *RPCManager) GetSlashingParams(height int64) (*slashingTypes.QueryParamsResponse, error) {
 	return manager.rpc.GetSlashingParams(height)
+}
+
+func (manager *RPCManager) GetConsumerSoftOutOutThreshold(height int64) (*paramsTypes.QueryParamsResponse, error) {
+	return manager.rpc.GetConsumerSoftOutOutThreshold(height)
 }
 
 func (manager *RPCManager) GetActiveSetAtBlock(height int64) (map[string]bool, error) {

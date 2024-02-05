@@ -32,7 +32,9 @@ const (
 	QueryTypeSigningInfo  QueryType = "signing_info"
 	QueryTypeConsumerAddr QueryType = "consumer_addr"
 
-	QueryTypeSlashingParams       QueryType = "slashing_params"
+	QueryTypeSlashingParams QueryType = "slashing_params"
+	QueryTypeSubspaceParams QueryType = "subspace_params"
+
 	QueryTypeHistoricalValidators QueryType = "historical_validators"
 	QueryTypeBlock                QueryType = "block"
 

@@ -14,6 +14,7 @@ import (
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"main/pkg/utils"
+	"strconv"
 	"sync"
 	"time"
 
@@ -84,6 +85,11 @@ func (a *AppManager) Start() {
 		a.Config.MinSignedPerWindow,
 		a.Config.StoreBlocks,
 	)
+
+	if a.Config.IsConsumer.Bool {
+		a.MetricsManager.LogConsumerSoftOutThreshold(a.Config.Name, a.Config.ConsumerSoftOptOut)
+	}
+
 	a.MetricsManager.LogChainInfo(a.Config.Name, a.Config.GetName())
 
 	for _, reporter := range a.Reporters {
@@ -305,6 +311,43 @@ func (a *AppManager) PopulateSlashingParams() {
 	a.Config.RecalculateMissedBlocksGroups()
 }
 
+func (a *AppManager) PopulateSoftOptOutThreshold() {
+	if !a.Config.IsConsumer.Bool {
+		return
+	}
+
+	if a.Config.Intervals.SlashingParams == 0 {
+		return
+	}
+
+	params, err := a.RPCManager.GetConsumerSoftOutOutThreshold(a.StateManager.GetLastBlockHeight() - 1)
+	if err != nil {
+		a.Logger.Warn().
+			Err(err).
+			Msg("Error updating soft out-out threshold")
+
+		return
+	}
+
+	thresholdAsString := params.Param.Value[1 : len(params.Param.Value)-1]
+	threshold, err := strconv.ParseFloat(thresholdAsString, 64)
+	if err != nil {
+		a.Logger.Warn().
+			Err(err).
+			Msg("Error parsing soft out-out threshold")
+
+		return
+	}
+
+	a.Config.ConsumerSoftOptOut = threshold
+
+	a.Logger.Info().
+		Float64("threshold", threshold).
+		Msg("Got soft out-out threshold")
+
+	a.MetricsManager.LogConsumerSoftOutThreshold(a.Config.Name, threshold)
+}
+
 func (a *AppManager) UpdateValidators(height int64) []error {
 	validators, errs := a.DataManager.GetValidators(height)
 	if len(errs) > 0 {
@@ -317,6 +360,7 @@ func (a *AppManager) UpdateValidators(height int64) []error {
 
 func (a *AppManager) PopulateInBackground() {
 	a.PopulateSlashingParams()
+	a.PopulateSoftOptOutThreshold()
 
 	// Start populating blocks in background
 	go a.PopulateBlocks()
@@ -324,6 +368,7 @@ func (a *AppManager) PopulateInBackground() {
 	// Setting timers
 	go a.SyncBlocks()
 	go a.SyncSlashingParams()
+	go a.SyncSoftOptOutThreshold()
 	go a.SyncTrim()
 }
 
@@ -354,6 +399,27 @@ func (a *AppManager) SyncSlashingParams() {
 		select {
 		case <-slashingParamsTimer.C:
 			a.PopulateSlashingParams()
+		}
+	}
+}
+
+func (a *AppManager) SyncSoftOptOutThreshold() {
+	if !a.Config.IsConsumer.Bool {
+		a.Logger.Debug().
+			Msg("Chain is not a consumer chain, soft opt-out threshold fetching disabled.")
+	}
+
+	if a.Config.Intervals.SoftOptOutThreshold == 0 {
+		a.Logger.Info().Msg("Soft opt-out threshold continuous population is disabled.")
+		return
+	}
+
+	softOptOutTimer := time.NewTicker(a.Config.Intervals.SoftOptOutThreshold * time.Second)
+
+	for {
+		select {
+		case <-softOptOutTimer.C:
+			a.PopulateSoftOptOutThreshold()
 		}
 	}
 }
