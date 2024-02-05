@@ -1,11 +1,12 @@
 package tendermint
 
 import (
-	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	configPkg "main/pkg/config"
 	"main/pkg/metrics"
 	"main/pkg/types/responses"
 	"sync"
+
+	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 
 	providerTypes "github.com/cosmos/interchain-security/x/ccv/provider/types"
 
