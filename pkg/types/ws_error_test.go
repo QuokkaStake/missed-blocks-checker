@@ -1,7 +1,7 @@
 package types
 
 import (
-	"fmt"
+	"errors"
 	"strings"
 	"testing"
 
@@ -11,6 +11,6 @@ import (
 func TestWsErrorHash(t *testing.T) {
 	t.Parallel()
 
-	err := WSError{Error: fmt.Errorf("error")}
+	err := WSError{Error: errors.New("error")}
 	assert.True(t, strings.HasPrefix(err.Hash(), "error_"), "Wrong error hash!")
 }

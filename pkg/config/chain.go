@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 
 	"gopkg.in/guregu/null.v4"
@@ -56,15 +57,15 @@ func (c *ChainConfig) GetBlocksMissCount() int64 {
 
 func (c *ChainConfig) Validate() error {
 	if c.Name == "" {
-		return fmt.Errorf("chain name is not provided")
+		return errors.New("chain name is not provided")
 	}
 
 	if len(c.RPCEndpoints) == 0 {
-		return fmt.Errorf("chain has 0 RPC endpoints")
+		return errors.New("chain has 0 RPC endpoints")
 	}
 
 	if len(c.Thresholds) <= 2 {
-		return fmt.Errorf("not enough thresholds provided")
+		return errors.New("not enough thresholds provided")
 	}
 
 	if len(c.Thresholds) != len(c.EmojisStart)+1 {
@@ -101,11 +102,11 @@ func (c *ChainConfig) Validate() error {
 
 	if c.IsConsumer.Bool {
 		if len(c.ProviderRPCEndpoints) == 0 {
-			return fmt.Errorf("chain is a consumer, but has 0 provider RPC endpoints")
+			return errors.New("chain is a consumer, but has 0 provider RPC endpoints")
 		}
 
 		if c.ConsumerChainID == "" {
-			return fmt.Errorf("chain is a consumer, but consumer chain id is not provided")
+			return errors.New("chain is a consumer, but consumer chain id is not provided")
 		}
 	}
 

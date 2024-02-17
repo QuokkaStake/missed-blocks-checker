@@ -143,8 +143,8 @@ func TestCompareTwoBech32SecondNotEqual(t *testing.T) {
 
 func TestCompareBoolToFloat64(t *testing.T) {
 	t.Parallel()
-	assert.InDelta(t, BoolToFloat64(true), float64(1), 0.001, "Value mismatch!")
-	assert.InDelta(t, BoolToFloat64(false), float64(0), 0.001, "Value mismatch!")
+	assert.InDelta(t, float64(1), BoolToFloat64(true), 0.001, "Value mismatch!")
+	assert.InDelta(t, float64(0), BoolToFloat64(false), 0.001, "Value mismatch!")
 }
 
 func TestSplitIntoChunks(t *testing.T) {

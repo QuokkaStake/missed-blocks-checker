@@ -1,6 +1,9 @@
 package config
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type MissedBlocksGroup struct {
 	Start      int64  `toml:"start"`
@@ -20,7 +23,7 @@ type MissedBlocksGroups []*MissedBlocksGroup
 // 0 - 50 - not valid.
 func (g MissedBlocksGroups) Validate(window int64) error {
 	if len(g) == 0 {
-		return fmt.Errorf("MissedBlocksGroups is empty")
+		return errors.New("MissedBlocksGroups is empty")
 	}
 
 	if g[0].Start != 0 {
