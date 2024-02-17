@@ -3,7 +3,6 @@ package data
 import (
 	configPkg "main/pkg/config"
 	converterPkg "main/pkg/converter"
-	"main/pkg/data/fetchers"
 	"main/pkg/metrics"
 	"main/pkg/tendermint"
 	"main/pkg/types"
@@ -33,7 +32,7 @@ func NewManager(
 	metricsManager *metrics.Manager,
 ) *Manager {
 	rpc := tendermint.NewRPC(config, logger, metricsManager)
-	fetcher := fetchers.NewCosmosRPCFetcher(config, logger, metricsManager)
+	fetcher := GetFetcher(config, logger, metricsManager)
 
 	return &Manager{
 		logger:    logger.With().Str("component", "data_manager").Logger(),
