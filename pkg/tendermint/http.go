@@ -9,18 +9,9 @@ import (
 	"main/pkg/metrics"
 	"main/pkg/types/responses"
 	"main/pkg/utils"
-	"net/url"
 	"strconv"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-
-	queryTypes "github.com/cosmos/cosmos-sdk/types/query"
-
-	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
-	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	providerTypes "github.com/cosmos/interchain-security/x/ccv/provider/types"
 	"github.com/rs/zerolog"
 )
 
@@ -29,8 +20,7 @@ type RPC struct {
 	metricsManager *metrics.Manager
 	logger         zerolog.Logger
 
-	clients         []*http.Client
-	providerClients []*http.Client
+	clients []*http.Client
 }
 
 func NewRPC(config *configPkg.ChainConfig, logger zerolog.Logger, metricsManager *metrics.Manager) *RPC {
@@ -39,26 +29,12 @@ func NewRPC(config *configPkg.ChainConfig, logger zerolog.Logger, metricsManager
 		clients[index] = http.NewClient(logger, metricsManager, host, config.Name)
 	}
 
-	providerClients := make([]*http.Client, len(config.ProviderRPCEndpoints))
-	for index, host := range config.ProviderRPCEndpoints {
-		providerClients[index] = http.NewClient(logger, metricsManager, host, config.Name)
-	}
-
 	return &RPC{
-		config:          config,
-		metricsManager:  metricsManager,
-		logger:          logger.With().Str("component", "rpc").Logger(),
-		clients:         clients,
-		providerClients: providerClients,
+		config:         config,
+		metricsManager: metricsManager,
+		logger:         logger.With().Str("component", "rpc").Logger(),
+		clients:        clients,
 	}
-}
-
-func (rpc *RPC) GetConsumerOrProviderClients() []*http.Client {
-	if rpc.config.IsConsumer.Bool {
-		return rpc.providerClients
-	}
-
-	return rpc.clients
 }
 
 func (rpc *RPC) GetBlock(height int64) (*responses.SingleBlockResponse, error) {
@@ -84,183 +60,6 @@ func (rpc *RPC) GetBlock(height int64) (*responses.SingleBlockResponse, error) {
 
 		return nil
 	}); err != nil {
-		return nil, err
-	}
-
-	return &response, nil
-}
-
-func (rpc *RPC) AbciQuery(
-	method string,
-	message codec.ProtoMarshaler,
-	height int64,
-	queryType constants.QueryType,
-	output codec.ProtoMarshaler,
-	clients []*http.Client,
-) error {
-	dataBytes, err := message.Marshal()
-	if err != nil {
-		return err
-	}
-
-	methodName := fmt.Sprintf("\"%s\"", method)
-	queryURL := fmt.Sprintf(
-		"/abci_query?path=%s&data=0x%x",
-		url.QueryEscape(methodName),
-		dataBytes,
-	)
-
-	if height != 0 {
-		queryURL += fmt.Sprintf("&height=%d", height)
-	}
-
-	var response responses.AbciQueryResponse
-	if err := rpc.Get(queryURL, constants.QueryType("abci_"+string(queryType)), &response, clients, func(v interface{}) error {
-		response, ok := v.(*responses.AbciQueryResponse)
-		if !ok {
-			return errors.New("error converting ABCI response")
-		}
-
-		// code = NotFound desc = SigningInfo not found for validator xxx: key not found
-		if queryType == constants.QueryTypeSigningInfo && response.Result.Response.Code == 22 {
-			return nil
-		}
-
-		if response.Result.Response.Code != 0 {
-			return fmt.Errorf(
-				"error in Tendermint response: expected code 0, but got %d, error: %s",
-				response.Result.Response.Code,
-				response.Result.Response.Log,
-			)
-		}
-
-		return nil
-	}); err != nil {
-		return err
-	}
-
-	return output.Unmarshal(response.Result.Response.Value)
-}
-
-func (rpc *RPC) GetValidators(height int64) (*stakingTypes.QueryValidatorsResponse, error) {
-	query := stakingTypes.QueryValidatorsRequest{
-		Pagination: &queryTypes.PageRequest{
-			Limit: rpc.config.Pagination.ValidatorsList,
-		},
-	}
-
-	var validatorsResponse stakingTypes.QueryValidatorsResponse
-	if err := rpc.AbciQuery(
-		"/cosmos.staking.v1beta1.Query/Validators",
-		&query,
-		height,
-		constants.QueryTypeValidators,
-		&validatorsResponse,
-		rpc.GetConsumerOrProviderClients(),
-	); err != nil {
-		return nil, err
-	}
-
-	return &validatorsResponse, nil
-}
-
-func (rpc *RPC) GetSigningInfos(height int64) (*slashingTypes.QuerySigningInfosResponse, error) {
-	query := slashingTypes.QuerySigningInfosRequest{
-		Pagination: &queryTypes.PageRequest{
-			Limit: rpc.config.Pagination.SigningInfos,
-		},
-	}
-
-	var response slashingTypes.QuerySigningInfosResponse
-	if err := rpc.AbciQuery(
-		"/cosmos.slashing.v1beta1.Query/SigningInfos",
-		&query,
-		height,
-		constants.QueryTypeSigningInfos,
-		&response,
-		rpc.clients,
-	); err != nil {
-		return nil, err
-	}
-
-	return &response, nil
-}
-
-func (rpc *RPC) GetSigningInfo(valcons string, height int64) (*slashingTypes.QuerySigningInfoResponse, error) {
-	query := slashingTypes.QuerySigningInfoRequest{
-		ConsAddress: valcons,
-	}
-
-	var response slashingTypes.QuerySigningInfoResponse
-	if err := rpc.AbciQuery(
-		"/cosmos.slashing.v1beta1.Query/SigningInfo",
-		&query,
-		height,
-		constants.QueryTypeSigningInfo,
-		&response,
-		rpc.clients,
-	); err != nil {
-		return nil, err
-	}
-
-	return &response, nil
-}
-
-func (rpc *RPC) GetValidatorAssignedConsumerKey(
-	providerValcons string,
-	height int64,
-) (*providerTypes.QueryValidatorConsumerAddrResponse, error) {
-	query := providerTypes.QueryValidatorConsumerAddrRequest{
-		ChainId:         rpc.config.ConsumerChainID,
-		ProviderAddress: providerValcons,
-	}
-
-	var response providerTypes.QueryValidatorConsumerAddrResponse
-	if err := rpc.AbciQuery(
-		"/interchain_security.ccv.provider.v1.Query/QueryValidatorConsumerAddr",
-		&query,
-		height,
-		constants.QueryTypeConsumerAddr,
-		&response,
-		rpc.providerClients,
-	); err != nil {
-		return nil, err
-	}
-
-	return &response, nil
-}
-
-func (rpc *RPC) GetSlashingParams(height int64) (*slashingTypes.QueryParamsResponse, error) {
-	var response slashingTypes.QueryParamsResponse
-	if err := rpc.AbciQuery(
-		"/cosmos.slashing.v1beta1.Query/Params",
-		&slashingTypes.QueryParamsRequest{},
-		height,
-		constants.QueryTypeSlashingParams,
-		&response,
-		rpc.clients,
-	); err != nil {
-		return nil, err
-	}
-
-	return &response, nil
-}
-
-func (rpc *RPC) GetConsumerSoftOutOutThreshold(height int64) (*paramsTypes.QueryParamsResponse, error) {
-	query := paramsTypes.QueryParamsRequest{
-		Subspace: "ccvconsumer",
-		Key:      "SoftOptOutThreshold",
-	}
-
-	var response paramsTypes.QueryParamsResponse
-	if err := rpc.AbciQuery(
-		"/cosmos.params.v1beta1.Query/Params",
-		&query,
-		height,
-		constants.QueryTypeSubspaceParams,
-		&response,
-		rpc.clients,
-	); err != nil {
 		return nil, err
 	}
 

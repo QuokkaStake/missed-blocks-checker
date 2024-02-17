@@ -3,6 +3,7 @@ package data
 import (
 	configPkg "main/pkg/config"
 	converterPkg "main/pkg/converter"
+	"main/pkg/data/fetchers"
 	"main/pkg/metrics"
 	"main/pkg/tendermint"
 	"main/pkg/types"
@@ -21,6 +22,7 @@ import (
 type Manager struct {
 	logger    zerolog.Logger
 	config    *configPkg.ChainConfig
+	fetcher   Fetcher
 	rpc       *tendermint.RPC
 	converter *converterPkg.Converter
 }
@@ -31,10 +33,12 @@ func NewManager(
 	metricsManager *metrics.Manager,
 ) *Manager {
 	rpc := tendermint.NewRPC(config, logger, metricsManager)
+	fetcher := fetchers.NewCosmosRPCFetcher(config, logger, metricsManager)
 
 	return &Manager{
 		logger:    logger.With().Str("component", "data_manager").Logger(),
 		config:    config,
+		fetcher:   fetcher,
 		rpc:       rpc,
 		converter: converterPkg.NewConverter(),
 	}
@@ -59,12 +63,12 @@ func (manager *Manager) GetValidators(height int64) (types.Validators, []error) 
 
 	wg.Add(2)
 	go func() {
-		validatorsResponse, validatorsError = manager.rpc.GetValidators(height)
+		validatorsResponse, validatorsError = manager.fetcher.GetValidators(height)
 		wg.Done()
 	}()
 
 	go func() {
-		signingInfoResponse, signingInfoErr = manager.rpc.GetSigningInfos(height)
+		signingInfoResponse, signingInfoErr = manager.fetcher.GetSigningInfos(height)
 		wg.Done()
 	}()
 
@@ -111,7 +115,7 @@ func (manager *Manager) GetValidators(height int64) (types.Validators, []error) 
 }
 
 func (manager *Manager) GetValidatorsAndEachSigningInfo(height int64) (types.Validators, []error) {
-	validatorsResponse, validatorsError := manager.rpc.GetValidators(height)
+	validatorsResponse, validatorsError := manager.fetcher.GetValidators(height)
 	if validatorsError != nil {
 		return nil, []error{validatorsError}
 	}
@@ -127,7 +131,7 @@ func (manager *Manager) GetValidatorsAndEachSigningInfo(height int64) (types.Val
 			defer wg.Done()
 
 			consensusAddr := manager.converter.GetConsensusAddress(validatorRaw)
-			signingInfoResponse, signingInfoErr := manager.rpc.GetSigningInfo(consensusAddr, height)
+			signingInfoResponse, signingInfoErr := manager.fetcher.GetSigningInfo(consensusAddr, height)
 			if signingInfoErr != nil {
 				manager.logger.Warn().
 					Str("operator_address", validatorRaw.OperatorAddress).
@@ -169,12 +173,12 @@ func (manager *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64
 
 	wg.Add(2)
 	go func() {
-		validatorsResponse, validatorsError = manager.rpc.GetValidators(0)
+		validatorsResponse, validatorsError = manager.fetcher.GetValidators(0)
 		wg.Done()
 	}()
 
 	go func() {
-		signingInfoResponse, signingInfoErr = manager.rpc.GetSigningInfos(height)
+		signingInfoResponse, signingInfoErr = manager.fetcher.GetSigningInfos(height)
 		wg.Done()
 	}()
 
@@ -212,7 +216,7 @@ func (manager *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64
 			consensusAddrProvider := manager.converter.GetConsensusAddress(validatorRaw)
 			consensusAddr := consensusAddrProvider
 
-			consensusAddrConsumer, err := manager.rpc.GetValidatorAssignedConsumerKey(consensusAddrProvider, 0)
+			consensusAddrConsumer, err := manager.fetcher.GetValidatorAssignedConsumerKey(consensusAddrProvider, 0)
 			if err != nil {
 				manager.logger.Warn().
 					Str("operator_address", validatorRaw.OperatorAddress).
@@ -270,23 +274,23 @@ func (manager *Manager) GetValidatorAssignedConsumerKey(
 	providerValcons string,
 	height int64,
 ) (*providerTypes.QueryValidatorConsumerAddrResponse, error) {
-	return manager.rpc.GetValidatorAssignedConsumerKey(providerValcons, height)
+	return manager.fetcher.GetValidatorAssignedConsumerKey(providerValcons, height)
 }
 
 func (manager *Manager) GetSigningInfos(height int64) (*slashingTypes.QuerySigningInfosResponse, error) {
-	return manager.rpc.GetSigningInfos(height)
+	return manager.fetcher.GetSigningInfos(height)
 }
 
 func (manager *Manager) GetSigningInfo(valcons string, height int64) (*slashingTypes.QuerySigningInfoResponse, error) {
-	return manager.rpc.GetSigningInfo(valcons, height)
+	return manager.fetcher.GetSigningInfo(valcons, height)
 }
 
 func (manager *Manager) GetSlashingParams(height int64) (*slashingTypes.QueryParamsResponse, error) {
-	return manager.rpc.GetSlashingParams(height)
+	return manager.fetcher.GetSlashingParams(height)
 }
 
 func (manager *Manager) GetConsumerSoftOutOutThreshold(height int64) (*paramsTypes.QueryParamsResponse, error) {
-	return manager.rpc.GetConsumerSoftOutOutThreshold(height)
+	return manager.fetcher.GetConsumerSoftOutOutThreshold(height)
 }
 
 func (manager *Manager) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
