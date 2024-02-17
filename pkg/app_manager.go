@@ -24,7 +24,6 @@ import (
 type AppManager struct {
 	Logger             zerolog.Logger
 	Config             *configPkg.ChainConfig
-	RPCManager         *tendermint.RPCManager
 	Database           *databasePkg.Database
 	DataManager        *dataPkg.Manager
 	StateManager       *statePkg.Manager
@@ -50,8 +49,7 @@ func NewAppManager(
 		Str("chain", config.Name).
 		Logger()
 
-	rpcManager := tendermint.NewRPCManager(config, managerLogger, metricsManager)
-	dataManager := dataPkg.NewManager(managerLogger, config, rpcManager)
+	dataManager := dataPkg.NewManager(managerLogger, config, metricsManager)
 	snapshotManager := snapshotPkg.NewManager(managerLogger, config, metricsManager)
 	stateManager := statePkg.NewManager(managerLogger, config, metricsManager, snapshotManager, database)
 	websocketManager := tendermint.NewWebsocketManager(managerLogger, config, metricsManager)
@@ -64,7 +62,6 @@ func NewAppManager(
 	return &AppManager{
 		Logger:             managerLogger,
 		Config:             config,
-		RPCManager:         rpcManager,
 		DataManager:        dataManager,
 		Database:           database,
 		StateManager:       stateManager,
@@ -148,7 +145,7 @@ func (a *AppManager) ProcessEvent(emittable types.WebsocketEmittable) {
 		return
 	}
 
-	validators, err := a.RPCManager.GetActiveSetAtBlock(block.Height)
+	validators, err := a.DataManager.GetActiveSetAtBlock(block.Height)
 	if err != nil {
 		a.Logger.Error().
 			Err(err).
@@ -277,7 +274,7 @@ func (a *AppManager) PopulateSlashingParams() {
 		return
 	}
 
-	params, err := a.RPCManager.GetSlashingParams(a.StateManager.GetLastBlockHeight() - 1)
+	params, err := a.DataManager.GetSlashingParams(a.StateManager.GetLastBlockHeight() - 1)
 	if err != nil {
 		a.Logger.Warn().
 			Err(err).
@@ -320,7 +317,7 @@ func (a *AppManager) PopulateSoftOptOutThreshold() {
 		return
 	}
 
-	params, err := a.RPCManager.GetConsumerSoftOutOutThreshold(a.StateManager.GetLastBlockHeight() - 1)
+	params, err := a.DataManager.GetConsumerSoftOutOutThreshold(a.StateManager.GetLastBlockHeight() - 1)
 	if err != nil {
 		a.Logger.Warn().
 			Err(err).
@@ -455,7 +452,7 @@ func (a *AppManager) PopulateBlocks() {
 	// Populating latest block
 	a.Logger.Info().Msg("Populating latest block...")
 
-	blockRaw, err := a.RPCManager.GetBlock(0)
+	blockRaw, err := a.DataManager.GetBlock(0)
 	if err != nil {
 		a.Logger.Error().Err(err).Msg("Error querying for last block")
 		a.IsPopulatingBlocks = false
@@ -484,7 +481,7 @@ func (a *AppManager) PopulateBlocks() {
 		Time("time", block.Time).
 		Msg("Last block height")
 
-	validators, err := a.RPCManager.GetActiveSetAtBlock(block.Height)
+	validators, err := a.DataManager.GetActiveSetAtBlock(block.Height)
 	if err != nil {
 		a.Logger.Error().
 			Err(err).
@@ -533,7 +530,7 @@ func (a *AppManager) PopulateBlocks() {
 			Ints64("blocks", chunk).
 			Msg("Fetching more blocks...")
 
-		blocks, allValidators, errs := a.RPCManager.GetBlocksAndValidatorsAtHeights(chunk)
+		blocks, allValidators, errs := a.DataManager.GetBlocksAndValidatorsAtHeights(chunk)
 
 		if len(errs) > 0 {
 			a.Logger.Error().Errs("errors", errs).Msg("Error querying for blocks")
