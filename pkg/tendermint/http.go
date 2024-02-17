@@ -1,24 +1,19 @@
 package tendermint
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
+	"main/pkg/http"
 	"main/pkg/metrics"
 	"main/pkg/types/responses"
 	"main/pkg/utils"
-	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
-	"time"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 
 	queryTypes "github.com/cosmos/cosmos-sdk/types/query"
-
-	"main/pkg/types"
 
 	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -31,22 +26,37 @@ type RPC struct {
 	config         *configPkg.ChainConfig
 	metricsManager *metrics.Manager
 	logger         zerolog.Logger
+
+	clients         []*http.Client
+	providerClients []*http.Client
 }
 
 func NewRPC(config *configPkg.ChainConfig, logger zerolog.Logger, metricsManager *metrics.Manager) *RPC {
+	clients := make([]*http.Client, len(config.RPCEndpoints))
+	for index, host := range config.RPCEndpoints {
+		clients[index] = http.NewClient(logger, metricsManager, host, config.Name)
+	}
+
+	providerClients := make([]*http.Client, len(config.ProviderRPCEndpoints))
+	for index, host := range config.ProviderRPCEndpoints {
+		providerClients[index] = http.NewClient(logger, metricsManager, host, config.Name)
+	}
+
 	return &RPC{
-		config:         config,
-		metricsManager: metricsManager,
-		logger:         logger.With().Str("component", "rpc").Logger(),
+		config:          config,
+		metricsManager:  metricsManager,
+		logger:          logger.With().Str("component", "rpc").Logger(),
+		clients:         clients,
+		providerClients: providerClients,
 	}
 }
 
-func (rpc *RPC) GetConsumerOrProviderHosts() []string {
+func (rpc *RPC) GetConsumerOrProviderClients() []*http.Client {
 	if rpc.config.IsConsumer.Bool {
-		return rpc.config.ProviderRPCEndpoints
+		return rpc.providerClients
 	}
 
-	return rpc.config.RPCEndpoints
+	return rpc.clients
 }
 
 func (rpc *RPC) GetBlock(height int64) (*responses.SingleBlockResponse, error) {
@@ -56,7 +66,7 @@ func (rpc *RPC) GetBlock(height int64) (*responses.SingleBlockResponse, error) {
 	}
 
 	var response responses.SingleBlockResponse
-	if err := rpc.Get(queryURL, constants.QueryTypeBlock, &response, rpc.config.RPCEndpoints, func(v interface{}) error {
+	if err := rpc.Get(queryURL, constants.QueryTypeBlock, &response, rpc.clients, func(v interface{}) error {
 		response, ok := v.(*responses.SingleBlockResponse)
 		if !ok {
 			return fmt.Errorf("error converting block")
@@ -84,7 +94,7 @@ func (rpc *RPC) AbciQuery(
 	height int64,
 	queryType constants.QueryType,
 	output codec.ProtoMarshaler,
-	hosts []string,
+	clients []*http.Client,
 ) error {
 	dataBytes, err := message.Marshal()
 	if err != nil {
@@ -103,7 +113,7 @@ func (rpc *RPC) AbciQuery(
 	}
 
 	var response responses.AbciQueryResponse
-	if err := rpc.Get(queryURL, constants.QueryType("abci_"+string(queryType)), &response, hosts, func(v interface{}) error {
+	if err := rpc.Get(queryURL, constants.QueryType("abci_"+string(queryType)), &response, clients, func(v interface{}) error {
 		response, ok := v.(*responses.AbciQueryResponse)
 		if !ok {
 			return fmt.Errorf("error converting ABCI response")
@@ -144,7 +154,7 @@ func (rpc *RPC) GetValidators(height int64) (*stakingTypes.QueryValidatorsRespon
 		height,
 		constants.QueryTypeValidators,
 		&validatorsResponse,
-		rpc.GetConsumerOrProviderHosts(),
+		rpc.GetConsumerOrProviderClients(),
 	); err != nil {
 		return nil, err
 	}
@@ -166,7 +176,7 @@ func (rpc *RPC) GetSigningInfos(height int64) (*slashingTypes.QuerySigningInfosR
 		height,
 		constants.QueryTypeSigningInfos,
 		&response,
-		rpc.config.RPCEndpoints,
+		rpc.clients,
 	); err != nil {
 		return nil, err
 	}
@@ -186,7 +196,7 @@ func (rpc *RPC) GetSigningInfo(valcons string, height int64) (*slashingTypes.Que
 		height,
 		constants.QueryTypeSigningInfo,
 		&response,
-		rpc.config.RPCEndpoints,
+		rpc.clients,
 	); err != nil {
 		return nil, err
 	}
@@ -210,7 +220,7 @@ func (rpc *RPC) GetValidatorAssignedConsumerKey(
 		height,
 		constants.QueryTypeConsumerAddr,
 		&response,
-		rpc.config.ProviderRPCEndpoints,
+		rpc.providerClients,
 	); err != nil {
 		return nil, err
 	}
@@ -226,7 +236,7 @@ func (rpc *RPC) GetSlashingParams(height int64) (*slashingTypes.QueryParamsRespo
 		height,
 		constants.QueryTypeSlashingParams,
 		&response,
-		rpc.config.RPCEndpoints,
+		rpc.clients,
 	); err != nil {
 		return nil, err
 	}
@@ -247,7 +257,7 @@ func (rpc *RPC) GetConsumerSoftOutOutThreshold(height int64) (*paramsTypes.Query
 		height,
 		constants.QueryTypeSubspaceParams,
 		&response,
-		rpc.config.RPCEndpoints,
+		rpc.clients,
 	); err != nil {
 		return nil, err
 	}
@@ -268,7 +278,7 @@ func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 		)
 
 		var response responses.ValidatorsResponse
-		if err := rpc.Get(queryURL, constants.QueryTypeHistoricalValidators, &response, rpc.config.RPCEndpoints, func(v interface{}) error {
+		if err := rpc.Get(queryURL, constants.QueryTypeHistoricalValidators, &response, rpc.clients, func(v interface{}) error {
 			response, ok := v.(*responses.ValidatorsResponse)
 			if !ok {
 				return fmt.Errorf("error converting validators")
@@ -313,26 +323,25 @@ func (rpc *RPC) Get(
 	url string,
 	queryType constants.QueryType,
 	target interface{},
-	hosts []string,
+	clients []*http.Client,
 	predicate func(interface{}) error,
 ) error {
-	errors := make([]error, len(hosts))
+	errors := make([]error, len(clients))
 
-	indexesShuffled := utils.MakeShuffledArray(len(hosts))
-	hostsShuffled := make([]string, len(hosts))
+	indexesShuffled := utils.MakeShuffledArray(len(clients))
+	clientsShuffled := make([]*http.Client, len(clients))
 
 	for index, indexShuffled := range indexesShuffled {
-		hostsShuffled[index] = hosts[indexShuffled]
+		clientsShuffled[index] = clients[indexShuffled]
 	}
 
 	for index := range indexesShuffled {
-		lcd := hostsShuffled[index]
+		client := clientsShuffled[index]
 
-		fullURL := lcd + url
+		fullURL := client.Host + url
 		rpc.logger.Trace().Str("url", fullURL).Msg("Trying making request to LCD")
 
-		err := rpc.GetFull(
-			lcd,
+		err := client.Get(
 			url,
 			queryType,
 			target,
@@ -358,61 +367,9 @@ func (rpc *RPC) Get(
 	var sb strings.Builder
 
 	sb.WriteString("All LCD requests failed:\n")
-	for index, nodeURL := range hostsShuffled {
-		sb.WriteString(fmt.Sprintf("#%d: %s -> %s\n", index+1, nodeURL, errors[index]))
+	for index, client := range clientsShuffled {
+		sb.WriteString(fmt.Sprintf("#%d: %s -> %s\n", index+1, client.Host, errors[index]))
 	}
 
 	return fmt.Errorf(sb.String())
-}
-
-func (rpc *RPC) GetFull(
-	host, url string,
-	queryType constants.QueryType,
-	target interface{},
-) error {
-	client := &http.Client{Timeout: 10 * time.Second}
-	start := time.Now()
-
-	fullURL := host + url
-
-	queryInfo := types.QueryInfo{
-		Success:   false,
-		Node:      host,
-		QueryType: queryType,
-	}
-
-	req, err := http.NewRequest(http.MethodGet, fullURL, nil)
-	if err != nil {
-		return err
-	}
-
-	req.Header.Set("User-Agent", "missed-blocks-checker")
-
-	rpc.logger.Trace().
-		Str("url", fullURL).
-		Msg("Doing a query...")
-
-	res, err := client.Do(req)
-	if err != nil {
-		rpc.logger.Warn().Str("url", fullURL).Err(err).Msg("Query failed")
-		rpc.metricsManager.LogTendermintQuery(rpc.config.Name, queryInfo)
-		return err
-	}
-	defer res.Body.Close()
-
-	rpc.logger.Debug().
-		Str("url", fullURL).
-		Dur("duration", time.Since(start)).
-		Msg("Query is finished")
-
-	if jsonErr := json.NewDecoder(res.Body).Decode(target); jsonErr != nil {
-		rpc.logger.Warn().Str("url", fullURL).Err(jsonErr).Msg("Error decoding JSON from response")
-		rpc.metricsManager.LogTendermintQuery(rpc.config.Name, queryInfo)
-		return jsonErr
-	}
-
-	queryInfo.Success = true
-	rpc.metricsManager.LogTendermintQuery(rpc.config.Name, queryInfo)
-
-	return nil
 }

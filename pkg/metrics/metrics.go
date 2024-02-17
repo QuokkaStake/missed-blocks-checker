@@ -288,7 +288,7 @@ func (m *Manager) LogNodeConnection(chain, node string, connected bool) {
 		Set(utils.BoolToFloat64(connected))
 }
 
-func (m *Manager) LogTendermintQuery(chain string, query types.QueryInfo) {
+func (m *Manager) LogQuery(chain string, query types.QueryInfo) {
 	if query.Success {
 		m.successfulQueriesCollector.
 			With(prometheus.Labels{
