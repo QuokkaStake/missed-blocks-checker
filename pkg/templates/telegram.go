@@ -2,6 +2,7 @@ package templates
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"html"
 	"html/template"
@@ -34,7 +35,7 @@ func (m *TelegramTemplateManager) GetHTMLTemplate(name string) (*template.Templa
 	if cachedTemplate, ok := m.Templates[name]; ok {
 		m.Logger.Trace().Str("type", name).Msg("Using cached template")
 		if convertedTemplate, ok := cachedTemplate.(*template.Template); !ok {
-			return nil, fmt.Errorf("error converting template")
+			return nil, errors.New("error converting template")
 		} else {
 			return convertedTemplate, nil
 		}

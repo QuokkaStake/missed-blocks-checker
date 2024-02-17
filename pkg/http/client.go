@@ -2,12 +2,13 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/rs/zerolog"
 	"main/pkg/constants"
 	"main/pkg/metrics"
 	"main/pkg/types"
 	"net/http"
 	"time"
+
+	"github.com/rs/zerolog"
 )
 
 type Client struct {

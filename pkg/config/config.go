@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -17,7 +18,7 @@ type Config struct {
 
 func (config *Config) Validate() error {
 	if len(config.ChainConfigs) == 0 {
-		return fmt.Errorf("no chains specified")
+		return errors.New("no chains specified")
 	}
 
 	for index, chainConfig := range config.ChainConfigs {

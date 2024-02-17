@@ -2,6 +2,7 @@ package templates
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	htmlTemplate "html/template"
 	"main/pkg/events"
@@ -34,7 +35,7 @@ func (m *DiscordTemplateManager) GetTemplate(name string) (*template.Template, e
 	if cachedTemplate, ok := m.Templates[name]; ok {
 		m.Logger.Trace().Str("type", name).Msg("Using cached template")
 		if convertedTemplate, ok := cachedTemplate.(*template.Template); !ok {
-			return nil, fmt.Errorf("error converting template")
+			return nil, errors.New("error converting template")
 		} else {
 			return convertedTemplate, nil
 		}

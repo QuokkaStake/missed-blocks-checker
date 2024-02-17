@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"main/pkg/constants"
 	"main/pkg/utils"
@@ -24,7 +25,7 @@ func (c *DatabaseConfig) Validate() error {
 	}
 
 	if c.Path == "" {
-		return fmt.Errorf("database path not specified")
+		return errors.New("database path not specified")
 	}
 
 	return nil

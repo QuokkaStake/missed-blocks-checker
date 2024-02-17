@@ -1,8 +1,8 @@
 package tendermint
 
 import (
+	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/http"
@@ -12,6 +12,8 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	queryTypes "github.com/cosmos/cosmos-sdk/types/query"
 
@@ -69,7 +71,7 @@ func (rpc *RPC) GetBlock(height int64) (*responses.SingleBlockResponse, error) {
 	if err := rpc.Get(queryURL, constants.QueryTypeBlock, &response, rpc.clients, func(v interface{}) error {
 		response, ok := v.(*responses.SingleBlockResponse)
 		if !ok {
-			return fmt.Errorf("error converting block")
+			return errors.New("error converting block")
 		}
 
 		if response.Error != nil {
@@ -77,7 +79,7 @@ func (rpc *RPC) GetBlock(height int64) (*responses.SingleBlockResponse, error) {
 		}
 
 		if response.Result.Block.Header.Height == "" {
-			return fmt.Errorf("malformed result of block: empty block height")
+			return errors.New("malformed result of block: empty block height")
 		}
 
 		return nil
@@ -116,7 +118,7 @@ func (rpc *RPC) AbciQuery(
 	if err := rpc.Get(queryURL, constants.QueryType("abci_"+string(queryType)), &response, clients, func(v interface{}) error {
 		response, ok := v.(*responses.AbciQueryResponse)
 		if !ok {
-			return fmt.Errorf("error converting ABCI response")
+			return errors.New("error converting ABCI response")
 		}
 
 		// code = NotFound desc = SigningInfo not found for validator xxx: key not found
@@ -281,7 +283,7 @@ func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 		if err := rpc.Get(queryURL, constants.QueryTypeHistoricalValidators, &response, rpc.clients, func(v interface{}) error {
 			response, ok := v.(*responses.ValidatorsResponse)
 			if !ok {
-				return fmt.Errorf("error converting validators")
+				return errors.New("error converting validators")
 			}
 
 			if response.Error != nil {
@@ -289,7 +291,7 @@ func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 			}
 
 			if len(response.Result.Validators) == 0 {
-				return fmt.Errorf("malformed result of validators active set: got 0 validators")
+				return errors.New("malformed result of validators active set: got 0 validators")
 			}
 
 			return nil
@@ -326,7 +328,7 @@ func (rpc *RPC) Get(
 	clients []*http.Client,
 	predicate func(interface{}) error,
 ) error {
-	errors := make([]error, len(clients))
+	errorsArray := make([]error, len(clients))
 
 	indexesShuffled := utils.MakeShuffledArray(len(clients))
 	clientsShuffled := make([]*http.Client, len(clients))
@@ -349,13 +351,13 @@ func (rpc *RPC) Get(
 
 		if err != nil {
 			rpc.logger.Warn().Str("url", fullURL).Err(err).Msg("LCD request failed")
-			errors[index] = err
+			errorsArray[index] = err
 			continue
 		}
 
 		if predicateErr := predicate(target); predicateErr != nil {
 			rpc.logger.Warn().Str("url", fullURL).Err(predicateErr).Msg("LCD precondition failed")
-			errors[index] = fmt.Errorf("precondition failed: %s", predicateErr)
+			errorsArray[index] = fmt.Errorf("precondition failed: %s", predicateErr)
 			continue
 		}
 
@@ -368,8 +370,8 @@ func (rpc *RPC) Get(
 
 	sb.WriteString("All LCD requests failed:\n")
 	for index, client := range clientsShuffled {
-		sb.WriteString(fmt.Sprintf("#%d: %s -> %s\n", index+1, client.Host, errors[index]))
+		sb.WriteString(fmt.Sprintf("#%d: %s -> %s\n", index+1, client.Host, errorsArray[index]))
 	}
 
-	return fmt.Errorf(sb.String())
+	return errors.New(sb.String())
 }
