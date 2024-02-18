@@ -3,6 +3,9 @@ package config
 import (
 	"errors"
 	"fmt"
+	"main/pkg/constants"
+	"main/pkg/utils"
+	"strings"
 
 	"gopkg.in/guregu/null.v4"
 )
@@ -28,6 +31,10 @@ type ChainConfig struct {
 	ConsumerValidatorPrefix string    `toml:"consumer-validator-prefix"`
 	ConsumerChainID         string    `toml:"consumer-chain-id"`
 	ConsumerSoftOptOut      float64   `default:"0.05"                   toml:"consumer-soft-opt-out"`
+
+	FetcherType          string   `default:"cosmos-rpc"          toml:"fetcher-type"`
+	LCDEndpoints         []string `toml:"lcd-endpoints"`
+	ProviderLCDEndpoints []string `toml:"provider-lcd-endpoints"`
 
 	MissedBlocksGroups MissedBlocksGroups `toml:"-"`
 	Thresholds         []float64          `default:"[0, 0.5, 1, 5, 10, 25, 50, 75, 90, 100]"                                                    toml:"thresholds"`
@@ -60,8 +67,20 @@ func (c *ChainConfig) Validate() error {
 		return errors.New("chain name is not provided")
 	}
 
+	if !utils.Contains(constants.GetFetcherTypes(), c.FetcherType) {
+		return fmt.Errorf(
+			"expected fetcher-type to be one of %s, but got %s",
+			strings.Join(constants.GetFetcherTypes(), ", "),
+			c.FetcherType,
+		)
+	}
+
 	if len(c.RPCEndpoints) == 0 {
 		return errors.New("chain has 0 RPC endpoints")
+	}
+
+	if c.FetcherType == constants.FetcherTypeCosmosLCD && len(c.LCDEndpoints) == 0 {
+		return errors.New("chain has 0 LCD endpoints")
 	}
 
 	if len(c.Thresholds) <= 2 {
@@ -101,8 +120,12 @@ func (c *ChainConfig) Validate() error {
 	}
 
 	if c.IsConsumer.Bool {
-		if len(c.ProviderRPCEndpoints) == 0 {
+		if c.FetcherType == constants.FetcherTypeCosmosRPC && len(c.ProviderRPCEndpoints) == 0 {
 			return errors.New("chain is a consumer, but has 0 provider RPC endpoints")
+		}
+
+		if c.FetcherType == constants.FetcherTypeCosmosLCD && len(c.ProviderLCDEndpoints) == 0 {
+			return errors.New("chain is a consumer, but has 0 provider LCD endpoints")
 		}
 
 		if c.ConsumerChainID == "" {

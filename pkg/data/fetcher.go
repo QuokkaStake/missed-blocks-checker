@@ -2,6 +2,7 @@ package data
 
 import (
 	configPkg "main/pkg/config"
+	"main/pkg/constants"
 	"main/pkg/data/fetchers"
 	"main/pkg/metrics"
 
@@ -29,5 +30,9 @@ func GetFetcher(
 	logger zerolog.Logger,
 	metricsManager *metrics.Manager,
 ) Fetcher {
+	if config.FetcherType == constants.FetcherTypeCosmosLCD {
+		return fetchers.NewCosmosLCDFetcher(config, logger, metricsManager)
+	}
+
 	return fetchers.NewCosmosRPCFetcher(config, logger, metricsManager)
 }

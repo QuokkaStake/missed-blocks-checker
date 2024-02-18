@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"io"
 	"main/pkg/constants"
 	"main/pkg/metrics"
 	"main/pkg/types"
@@ -36,11 +37,11 @@ func NewClient(
 	}
 }
 
-func (c *Client) Get(
+func (c *Client) GetInternal(
 	url string,
 	queryType constants.QueryType,
-	target interface{},
-) error {
+	headers map[string]string,
+) (io.ReadCloser, error) {
 	client := &http.Client{Timeout: 10 * time.Second}
 	start := time.Now()
 
@@ -54,10 +55,14 @@ func (c *Client) Get(
 
 	req, err := http.NewRequest(http.MethodGet, fullURL, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	req.Header.Set("User-Agent", "missed-blocks-checker")
+
+	for headerName, headerValue := range headers {
+		req.Header.Set(headerName, headerValue)
+	}
 
 	c.logger.Trace().
 		Str("url", fullURL).
@@ -67,23 +72,58 @@ func (c *Client) Get(
 	if err != nil {
 		c.logger.Warn().Str("url", fullURL).Err(err).Msg("Query failed")
 		c.metricsManager.LogQuery(c.chainName, queryInfo)
-		return err
+		return nil, err
 	}
-	defer res.Body.Close()
 
 	c.logger.Debug().
 		Str("url", fullURL).
 		Dur("duration", time.Since(start)).
 		Msg("Query is finished")
 
-	if jsonErr := json.NewDecoder(res.Body).Decode(target); jsonErr != nil {
+	queryInfo.Success = true
+	c.metricsManager.LogQuery(c.chainName, queryInfo)
+
+	return res.Body, nil
+}
+
+func (c *Client) GetPlain(
+	url string,
+	queryType constants.QueryType,
+	headers map[string]string,
+) ([]byte, error) {
+	body, err := c.GetInternal(url, queryType, headers)
+	if err != nil {
+		return nil, err
+	}
+
+	bytes, err := io.ReadAll(body)
+	if err != nil {
+		return nil, err
+	}
+
+	return bytes, nil
+}
+
+func (c *Client) Get(
+	url string,
+	queryType constants.QueryType,
+	target interface{},
+) error {
+	body, err := c.GetInternal(url, queryType, map[string]string{})
+	if err != nil {
+		return err
+	}
+
+	fullURL := c.Host + url
+
+	if jsonErr := json.NewDecoder(body).Decode(target); jsonErr != nil {
 		c.logger.Warn().Str("url", fullURL).Err(jsonErr).Msg("Error decoding JSON from response")
-		c.metricsManager.LogQuery(c.chainName, queryInfo)
 		return jsonErr
 	}
 
-	queryInfo.Success = true
-	c.metricsManager.LogQuery(c.chainName, queryInfo)
+	if err := body.Close(); err != nil {
+		return err
+	}
 
 	return nil
 }
