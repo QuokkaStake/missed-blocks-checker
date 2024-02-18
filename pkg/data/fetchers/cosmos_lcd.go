@@ -1,12 +1,14 @@
 package fetchers
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/http"
 	"main/pkg/metrics"
+	"main/pkg/types/responses"
 	"main/pkg/utils"
 	"strconv"
 	"strings"
@@ -138,13 +140,9 @@ func (f *CosmosLCDFetcher) GetSigningInfo(valcons string, height int64) (*slashi
 		f.clients,
 		height,
 		func(v interface{}) error {
-			response, ok := v.(*slashingTypes.QuerySigningInfoResponse)
+			_, ok := v.(*slashingTypes.QuerySigningInfoResponse)
 			if !ok {
 				return errors.New("error converting signing info response")
-			}
-
-			if response.ValSigningInfo.Address == "" {
-				return errors.New("malformed response: got empty signing info address")
 			}
 
 			return nil
@@ -258,7 +256,26 @@ func (f *CosmosLCDFetcher) Get(
 			continue
 		}
 
-		// fmt.Printf("bytes: %s\n", bytes)
+		// check whether the response is error first
+		var errorResponse responses.LCDError
+		if err := json.Unmarshal(bytes, &errorResponse); err == nil {
+			// if we successfully unmarshalled it into LCDError, so err == nil,
+			// that means the response is indeed an error.
+			if errorResponse.Code != 0 {
+				// code = NotFound desc = SigningInfo not found for validator xxx: key not found
+				if queryType == constants.QueryTypeSigningInfo && errorResponse.Code == 5 {
+					return nil
+				}
+
+				f.logger.Warn().Str("url", fullURL).
+					Err(err).
+					Int("code", errorResponse.Code).
+					Str("message", errorResponse.Message).
+					Msg("LCD request returned an error")
+				errorsArray[index] = errors.New(errorResponse.Message)
+				continue
+			}
+		}
 
 		if err := f.parseCodec.UnmarshalJSON(bytes, target); err != nil {
 			f.logger.Warn().Str("url", fullURL).Err(err).Msg("JSON unmarshalling failed")
