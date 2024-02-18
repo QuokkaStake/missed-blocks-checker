@@ -19,7 +19,7 @@ import (
 	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	providerTypes "github.com/cosmos/interchain-security/x/ccv/provider/types"
+	providerTypes "github.com/cosmos/interchain-security/v3/x/ccv/provider/types"
 	"github.com/rs/zerolog"
 )
 

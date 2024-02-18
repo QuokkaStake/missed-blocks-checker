@@ -14,9 +14,9 @@ import (
 
 	"main/pkg/types"
 
+	tmClient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
+	rpcTypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
 	"github.com/rs/zerolog"
-	tmClient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
-	rpcTypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
 )
 
 const (
