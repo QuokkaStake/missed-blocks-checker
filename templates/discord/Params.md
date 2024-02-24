@@ -8,7 +8,7 @@ Average block time: {{ .FormatAvgBlockTime }} seconds
 Approximate time to go to jail when missing all blocks: {{ .FormatTimeToJail }}
 
 **Chain info**
-{{ if .Config.IsConsumer -}}
+{{ if .Config.IsConsumer.Bool -}}
 The chain is an ICS consumer chain.
 Soft opt-out percent is at {{ .FormatSoftOptOut }}%.
 Top {{ .GetConsumerRequiredValidators }} are required to sign blocks.

@@ -18,7 +18,10 @@ func (reporter *Reporter) HandleParams(c tele.Context) error {
 	maxTimeToJail := reporter.Manager.GetTimeTillJail(0)
 
 	validators := reporter.Manager.GetValidators().ToSlice().GetActive()
-	_, amount := validators.GetSoftOutOutThreshold(reporter.Config.ConsumerSoftOptOut)
+	var amount int
+	if reporter.Config.IsConsumer.Bool {
+		_, amount = validators.GetSoftOutOutThreshold(reporter.Config.ConsumerSoftOptOut)
+	}
 
 	template, err := reporter.TemplatesManager.Render("Params", paramsRender{
 		Config:                   reporter.Config,
