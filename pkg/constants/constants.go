@@ -43,6 +43,9 @@ const (
 
 	DatabaseTypeSqlite   string = "sqlite"
 	DatabaseTypePostgres string = "postgres"
+
+	FetcherTypeCosmosRPC string = "cosmos-rpc"
+	FetcherTypeCosmosLCD string = "cosmos-lcd"
 )
 
 func GetEventNames() []EventName {
@@ -61,5 +64,12 @@ func GetDatabaseTypes() []string {
 	return []string{
 		DatabaseTypeSqlite,
 		DatabaseTypePostgres,
+	}
+}
+
+func GetFetcherTypes() []string {
+	return []string{
+		FetcherTypeCosmosRPC,
+		FetcherTypeCosmosLCD,
 	}
 }

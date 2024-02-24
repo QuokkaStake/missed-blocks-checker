@@ -6,7 +6,7 @@ import (
 	"math/big"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codecTyped "github.com/cosmos/cosmos-sdk/codec/types"
+	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	sdkTypes "github.com/cosmos/cosmos-sdk/types"
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -14,12 +14,12 @@ import (
 )
 
 type Converter struct {
-	registry   codecTyped.InterfaceRegistry
+	registry   codecTypes.InterfaceRegistry
 	parseCodec *codec.ProtoCodec
 }
 
 func NewConverter() *Converter {
-	interfaceRegistry := codecTyped.NewInterfaceRegistry()
+	interfaceRegistry := codecTypes.NewInterfaceRegistry()
 	std.RegisterInterfaces(interfaceRegistry)
 	parseCodec := codec.NewProtoCodec(interfaceRegistry)
 
