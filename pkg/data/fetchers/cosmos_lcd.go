@@ -158,7 +158,31 @@ func (f *CosmosLCDFetcher) GetValidatorAssignedConsumerKey(
 	providerValcons string,
 	height int64,
 ) (*providerTypes.QueryValidatorConsumerAddrResponse, error) {
-	return nil, errors.New("consumer keys fetching is not supported")
+	var response providerTypes.QueryValidatorConsumerAddrResponse
+
+	if err := f.Get(
+		fmt.Sprintf(
+			"/interchain_security/ccv/provider/validator_consumer_addr?chain_id=%s&provider_address=%s",
+			f.config.ConsumerChainID,
+			providerValcons,
+		),
+		constants.QueryTypeConsumerAddr,
+		&response,
+		f.providerClients,
+		height,
+		func(v interface{}) error {
+			_, ok := v.(*providerTypes.QueryValidatorConsumerAddrResponse)
+			if !ok {
+				return errors.New("error converting assigned consumer key response")
+			}
+
+			return nil
+		},
+	); err != nil {
+		return nil, err
+	}
+
+	return &response, nil
 }
 
 func (f *CosmosLCDFetcher) GetSlashingParams(height int64) (*slashingTypes.QueryParamsResponse, error) {
