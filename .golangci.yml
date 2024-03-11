@@ -51,3 +51,4 @@ linters:
     - deadcode
     - varcheck
     - durationcheck
+    - gocyclo
