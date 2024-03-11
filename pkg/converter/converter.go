@@ -83,6 +83,7 @@ func (c *Converter) ValidatorFromCosmosValidator(
 		Jailed:                  validator.Jailed,
 		SigningInfo:             valSigningInfo,
 		VotingPower:             big.NewFloat(0).SetInt(validator.DelegatorShares.BigInt()),
+		NeedsToSign:             true,
 	}
 }
 
