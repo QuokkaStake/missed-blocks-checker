@@ -156,6 +156,68 @@ func TestValidatorUnjailed(t *testing.T) {
 	assert.Equal(t, constants.EventValidatorUnjailed, report.Events[0].Type(), 1, "ReportEvent type mismatch!")
 }
 
+func TestValidatorJoinedSignatory(t *testing.T) {
+	t.Parallel()
+
+	config := &configPkg.ChainConfig{
+		MissedBlocksGroups: []*configPkg.MissedBlocksGroup{
+			{Start: 0, End: 49},
+			{Start: 50, End: 99},
+		},
+	}
+
+	olderSnapshot := Snapshot{Entries: map[string]Entry{
+		"validator": {
+			Validator:     &types.Validator{NeedsToSign: false},
+			SignatureInfo: types.SignatureInto{NotSigned: 0},
+		},
+	}}
+	newerSnapshot := Snapshot{Entries: map[string]Entry{
+		"validator": {
+			Validator:     &types.Validator{NeedsToSign: true},
+			SignatureInfo: types.SignatureInto{NotSigned: 0},
+		},
+	}}
+
+	report, err := newerSnapshot.GetReport(olderSnapshot, config)
+	require.NoError(t, err)
+
+	assert.NotEmpty(t, report.Events)
+	assert.Len(t, report.Events, 1)
+	assert.Equal(t, constants.EventValidatorJoinedSignatory, report.Events[0].Type())
+}
+
+func TestValidatorLeftSignatory(t *testing.T) {
+	t.Parallel()
+
+	config := &configPkg.ChainConfig{
+		MissedBlocksGroups: []*configPkg.MissedBlocksGroup{
+			{Start: 0, End: 49},
+			{Start: 50, End: 99},
+		},
+	}
+
+	olderSnapshot := Snapshot{Entries: map[string]Entry{
+		"validator": {
+			Validator:     &types.Validator{NeedsToSign: true},
+			SignatureInfo: types.SignatureInto{NotSigned: 0},
+		},
+	}}
+	newerSnapshot := Snapshot{Entries: map[string]Entry{
+		"validator": {
+			Validator:     &types.Validator{NeedsToSign: false},
+			SignatureInfo: types.SignatureInto{NotSigned: 0},
+		},
+	}}
+
+	report, err := newerSnapshot.GetReport(olderSnapshot, config)
+	require.NoError(t, err)
+
+	assert.NotEmpty(t, report.Events)
+	assert.Len(t, report.Events, 1)
+	assert.Equal(t, constants.EventValidatorLeftSignatory, report.Events[0].Type())
+}
+
 func TestValidatorInactive(t *testing.T) {
 	t.Parallel()
 

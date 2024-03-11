@@ -137,6 +137,18 @@ func (m *TelegramTemplateManager) SerializeEvent(event types.RenderEventItem) st
 			m.SerializeLink(event.ValidatorLink),
 			notifiersSerialized,
 		)
+	case events.ValidatorJoinedSignatory:
+		return fmt.Sprintf(
+			"<strong>🙋 %s is now required to sign blocks</strong>%s",
+			m.SerializeLink(event.ValidatorLink),
+			notifiersSerialized,
+		)
+	case events.ValidatorLeftSignatory:
+		return fmt.Sprintf(
+			"<strong>👋 %s is now not required to sign blocks</strong>%s",
+			m.SerializeLink(event.ValidatorLink),
+			notifiersSerialized,
+		)
 	case events.ValidatorInactive:
 		return fmt.Sprintf(
 			"😔 <strong>%s has left the active set</strong>%s",

@@ -15,13 +15,15 @@ const (
 
 	PrometheusMetricsPrefix = "missed_blocks_checker_"
 
-	EventValidatorActive       EventName = "ValidatorActive"
-	EventValidatorGroupChanged EventName = "ValidatorGroupChanged"
-	EventValidatorInactive     EventName = "ValidatorInactive"
-	EventValidatorJailed       EventName = "ValidatorJailed"
-	EventValidatorUnjailed     EventName = "ValidatorUnjailed"
-	EventValidatorTombstoned   EventName = "ValidatorTombstoned"
-	EventValidatorCreated      EventName = "ValidatorCreated"
+	EventValidatorActive          EventName = "ValidatorActive"
+	EventValidatorGroupChanged    EventName = "ValidatorGroupChanged"
+	EventValidatorInactive        EventName = "ValidatorInactive"
+	EventValidatorJailed          EventName = "ValidatorJailed"
+	EventValidatorUnjailed        EventName = "ValidatorUnjailed"
+	EventValidatorTombstoned      EventName = "ValidatorTombstoned"
+	EventValidatorCreated         EventName = "ValidatorCreated"
+	EventValidatorJoinedSignatory EventName = "ValidatorJoinedSignatory"
+	EventValidatorLeftSignatory   EventName = "ValidatorLeftSignatory"
 
 	TelegramReporterName ReporterName = "telegram"
 	DiscordReporterName  ReporterName = "discord"
@@ -55,6 +57,8 @@ func GetEventNames() []EventName {
 		EventValidatorInactive,
 		EventValidatorUnjailed,
 		EventValidatorActive,
+		EventValidatorLeftSignatory,
+		EventValidatorJoinedSignatory,
 		EventValidatorCreated,
 		EventValidatorGroupChanged,
 	}
