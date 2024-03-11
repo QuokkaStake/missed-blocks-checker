@@ -191,7 +191,7 @@ func (manager *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64
 		return nil, []error{signingInfoErr}
 	}
 
-	validators := make([]*types.Validator, len(validatorsResponse.Validators))
+	validators := make(types.Validators, len(validatorsResponse.Validators))
 	errs := make([]error, 0)
 
 	for index, validatorRaw := range validatorsResponse.Validators {
@@ -261,6 +261,14 @@ func (manager *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64
 	}
 
 	wg.Wait()
+
+	threshold, _ := validators.GetSoftOutOutThreshold(manager.config.ConsumerSoftOptOut)
+
+	for _, validator := range validators {
+		if validator.VotingPower.Cmp(threshold) < 0 {
+			validator.NeedsToSign = false
+		}
+	}
 
 	return validators, errs
 }

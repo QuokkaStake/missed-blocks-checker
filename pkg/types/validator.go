@@ -24,6 +24,7 @@ type Validator struct {
 	Jailed                  bool
 	SigningInfo             *SigningInfo
 	VotingPower             *big.Float
+	NeedsToSign             bool // for consumer chains
 }
 
 func (v *Validator) Active() bool {
