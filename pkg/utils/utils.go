@@ -129,12 +129,7 @@ func ConvertBech32Prefix(address, newPrefix string) (string, error) {
 		return "", err
 	}
 
-	result, err := bech32.Encode(newPrefix, addressRaw)
-	if err != nil {
-		return "", err
-	}
-
-	return result, nil
+	return bech32.Encode(newPrefix, addressRaw)
 }
 
 func FormatDuration(duration time.Duration) string {
