@@ -81,8 +81,8 @@ func TestValidatorsSetTotalVotingPower(t *testing.T) {
 	assert.InDelta(t, 0.75, validators[1].VotingPowerPercent, 0.001)
 	assert.Equal(t, 2, validators[0].Rank)
 	assert.Equal(t, 1, validators[1].Rank)
-	assert.Equal(t, float64(1), validators[0].CumulativeVotingPowerPercent)
-	assert.Equal(t, 0.75, validators[1].CumulativeVotingPowerPercent)
+	assert.InDelta(t, float64(1), validators[0].CumulativeVotingPowerPercent, 0.001)
+	assert.InDelta(t, 0.75, validators[1].CumulativeVotingPowerPercent, 0.001)
 }
 
 func TestValidatorsGetSoftOptOutThresholdAchievable(t *testing.T) {

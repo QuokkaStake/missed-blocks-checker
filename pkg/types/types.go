@@ -63,7 +63,6 @@ func (validators Validators) SetVotingPowerPercent() {
 
 	var cumulativeVotingPowerPercent float64 = 0
 	for index, validator := range activeAndSortedValidators {
-
 		percent, _ := new(big.Float).Quo(validator.VotingPower, totalVP).Float64()
 		validator.VotingPowerPercent = percent
 		validator.Rank = index + 1
