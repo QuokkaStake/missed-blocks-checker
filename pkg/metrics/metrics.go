@@ -39,6 +39,7 @@ type Manager struct {
 	missingBlocksGauge *prometheus.GaugeVec
 	activeBlocksGauge  *prometheus.GaugeVec
 	needsToSignGauge   *prometheus.GaugeVec
+	votingPowerGauge   *prometheus.GaugeVec
 
 	isActiveGauge     *prometheus.GaugeVec
 	isJailedGauge     *prometheus.GaugeVec
@@ -126,6 +127,10 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 		Name: constants.PrometheusMetricsPrefix + "needs_to_sign",
 		Help: "Whether the validator needs to sign blocks (for consumer chains)",
 	}, []string{"chain", "moniker", "address"})
+	votingPowerGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: constants.PrometheusMetricsPrefix + "voting_power",
+		Help: "Voting power % of the validator",
+	}, []string{"chain", "moniker", "address"})
 	isActiveGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: constants.PrometheusMetricsPrefix + "active",
 		Help: "Whether the validator is active",
@@ -175,6 +180,7 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 	registry.MustRegister(reconnectsCounter)
 	registry.MustRegister(missingBlocksGauge)
 	registry.MustRegister(activeBlocksGauge)
+	registry.MustRegister(votingPowerGauge)
 	registry.MustRegister(isActiveGauge)
 	registry.MustRegister(isJailedGauge)
 	registry.MustRegister(needsToSignGauge)
@@ -209,6 +215,7 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 		reconnectsCounter:          reconnectsCounter,
 		missingBlocksGauge:         missingBlocksGauge,
 		activeBlocksGauge:          activeBlocksGauge,
+		votingPowerGauge:           votingPowerGauge,
 		isActiveGauge:              isActiveGauge,
 		isJailedGauge:              isJailedGauge,
 		needsToSignGauge:           needsToSignGauge,
@@ -406,14 +413,24 @@ func (m *Manager) LogValidatorStats(
 			Set(utils.BoolToFloat64(validator.SigningInfo.Tombstoned))
 	}
 
-	if chain.IsConsumer.Bool && validator.Active() {
-		m.needsToSignGauge.
+	if validator.Active() {
+		if chain.IsConsumer.Bool {
+			m.needsToSignGauge.
+				With(prometheus.Labels{
+					"chain":   chain.Name,
+					"moniker": validator.Moniker,
+					"address": validator.OperatorAddress,
+				}).
+				Set(utils.BoolToFloat64(validator.NeedsToSign))
+		}
+
+		m.votingPowerGauge.
 			With(prometheus.Labels{
 				"chain":   chain.Name,
 				"moniker": validator.Moniker,
 				"address": validator.OperatorAddress,
 			}).
-			Set(utils.BoolToFloat64(validator.NeedsToSign))
+			Set(validator.VotingPowerPercent)
 	}
 }
 
