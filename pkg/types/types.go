@@ -51,6 +51,15 @@ func (validators Validators) GetTotalVotingPower() *big.Float {
 	return sum
 }
 
+func (validators Validators) SetVotingPowerPercent() {
+	totalVP := validators.GetTotalVotingPower()
+
+	for _, validator := range validators {
+		percent, _ := new(big.Float).Quo(validator.VotingPower, totalVP).Float64()
+		validator.VotingPowerPercent = percent
+	}
+}
+
 func (validators Validators) GetSoftOutOutThreshold(softOptOut float64) (*big.Float, int) {
 	sortedValidators := make([]*Validator, 0)
 	for _, validator := range validators {

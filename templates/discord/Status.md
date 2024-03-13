@@ -8,6 +8,6 @@ You are subscribed to the following validators' updates on {{ .ChainConfig.GetNa
 {{- else if .Error -}}
 **{{ SerializeLink .Link }}:**: error getting validators missed blocks: {{ .Error }}
 {{- else -}}
-**{{ SerializeLink .Link }}:** {{ .SigningInfo.GetNotSigned }} missed blocks ({{ $render.FormatNotSignedPercent . }}%)
+**{{ SerializeLink .Link }}** ({{ $render.FormatVotingPower . }}): {{ .SigningInfo.GetNotSigned }} missed blocks ({{ $render.FormatNotSignedPercent . }}%)
 {{- end -}}
 {{ end }}

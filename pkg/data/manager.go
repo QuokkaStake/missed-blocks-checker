@@ -81,7 +81,7 @@ func (manager *Manager) GetValidators(height int64) (types.Validators, []error) 
 		return nil, []error{signingInfoErr}
 	}
 
-	validators := make([]*types.Validator, len(validatorsResponse.Validators))
+	validators := make(types.Validators, len(validatorsResponse.Validators))
 	for index, validatorRaw := range validatorsResponse.Validators {
 		consensusAddr := manager.converter.GetConsensusAddress(validatorRaw)
 
@@ -110,6 +110,8 @@ func (manager *Manager) GetValidators(height int64) (types.Validators, []error) 
 		validators[index] = validator
 	}
 
+	validators.SetVotingPowerPercent()
+
 	return validators, nil
 }
 
@@ -123,7 +125,7 @@ func (manager *Manager) GetValidatorsAndEachSigningInfo(height int64) (types.Val
 	var mutex sync.Mutex
 	errs := make([]error, 0)
 
-	validators := make([]*types.Validator, len(validatorsResponse.Validators))
+	validators := make(types.Validators, len(validatorsResponse.Validators))
 	for index, validatorRaw := range validatorsResponse.Validators {
 		wg.Add(1)
 		go func(validatorRaw stakingTypes.Validator, index int) {
@@ -156,6 +158,8 @@ func (manager *Manager) GetValidatorsAndEachSigningInfo(height int64) (types.Val
 	}
 
 	wg.Wait()
+
+	validators.SetVotingPowerPercent()
 
 	return validators, errs
 }
@@ -269,6 +273,8 @@ func (manager *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64
 			validator.NeedsToSign = false
 		}
 	}
+
+	validators.SetVotingPowerPercent()
 
 	return validators, errs
 }

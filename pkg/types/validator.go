@@ -24,6 +24,7 @@ type Validator struct {
 	Jailed                  bool
 	SigningInfo             *SigningInfo
 	VotingPower             *big.Float
+	VotingPowerPercent      float64
 	NeedsToSign             bool // for consumer chains
 }
 
