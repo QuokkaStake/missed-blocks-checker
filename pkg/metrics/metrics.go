@@ -36,9 +36,9 @@ type Manager struct {
 	reporterEnabledGauge   *prometheus.GaugeVec
 	reporterQueriesCounter *prometheus.CounterVec
 
-	missingBlocksGauge   *prometheus.GaugeVec
-	activeBlocksGauge    *prometheus.GaugeVec
-	notActiveBlocksGauge *prometheus.GaugeVec
+	missingBlocksGauge *prometheus.GaugeVec
+	activeBlocksGauge  *prometheus.GaugeVec
+	needsToSignGauge   *prometheus.GaugeVec
 
 	isActiveGauge     *prometheus.GaugeVec
 	isJailedGauge     *prometheus.GaugeVec
@@ -122,9 +122,9 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 		Name: constants.PrometheusMetricsPrefix + "active_blocks",
 		Help: "Count of each validator's blocks during which they were active",
 	}, []string{"chain", "moniker", "address"})
-	notActiveBlocksGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: constants.PrometheusMetricsPrefix + "not_active_blocks",
-		Help: "Count of each validator's blocks during which they were not active",
+	needsToSignGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: constants.PrometheusMetricsPrefix + "needs_to_sign",
+		Help: "Whether the validator needs to sign blocks (for consumer chains)",
 	}, []string{"chain", "moniker", "address"})
 	isActiveGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: constants.PrometheusMetricsPrefix + "active",
@@ -175,9 +175,9 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 	registry.MustRegister(reconnectsCounter)
 	registry.MustRegister(missingBlocksGauge)
 	registry.MustRegister(activeBlocksGauge)
-	registry.MustRegister(notActiveBlocksGauge)
 	registry.MustRegister(isActiveGauge)
 	registry.MustRegister(isJailedGauge)
+	registry.MustRegister(needsToSignGauge)
 	registry.MustRegister(isTombstonedGauge)
 	registry.MustRegister(signedBlocksWindowGauge)
 	registry.MustRegister(storeBlocksGauge)
@@ -209,9 +209,9 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 		reconnectsCounter:          reconnectsCounter,
 		missingBlocksGauge:         missingBlocksGauge,
 		activeBlocksGauge:          activeBlocksGauge,
-		notActiveBlocksGauge:       notActiveBlocksGauge,
 		isActiveGauge:              isActiveGauge,
 		isJailedGauge:              isJailedGauge,
+		needsToSignGauge:           needsToSignGauge,
 		isTombstonedGauge:          isTombstonedGauge,
 		signedBlocksWindowGauge:    signedBlocksWindowGauge,
 		storeBlocksGauge:           storeBlocksGauge,
@@ -352,13 +352,13 @@ func (m *Manager) LogNodeReconnect(chain string, node string) {
 }
 
 func (m *Manager) LogValidatorStats(
-	chain string,
+	chain *configPkg.ChainConfig,
 	validator *types.Validator,
 	signatureInfo types.SignatureInto,
 ) {
 	m.missingBlocksGauge.
 		With(prometheus.Labels{
-			"chain":   chain,
+			"chain":   chain.Name,
 			"moniker": validator.Moniker,
 			"address": validator.OperatorAddress,
 		}).
@@ -366,23 +366,15 @@ func (m *Manager) LogValidatorStats(
 
 	m.activeBlocksGauge.
 		With(prometheus.Labels{
-			"chain":   chain,
+			"chain":   chain.Name,
 			"moniker": validator.Moniker,
 			"address": validator.OperatorAddress,
 		}).
 		Set(float64(signatureInfo.Active))
 
-	m.notActiveBlocksGauge.
-		With(prometheus.Labels{
-			"chain":   chain,
-			"moniker": validator.Moniker,
-			"address": validator.OperatorAddress,
-		}).
-		Set(float64(signatureInfo.NotActive))
-
 	m.isActiveGauge.
 		With(prometheus.Labels{
-			"chain":   chain,
+			"chain":   chain.Name,
 			"moniker": validator.Moniker,
 			"address": validator.OperatorAddress,
 		}).
@@ -390,20 +382,38 @@ func (m *Manager) LogValidatorStats(
 
 	m.isJailedGauge.
 		With(prometheus.Labels{
-			"chain":   chain,
+			"chain":   chain.Name,
 			"moniker": validator.Moniker,
 			"address": validator.OperatorAddress,
 		}).
 		Set(utils.BoolToFloat64(validator.Jailed))
 
+	m.missingBlocksGauge.
+		With(prometheus.Labels{
+			"chain":   chain.Name,
+			"moniker": validator.Moniker,
+			"address": validator.OperatorAddress,
+		}).
+		Set(float64(signatureInfo.GetNotSigned()))
+
 	if validator.SigningInfo != nil {
 		m.isTombstonedGauge.
 			With(prometheus.Labels{
-				"chain":   chain,
+				"chain":   chain.Name,
 				"moniker": validator.Moniker,
 				"address": validator.OperatorAddress,
 			}).
 			Set(utils.BoolToFloat64(validator.SigningInfo.Tombstoned))
+	}
+
+	if chain.IsConsumer.Bool && validator.Active() {
+		m.needsToSignGauge.
+			With(prometheus.Labels{
+				"chain":   chain.Name,
+				"moniker": validator.Moniker,
+				"address": validator.OperatorAddress,
+			}).
+			Set(utils.BoolToFloat64(validator.NeedsToSign))
 	}
 }
 
