@@ -61,11 +61,10 @@ func (validators Validators) SetVotingPowerPercent() {
 }
 
 func (validators Validators) GetSoftOutOutThreshold(softOptOut float64) (*big.Float, int) {
-	sortedValidators := make([]*Validator, 0)
-	for _, validator := range validators {
-		if validator.Active() {
-			sortedValidators = append(sortedValidators, validator)
-		}
+	sortedValidators := validators.GetActive()
+
+	if len(sortedValidators) == 0 {
+		return big.NewFloat(0), 0
 	}
 
 	// sorting validators by voting power ascending
@@ -81,11 +80,12 @@ func (validators Validators) GetSoftOutOutThreshold(softOptOut float64) (*big.Fl
 		thresholdPercent := big.NewFloat(0).Quo(threshold, totalVP)
 
 		if thresholdPercent.Cmp(big.NewFloat(softOptOut)) > 0 {
-			return validator.VotingPower, index
+			return validator.VotingPower, index + 1
 		}
 	}
 
-	panic("Should have not reached here when calculating soft opt-out!")
+	// should've never reached here
+	return sortedValidators[0].VotingPower, len(sortedValidators)
 }
 
 func (validatorsMap ValidatorsMap) ToSlice() Validators {
