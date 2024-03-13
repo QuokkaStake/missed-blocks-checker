@@ -75,6 +75,18 @@ func (snapshot *Snapshot) GetReport(
 			})
 		}
 
+		if entry.Validator.Active() && olderEntry.Validator.Active() && entry.Validator.NeedsToSign && !olderEntry.Validator.NeedsToSign {
+			entries = append(entries, events.ValidatorJoinedSignatory{
+				Validator: entry.Validator,
+			})
+		}
+
+		if entry.Validator.Active() && olderEntry.Validator.Active() && !entry.Validator.NeedsToSign && olderEntry.Validator.NeedsToSign {
+			entries = append(entries, events.ValidatorLeftSignatory{
+				Validator: entry.Validator,
+			})
+		}
+
 		if entry.Validator.Active() && !olderEntry.Validator.Active() {
 			entries = append(entries, events.ValidatorActive{
 				Validator: entry.Validator,

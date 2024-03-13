@@ -144,6 +144,18 @@ func (m *DiscordTemplateManager) SerializeEvent(event types.RenderEventItem) str
 			validatorLink,
 			notifiersSerialized,
 		)
+	case events.ValidatorJoinedSignatory:
+		return fmt.Sprintf(
+			"**🙋 %s is now required to sign blocks**%s",
+			validatorLink,
+			notifiersSerialized,
+		)
+	case events.ValidatorLeftSignatory:
+		return fmt.Sprintf(
+			"**👋 %s is now not required to sign blocks**%s",
+			validatorLink,
+			notifiersSerialized,
+		)
 	case events.ValidatorInactive:
 		return fmt.Sprintf(
 			"😔 **%s has left the active set**%s",
