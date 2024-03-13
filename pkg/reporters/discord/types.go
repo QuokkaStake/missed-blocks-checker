@@ -96,6 +96,20 @@ func (s statusRender) FormatNotSignedPercent(entry statusEntry) string {
 	return fmt.Sprintf("%.2f", float64(entry.SigningInfo.GetNotSigned())/float64(s.ChainConfig.BlocksWindow)*100)
 }
 
+func (s statusRender) FormatVotingPower(entry statusEntry) string {
+	text := fmt.Sprintf("%.2f%% VP", entry.Validator.VotingPowerPercent*100)
+
+	if s.ChainConfig.IsConsumer.Bool {
+		if entry.Validator.NeedsToSign {
+			text += ", needs to sign blocks"
+		} else {
+			text += ", does not need to sign blocks"
+		}
+	}
+
+	return text
+}
+
 type helpRender struct {
 	Version  string
 	Commands map[string]*Command
