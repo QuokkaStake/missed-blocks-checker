@@ -54,9 +54,22 @@ func (validators Validators) GetTotalVotingPower() *big.Float {
 func (validators Validators) SetVotingPowerPercent() {
 	totalVP := validators.GetTotalVotingPower()
 
-	for _, validator := range validators {
+	activeAndSortedValidators := validators.GetActive()
+
+	// sorting by voting power desc
+	sort.Slice(activeAndSortedValidators, func(first, second int) bool {
+		return activeAndSortedValidators[first].VotingPower.Cmp(activeAndSortedValidators[second].VotingPower) > 0
+	})
+
+	var cumulativeVotingPowerPercent float64 = 0
+	for index, validator := range activeAndSortedValidators {
+
 		percent, _ := new(big.Float).Quo(validator.VotingPower, totalVP).Float64()
 		validator.VotingPowerPercent = percent
+		validator.Rank = index + 1
+
+		cumulativeVotingPowerPercent += percent
+		validator.CumulativeVotingPowerPercent = cumulativeVotingPowerPercent
 	}
 }
 

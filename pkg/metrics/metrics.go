@@ -36,10 +36,12 @@ type Manager struct {
 	reporterEnabledGauge   *prometheus.GaugeVec
 	reporterQueriesCounter *prometheus.CounterVec
 
-	missingBlocksGauge *prometheus.GaugeVec
-	activeBlocksGauge  *prometheus.GaugeVec
-	needsToSignGauge   *prometheus.GaugeVec
-	votingPowerGauge   *prometheus.GaugeVec
+	missingBlocksGauge         *prometheus.GaugeVec
+	activeBlocksGauge          *prometheus.GaugeVec
+	needsToSignGauge           *prometheus.GaugeVec
+	votingPowerGauge           *prometheus.GaugeVec
+	cumulativeVotingPowerGauge *prometheus.GaugeVec
+	validatorRankGauge         *prometheus.GaugeVec
 
 	isActiveGauge     *prometheus.GaugeVec
 	isJailedGauge     *prometheus.GaugeVec
@@ -131,6 +133,14 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 		Name: constants.PrometheusMetricsPrefix + "voting_power",
 		Help: "Voting power % of the validator",
 	}, []string{"chain", "moniker", "address"})
+	cumulativeVotingPowerGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: constants.PrometheusMetricsPrefix + "cumulative_voting_power",
+		Help: "Cumulative voting power % of the validator",
+	}, []string{"chain", "moniker", "address"})
+	validatorRankGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: constants.PrometheusMetricsPrefix + "validator_rank",
+		Help: "Validator rank on chain",
+	}, []string{"chain", "moniker", "address"})
 	isActiveGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: constants.PrometheusMetricsPrefix + "active",
 		Help: "Whether the validator is active",
@@ -181,6 +191,8 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 	registry.MustRegister(missingBlocksGauge)
 	registry.MustRegister(activeBlocksGauge)
 	registry.MustRegister(votingPowerGauge)
+	registry.MustRegister(cumulativeVotingPowerGauge)
+	registry.MustRegister(validatorRankGauge)
 	registry.MustRegister(isActiveGauge)
 	registry.MustRegister(isJailedGauge)
 	registry.MustRegister(needsToSignGauge)
@@ -215,7 +227,9 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 		reconnectsCounter:          reconnectsCounter,
 		missingBlocksGauge:         missingBlocksGauge,
 		activeBlocksGauge:          activeBlocksGauge,
+		cumulativeVotingPowerGauge: cumulativeVotingPowerGauge,
 		votingPowerGauge:           votingPowerGauge,
+		validatorRankGauge:         validatorRankGauge,
 		isActiveGauge:              isActiveGauge,
 		isJailedGauge:              isJailedGauge,
 		needsToSignGauge:           needsToSignGauge,
@@ -431,6 +445,22 @@ func (m *Manager) LogValidatorStats(
 				"address": validator.OperatorAddress,
 			}).
 			Set(validator.VotingPowerPercent)
+
+		m.cumulativeVotingPowerGauge.
+			With(prometheus.Labels{
+				"chain":   chain.Name,
+				"moniker": validator.Moniker,
+				"address": validator.OperatorAddress,
+			}).
+			Set(validator.CumulativeVotingPowerPercent)
+
+		m.validatorRankGauge.
+			With(prometheus.Labels{
+				"chain":   chain.Name,
+				"moniker": validator.Moniker,
+				"address": validator.OperatorAddress,
+			}).
+			Set(float64(validator.Rank))
 	}
 }
 
