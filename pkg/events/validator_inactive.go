@@ -2,6 +2,7 @@ package events
 
 import (
 	"fmt"
+	"html/template"
 	"main/pkg/constants"
 	"main/pkg/types"
 )
@@ -27,11 +28,11 @@ func (e ValidatorInactive) Render(formatType constants.FormatType, renderData ty
 			renderData.Notifiers,
 		)
 	case constants.FormatTypeHTML:
-		return fmt.Sprintf(
+		return template.HTML(fmt.Sprintf(
 			"😔 <strong>%s has left the active set</strong>%s",
 			renderData.ValidatorLink,
 			renderData.Notifiers,
-		)
+		))
 	default:
 		return fmt.Sprintf("Unsupported format type: %s", formatType)
 	}
