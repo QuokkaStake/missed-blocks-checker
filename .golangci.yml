@@ -2,6 +2,7 @@ linters-settings:
   gocritic:
     disabled-checks:
       - ifElseChain
+      - singleCaseSwitch
   gosec:
     excludes:
       - G402
@@ -52,3 +53,4 @@ linters:
     - varcheck
     - durationcheck
     - gocyclo
+    - exhaustive

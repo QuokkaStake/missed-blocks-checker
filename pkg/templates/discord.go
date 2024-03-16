@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	htmlTemplate "html/template"
+	"main/pkg/constants"
 	"main/pkg/events"
 	"main/pkg/types"
 	"main/pkg/utils"
@@ -104,82 +105,24 @@ func (m *DiscordTemplateManager) SerializeDate(date time.Time) string {
 }
 
 func (m *DiscordTemplateManager) SerializeEvent(event types.RenderEventItem) string {
-	notifiersSerialized := " " + m.SerializeNotifiers(event.Notifiers)
-
-	validatorLink := fmt.Sprintf(
-		"%s (%s)",
-		event.ValidatorLink.Text,
-		m.SerializeLink(types.Link{
-			Href: event.ValidatorLink.Href,
-			Text: "link",
-		}),
-	)
+	renderData := types.ReportEventRenderData{
+		Notifiers: " " + m.SerializeNotifiers(event.Notifiers),
+		ValidatorLink: fmt.Sprintf(
+			"%s (%s)",
+			event.ValidatorLink.Text,
+			m.SerializeLink(types.Link{
+				Href: event.ValidatorLink.Href,
+				Text: "link",
+			}),
+		),
+	}
 
 	switch entry := event.Event.(type) {
 	case events.ValidatorGroupChanged:
-		timeToJailStr := ""
-
 		if entry.IsIncreasing() {
-			timeToJailStr = fmt.Sprintf(" (%s till jail)", utils.FormatDuration(event.TimeToJail))
+			renderData.TimeToJail = fmt.Sprintf(" (%s till jail)", utils.FormatDuration(event.TimeToJail))
 		}
-
-		return fmt.Sprintf(
-			// a string like "🟡 <validator> (link) is skipping blocks (> 1.0%)  (XXX till jail) <notifier> <notifier2>"
-			"**%s %s %s**%s%s",
-			entry.GetEmoji(),
-			validatorLink,
-			entry.GetDescription(),
-			timeToJailStr,
-			notifiersSerialized,
-		)
-	case events.ValidatorJailed:
-		return fmt.Sprintf(
-			"**❌ %s has been jailed**%s",
-			validatorLink,
-			notifiersSerialized,
-		)
-	case events.ValidatorUnjailed:
-		return fmt.Sprintf(
-			"**👌 %s has been unjailed**%s",
-			validatorLink,
-			notifiersSerialized,
-		)
-	case events.ValidatorJoinedSignatory:
-		return fmt.Sprintf(
-			"**🙋 %s is now required to sign blocks**%s",
-			validatorLink,
-			notifiersSerialized,
-		)
-	case events.ValidatorLeftSignatory:
-		return fmt.Sprintf(
-			"**👋 %s is now not required to sign blocks**%s",
-			validatorLink,
-			notifiersSerialized,
-		)
-	case events.ValidatorInactive:
-		return fmt.Sprintf(
-			"😔 **%s has left the active set**%s",
-			validatorLink,
-			notifiersSerialized,
-		)
-	case events.ValidatorActive:
-		return fmt.Sprintf(
-			"✅ **%s has joined the active set**%s",
-			validatorLink,
-			notifiersSerialized,
-		)
-	case events.ValidatorTombstoned:
-		return fmt.Sprintf(
-			"**💀 %s has been tombstoned**%s",
-			validatorLink,
-			notifiersSerialized,
-		)
-	case events.ValidatorCreated:
-		return fmt.Sprintf(
-			"**💡New validator created: %s**",
-			validatorLink,
-		)
-	default:
-		return fmt.Sprintf("Unsupported event %+v\n", entry)
 	}
+
+	return event.Event.Render(constants.FormatTypeMarkdown, renderData)
 }

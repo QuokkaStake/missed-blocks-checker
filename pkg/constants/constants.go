@@ -42,6 +42,7 @@ const (
 
 	FormatTypeHTML     FormatType = "html"
 	FormatTypeMarkdown FormatType = "markdown"
+	FormatTypeTest     FormatType = "test"
 
 	DatabaseTypeSqlite   string = "sqlite"
 	DatabaseTypePostgres string = "postgres"

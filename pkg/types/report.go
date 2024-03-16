@@ -4,9 +4,16 @@ import (
 	"main/pkg/constants"
 )
 
+type ReportEventRenderData struct {
+	Notifiers     string
+	ValidatorLink any
+	TimeToJail    string
+}
+
 type ReportEvent interface {
 	Type() constants.EventName
 	GetValidator() *Validator
+	Render(formatType constants.FormatType, renderData ReportEventRenderData) string
 }
 
 type Report struct {
