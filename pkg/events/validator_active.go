@@ -2,7 +2,6 @@ package events
 
 import (
 	"fmt"
-	"html/template"
 	"main/pkg/constants"
 	"main/pkg/types"
 )
@@ -19,7 +18,7 @@ func (e ValidatorActive) GetValidator() *types.Validator {
 	return e.Validator
 }
 
-func (e ValidatorActive) Render(formatType constants.FormatType, renderData types.ReportEventRenderData) any {
+func (e ValidatorActive) Render(formatType constants.FormatType, renderData types.ReportEventRenderData) string {
 	switch formatType {
 	case constants.FormatTypeMarkdown:
 		return fmt.Sprintf(
@@ -28,11 +27,11 @@ func (e ValidatorActive) Render(formatType constants.FormatType, renderData type
 			renderData.Notifiers,
 		)
 	case constants.FormatTypeHTML:
-		return template.HTML(fmt.Sprintf(
+		return fmt.Sprintf(
 			"✅ <strong>%s has joined the active set</strong>%s",
 			renderData.ValidatorLink,
 			renderData.Notifiers,
-		))
+		)
 	default:
 		return fmt.Sprintf("Unsupported format type: %s", formatType)
 	}

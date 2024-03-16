@@ -18,7 +18,7 @@ func (e ValidatorTombstoned) GetValidator() *types.Validator {
 	return e.Validator
 }
 
-func (e ValidatorTombstoned) Render(formatType constants.FormatType, renderData types.ReportEventRenderData) any {
+func (e ValidatorTombstoned) Render(formatType constants.FormatType, renderData types.ReportEventRenderData) string {
 	switch formatType {
 	case constants.FormatTypeMarkdown:
 		return fmt.Sprintf(

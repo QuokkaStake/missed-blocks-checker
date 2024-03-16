@@ -1,7 +1,6 @@
 package events_test
 
 import (
-	"html/template"
 	"main/pkg/constants"
 	"main/pkg/events"
 	"main/pkg/types"
@@ -25,13 +24,10 @@ func TestValidatorActiveFormatHTML(t *testing.T) {
 	entry := events.ValidatorActive{Validator: &types.Validator{Moniker: "test"}}
 	renderData := types.ReportEventRenderData{Notifiers: "notifier1 notifier2", ValidatorLink: "<link>"}
 	rendered := entry.Render(constants.FormatTypeHTML, renderData)
-
-	renderedAsHTML, ok := rendered.(template.HTML)
-	assert.True(t, ok)
 	assert.Equal(
 		t,
 		"✅ <strong><link> has joined the active set</strong>notifier1 notifier2",
-		string(renderedAsHTML),
+		rendered,
 	)
 }
 
@@ -41,13 +37,10 @@ func TestValidatorActiveFormatMarkdown(t *testing.T) {
 	entry := events.ValidatorActive{Validator: &types.Validator{Moniker: "test"}}
 	renderData := types.ReportEventRenderData{Notifiers: "notifier1 notifier2", ValidatorLink: "<link>"}
 	rendered := entry.Render(constants.FormatTypeMarkdown, renderData)
-
-	renderedAsString, ok := rendered.(string)
-	assert.True(t, ok)
 	assert.Equal(
 		t,
 		"✅ **<link> has joined the active set**notifier1 notifier2",
-		renderedAsString,
+		rendered,
 	)
 }
 
@@ -57,12 +50,9 @@ func TestValidatorActiveFormatUnsupported(t *testing.T) {
 	entry := events.ValidatorActive{Validator: &types.Validator{Moniker: "test"}}
 	renderData := types.ReportEventRenderData{Notifiers: "notifier1 notifier2", ValidatorLink: "<link>"}
 	rendered := entry.Render(constants.FormatTypeTest, renderData)
-
-	renderedAsString, ok := rendered.(string)
-	assert.True(t, ok)
 	assert.Equal(
 		t,
 		"Unsupported format type: test",
-		renderedAsString,
+		rendered,
 	)
 }

@@ -118,6 +118,5 @@ func (m *TelegramTemplateManager) SerializeEvent(event types.RenderEventItem) st
 		}
 	}
 
-	renderedEvent, _ := event.Event.Render(constants.FormatTypeHTML, renderData).(string)
-	return renderedEvent
+	return event.Event.Render(constants.FormatTypeHTML, renderData)
 }

@@ -9,45 +9,45 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestValidatorCreatedBase(t *testing.T) {
+func TestValidatorJailedBase(t *testing.T) {
 	t.Parallel()
 
-	entry := events.ValidatorCreated{Validator: &types.Validator{Moniker: "test"}}
+	entry := events.ValidatorJailed{Validator: &types.Validator{Moniker: "test"}}
 
-	assert.Equal(t, constants.EventValidatorCreated, entry.Type())
+	assert.Equal(t, constants.EventValidatorJailed, entry.Type())
 	assert.Equal(t, "test", entry.GetValidator().Moniker)
 }
 
-func TestValidatorCreatedFormatHTML(t *testing.T) {
+func TestValidatorJailedFormatHTML(t *testing.T) {
 	t.Parallel()
 
-	entry := events.ValidatorCreated{Validator: &types.Validator{Moniker: "test"}}
+	entry := events.ValidatorJailed{Validator: &types.Validator{Moniker: "test"}}
 	renderData := types.ReportEventRenderData{Notifiers: "notifier1 notifier2", ValidatorLink: "<link>"}
 	rendered := entry.Render(constants.FormatTypeHTML, renderData)
 	assert.Equal(
 		t,
-		"<strong>💡New validator created: <link></strong>",
+		"<strong>❌ <link> has been jailed</strong>notifier1 notifier2",
 		rendered,
 	)
 }
 
-func TestValidatorCreatedFormatMarkdown(t *testing.T) {
+func TestValidatorJailedFormatMarkdown(t *testing.T) {
 	t.Parallel()
 
-	entry := events.ValidatorCreated{Validator: &types.Validator{Moniker: "test"}}
+	entry := events.ValidatorJailed{Validator: &types.Validator{Moniker: "test"}}
 	renderData := types.ReportEventRenderData{Notifiers: "notifier1 notifier2", ValidatorLink: "<link>"}
 	rendered := entry.Render(constants.FormatTypeMarkdown, renderData)
 	assert.Equal(
 		t,
-		"**💡New validator created: <link>**",
+		"**❌ <link> has been jailed**notifier1 notifier2",
 		rendered,
 	)
 }
 
-func TestValidatorCreatedFormatUnsupported(t *testing.T) {
+func TestValidatorJailedFormatUnsupported(t *testing.T) {
 	t.Parallel()
 
-	entry := events.ValidatorCreated{Validator: &types.Validator{Moniker: "test"}}
+	entry := events.ValidatorJailed{Validator: &types.Validator{Moniker: "test"}}
 	renderData := types.ReportEventRenderData{Notifiers: "notifier1 notifier2", ValidatorLink: "<link>"}
 	rendered := entry.Render(constants.FormatTypeTest, renderData)
 	assert.Equal(

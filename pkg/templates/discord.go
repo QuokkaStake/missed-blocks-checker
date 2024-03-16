@@ -124,6 +124,5 @@ func (m *DiscordTemplateManager) SerializeEvent(event types.RenderEventItem) str
 		}
 	}
 
-	renderedEvent, _ := event.Event.Render(constants.FormatTypeMarkdown, renderData).(string)
-	return renderedEvent
+	return event.Event.Render(constants.FormatTypeMarkdown, renderData)
 }

@@ -18,7 +18,7 @@ func (e ValidatorJailed) GetValidator() *types.Validator {
 	return e.Validator
 }
 
-func (e ValidatorJailed) Render(formatType constants.FormatType, renderData types.ReportEventRenderData) any {
+func (e ValidatorJailed) Render(formatType constants.FormatType, renderData types.ReportEventRenderData) string {
 	switch formatType {
 	case constants.FormatTypeMarkdown:
 		return fmt.Sprintf(

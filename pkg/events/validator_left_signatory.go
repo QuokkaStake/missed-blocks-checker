@@ -18,7 +18,7 @@ func (e ValidatorLeftSignatory) GetValidator() *types.Validator {
 	return e.Validator
 }
 
-func (e ValidatorLeftSignatory) Render(formatType constants.FormatType, renderData types.ReportEventRenderData) any {
+func (e ValidatorLeftSignatory) Render(formatType constants.FormatType, renderData types.ReportEventRenderData) string {
 	switch formatType {
 	case constants.FormatTypeMarkdown:
 		return fmt.Sprintf(

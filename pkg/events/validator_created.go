@@ -2,7 +2,6 @@ package events
 
 import (
 	"fmt"
-	"html/template"
 	"main/pkg/constants"
 	"main/pkg/types"
 )
@@ -19,7 +18,7 @@ func (e ValidatorCreated) GetValidator() *types.Validator {
 	return e.Validator
 }
 
-func (e ValidatorCreated) Render(formatType constants.FormatType, renderData types.ReportEventRenderData) any {
+func (e ValidatorCreated) Render(formatType constants.FormatType, renderData types.ReportEventRenderData) string {
 	switch formatType {
 	case constants.FormatTypeMarkdown:
 		return fmt.Sprintf(
@@ -27,10 +26,10 @@ func (e ValidatorCreated) Render(formatType constants.FormatType, renderData typ
 			renderData.ValidatorLink,
 		)
 	case constants.FormatTypeHTML:
-		return template.HTML(fmt.Sprintf(
+		return fmt.Sprintf(
 			"<strong>💡New validator created: %s</strong>",
 			renderData.ValidatorLink,
-		))
+		)
 	default:
 		return fmt.Sprintf("Unsupported format type: %s", formatType)
 	}

@@ -13,7 +13,7 @@ type ReportEventRenderData struct {
 type ReportEvent interface {
 	Type() constants.EventName
 	GetValidator() *Validator
-	Render(formatType constants.FormatType, renderData ReportEventRenderData) any
+	Render(formatType constants.FormatType, renderData ReportEventRenderData) string
 }
 
 type Report struct {
