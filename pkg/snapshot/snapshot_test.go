@@ -21,9 +21,9 @@ func TestValidatorCreated(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, nil)
-	require.NoError(t, err, "Error should not be present!")
+	require.NoError(t, err)
 	assert.Len(t, report.Events, 1, "Report should have 1 entry!")
-	assert.Equal(t, constants.EventValidatorCreated, report.Events[0].Type(), 1, "ReportEvent type mismatch!")
+	assert.Equal(t, constants.EventValidatorCreated, report.Events[0].Type())
 }
 
 func TestValidatorGroupChanged(t *testing.T) {
@@ -50,10 +50,39 @@ func TestValidatorGroupChanged(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	require.NoError(t, err, "Error should not be present!")
-	assert.NotEmpty(t, report.Events, "Report should not be empty!")
-	assert.Len(t, report.Events, 1, "Report should have exactly 1 entry!")
-	assert.Equal(t, constants.EventValidatorGroupChanged, report.Events[0].Type(), 1, "ReportEvent type mismatch!")
+	require.NoError(t, err)
+	assert.NotEmpty(t, report.Events)
+	assert.Len(t, report.Events, 1)
+	assert.Equal(t, constants.EventValidatorGroupChanged, report.Events[0].Type())
+}
+
+func TestValidatorGroupChangedAnomaly(t *testing.T) {
+	t.Parallel()
+
+	config := &configPkg.ChainConfig{
+		MissedBlocksGroups: []*configPkg.MissedBlocksGroup{
+			{Start: 0, End: 49},
+			{Start: 50, End: 99},
+			{Start: 100, End: 200},
+		},
+	}
+
+	olderSnapshot := Snapshot{Entries: map[string]Entry{
+		"validator": {
+			Validator:     &types.Validator{Jailed: false, Status: 3},
+			SignatureInfo: types.SignatureInto{NotSigned: 0},
+		},
+	}}
+	newerSnapshot := Snapshot{Entries: map[string]Entry{
+		"validator": {
+			Validator:     &types.Validator{Jailed: false, Status: 3},
+			SignatureInfo: types.SignatureInto{NotSigned: 125},
+		},
+	}}
+
+	report, err := newerSnapshot.GetReport(olderSnapshot, config)
+	require.NoError(t, err)
+	assert.Empty(t, report.Events)
 }
 
 func TestValidatorTombstoned(t *testing.T) {
@@ -80,11 +109,11 @@ func TestValidatorTombstoned(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	require.NoError(t, err, "Error should not be present!")
+	require.NoError(t, err)
 
-	assert.NotEmpty(t, report.Events, "Report should not be empty!")
-	assert.Len(t, report.Events, 1, "Report should have exactly 1 entry!")
-	assert.Equal(t, constants.EventValidatorTombstoned, report.Events[0].Type(), 1, "ReportEvent type mismatch!")
+	assert.NotEmpty(t, report.Events)
+	assert.Len(t, report.Events, 1)
+	assert.Equal(t, constants.EventValidatorTombstoned, report.Events[0].Type())
 }
 
 func TestValidatorJailed(t *testing.T) {
@@ -111,18 +140,18 @@ func TestValidatorJailed(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	require.NoError(t, err, "Error should not be present!")
+	require.NoError(t, err)
 
-	assert.NotEmpty(t, report.Events, "Report should not be empty!")
-	assert.Len(t, report.Events, 2, "Report should have exactly 2 entries!")
+	assert.NotEmpty(t, report.Events)
+	assert.Len(t, report.Events, 2)
 
 	entriesTypes := []constants.EventName{
 		report.Events[0].Type(),
 		report.Events[1].Type(),
 	}
 
-	assert.Contains(t, entriesTypes, constants.EventValidatorJailed, 1, "Expected to have jailed event!")
-	assert.Contains(t, entriesTypes, constants.EventValidatorInactive, 1, "Expected to have inactive event!")
+	assert.Contains(t, entriesTypes, constants.EventValidatorJailed)
+	assert.Contains(t, entriesTypes, constants.EventValidatorInactive)
 }
 
 func TestValidatorUnjailed(t *testing.T) {
@@ -149,11 +178,11 @@ func TestValidatorUnjailed(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	require.NoError(t, err, "Error should not be present!")
+	require.NoError(t, err)
 
-	assert.NotEmpty(t, report.Events, "Report should not be empty!")
-	assert.Len(t, report.Events, 1, "Report should have exactly 1 entry!")
-	assert.Equal(t, constants.EventValidatorUnjailed, report.Events[0].Type(), 1, "ReportEvent type mismatch!")
+	assert.NotEmpty(t, report.Events)
+	assert.Len(t, report.Events, 1)
+	assert.Equal(t, constants.EventValidatorUnjailed, report.Events[0].Type())
 }
 
 func TestValidatorJoinedSignatory(t *testing.T) {
@@ -242,10 +271,26 @@ func TestValidatorInactive(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	require.NoError(t, err, "Error should not be present!")
-	assert.NotEmpty(t, report.Events, "Report should not be empty!")
-	assert.Len(t, report.Events, 1, "Report should have exactly 1 entry!")
-	assert.Equal(t, constants.EventValidatorInactive, report.Events[0].Type(), 1, "ReportEvent type mismatch!")
+	require.NoError(t, err)
+	assert.NotEmpty(t, report.Events)
+	assert.Len(t, report.Events, 1)
+	assert.Equal(t, constants.EventValidatorInactive, report.Events[0].Type())
+}
+
+func TestValidatorChangedKey(t *testing.T) {
+	t.Parallel()
+
+	olderSnapshot := Snapshot{Entries: map[string]Entry{
+		"validator": {Validator: &types.Validator{ConsensusAddressValcons: "key1"}},
+	}}
+	newerSnapshot := Snapshot{Entries: map[string]Entry{
+		"validator": {Validator: &types.Validator{ConsensusAddressValcons: "key2"}},
+	}}
+
+	report, err := newerSnapshot.GetReport(olderSnapshot, nil)
+	require.NoError(t, err)
+	assert.Len(t, report.Events, 1)
+	assert.Equal(t, constants.EventValidatorChangedKey, report.Events[0].Type())
 }
 
 func TestValidatorActive(t *testing.T) {
@@ -272,10 +317,10 @@ func TestValidatorActive(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	require.NoError(t, err, "Error should not be present!")
-	assert.NotEmpty(t, report.Events, "Report should not be empty!")
-	assert.Len(t, report.Events, 1, "Report should have exactly 1 entry!")
-	assert.Equal(t, constants.EventValidatorActive, report.Events[0].Type(), 1, "ReportEvent type mismatch!")
+	require.NoError(t, err)
+	assert.NotEmpty(t, report.Events)
+	assert.Len(t, report.Events, 1)
+	assert.Equal(t, constants.EventValidatorActive, report.Events[0].Type())
 }
 
 func TestValidatorJailedAndChangedGroup(t *testing.T) {
@@ -302,8 +347,8 @@ func TestValidatorJailedAndChangedGroup(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	require.NoError(t, err, "Error should not be present!")
-	assert.Empty(t, report.Events, "Report should be empty!")
+	require.NoError(t, err)
+	assert.Empty(t, report.Events)
 }
 
 func TestTombstonedAndNoPreviousSigningInfo(t *testing.T) {
@@ -334,8 +379,8 @@ func TestTombstonedAndNoPreviousSigningInfo(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	require.NoError(t, err, "Error should not be present!")
-	assert.Empty(t, report.Events, "Report should be empty!")
+	require.NoError(t, err)
+	assert.Empty(t, report.Events)
 }
 
 func TestToSlice(t *testing.T) {
@@ -349,9 +394,9 @@ func TestToSlice(t *testing.T) {
 	}
 
 	slice := entries.ToSlice()
-	assert.NotEmpty(t, slice, "Slice should not be empty!")
-	assert.Len(t, slice, 1, "Slice should have exactly 1 entry!")
-	assert.Equal(t, "test", slice[0].Validator.Moniker, 1, "Validator name mismatch!")
+	assert.NotEmpty(t, slice)
+	assert.Len(t, slice, 1)
+	assert.Equal(t, "test", slice[0].Validator.Moniker)
 }
 
 func TestNewMissedBlocksGroupNotPresent(t *testing.T) {
@@ -378,8 +423,8 @@ func TestNewMissedBlocksGroupNotPresent(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	require.Error(t, err, "Error should be present!")
-	assert.Nil(t, report, "Report should not be present!")
+	require.Error(t, err)
+	assert.Nil(t, report)
 }
 
 func TestOldMissedBlocksGroupNotPresent(t *testing.T) {
@@ -406,8 +451,8 @@ func TestOldMissedBlocksGroupNotPresent(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	require.Error(t, err, "Error should be present!")
-	assert.Nil(t, report, "Report should not be present!")
+	require.Error(t, err)
+	assert.Nil(t, report)
 }
 
 func TestSorting(t *testing.T) {
@@ -450,12 +495,12 @@ func TestSorting(t *testing.T) {
 	}}
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	require.NoError(t, err, "Error should not be present!")
-	assert.NotNil(t, report, "Report should be present!")
-	assert.Len(t, report.Events, 3, "Slice should have exactly 3 entries!")
-	assert.Equal(t, constants.EventValidatorTombstoned, report.Events[0].Type(), "ReportEvent type mismatch!")
-	assert.Equal(t, constants.EventValidatorJailed, report.Events[1].Type(), "ReportEvent type mismatch!")
-	assert.Equal(t, constants.EventValidatorGroupChanged, report.Events[2].Type(), "ReportEvent type mismatch!")
+	require.NoError(t, err)
+	assert.NotNil(t, report)
+	assert.Len(t, report.Events, 3)
+	assert.Equal(t, constants.EventValidatorTombstoned, report.Events[0].Type())
+	assert.Equal(t, constants.EventValidatorJailed, report.Events[1].Type())
+	assert.Equal(t, constants.EventValidatorGroupChanged, report.Events[2].Type())
 }
 
 func TestSortingMissedBlocksGroups(t *testing.T) {
@@ -517,11 +562,11 @@ func TestSortingMissedBlocksGroups(t *testing.T) {
 	// 4) validator4 recovering 75 -> 25
 
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
-	require.NoError(t, err, "Error should not be present!")
-	assert.NotNil(t, report, "Report should be present!")
+	require.NoError(t, err)
+	assert.NotNil(t, report)
 	assert.Len(t, report.Events, 4, "Slice should have exactly 4 entries!")
-	assert.Equal(t, "validator2", report.Events[0].GetValidator().OperatorAddress, "Wrong validator!")
-	assert.Equal(t, "validator1", report.Events[1].GetValidator().OperatorAddress, "Wrong validator!")
-	assert.Equal(t, "validator3", report.Events[2].GetValidator().OperatorAddress, "Wrong validator!")
-	assert.Equal(t, "validator4", report.Events[3].GetValidator().OperatorAddress, "Wrong validator!")
+	assert.Equal(t, "validator2", report.Events[0].GetValidator().OperatorAddress)
+	assert.Equal(t, "validator1", report.Events[1].GetValidator().OperatorAddress)
+	assert.Equal(t, "validator3", report.Events[2].GetValidator().OperatorAddress)
+	assert.Equal(t, "validator4", report.Events[3].GetValidator().OperatorAddress)
 }
