@@ -1,6 +1,7 @@
 package events
 
 import (
+	"fmt"
 	"main/pkg/constants"
 	"main/pkg/types"
 )
@@ -15,4 +16,23 @@ func (e ValidatorJailed) Type() constants.EventName {
 
 func (e ValidatorJailed) GetValidator() *types.Validator {
 	return e.Validator
+}
+
+func (e ValidatorJailed) Render(formatType constants.FormatType, renderData types.ReportEventRenderData) any {
+	switch formatType {
+	case constants.FormatTypeMarkdown:
+		return fmt.Sprintf(
+			"**❌ %s has been jailed**%s",
+			renderData.ValidatorLink,
+			renderData.Notifiers,
+		)
+	case constants.FormatTypeHTML:
+		return fmt.Sprintf(
+			"<strong>❌ %s has been jailed</strong>%s",
+			renderData.ValidatorLink,
+			renderData.Notifiers,
+		)
+	default:
+		return fmt.Sprintf("Unsupported format type: %s", formatType)
+	}
 }
