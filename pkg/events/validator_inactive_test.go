@@ -1,12 +1,13 @@
 package events_test
 
 import (
-	"github.com/stretchr/testify/assert"
 	"html/template"
 	"main/pkg/constants"
 	"main/pkg/events"
 	"main/pkg/types"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestValidatorInactiveBase(t *testing.T) {
@@ -25,12 +26,12 @@ func TestValidatorInactiveFormatHTML(t *testing.T) {
 	renderData := types.ReportEventRenderData{Notifiers: "notifier1 notifier2", ValidatorLink: "<link>"}
 	rendered := entry.Render(constants.FormatTypeHTML, renderData)
 
-	renderedAsHtml, ok := rendered.(template.HTML)
+	renderedAsHTML, ok := rendered.(template.HTML)
 	assert.True(t, ok)
 	assert.Equal(
 		t,
 		"😔 <strong><link> has left the active set</strong>notifier1 notifier2",
-		string(renderedAsHtml),
+		string(renderedAsHTML),
 	)
 }
 

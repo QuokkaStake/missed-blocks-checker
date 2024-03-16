@@ -53,3 +53,4 @@ linters:
     - varcheck
     - durationcheck
     - gocyclo
+    - exhaustive
