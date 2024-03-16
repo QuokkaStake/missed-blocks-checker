@@ -99,6 +99,13 @@ func (snapshot *Snapshot) GetReport(
 			})
 		}
 
+		if entry.Validator.ConsensusAddressValcons != olderEntry.Validator.ConsensusAddressValcons {
+			entries = append(entries, events.ValidatorChangedKey{
+				Validator:    entry.Validator,
+				OldValidator: entry.Validator,
+			})
+		}
+
 		isTombstoned := hasNewerSigningInfo && entry.Validator.SigningInfo.Tombstoned
 		if isTombstoned || entry.Validator.Jailed || !entry.Validator.Active() {
 			continue
