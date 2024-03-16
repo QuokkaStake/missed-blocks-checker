@@ -3,6 +3,7 @@ package events
 import (
 	"fmt"
 	"html"
+	"html/template"
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/types"
@@ -61,14 +62,14 @@ func (e ValidatorGroupChanged) Render(formatType constants.FormatType, renderDat
 			renderData.Notifiers,
 		)
 	case constants.FormatTypeHTML:
-		return fmt.Sprintf(
+		return template.HTML(fmt.Sprintf(
 			"<strong>%s %s %s</strong>%s%s",
 			e.GetEmoji(),
 			renderData.ValidatorLink,
 			html.EscapeString(e.GetDescription()),
 			renderData.TimeToJail,
 			renderData.Notifiers,
-		)
+		))
 	default:
 		return fmt.Sprintf("Unsupported format type: %s", formatType)
 	}

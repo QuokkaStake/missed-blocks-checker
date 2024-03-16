@@ -107,15 +107,8 @@ func (m *TelegramTemplateManager) SerializeNotifier(notifier *types.Notifier) st
 
 func (m *TelegramTemplateManager) SerializeEvent(event types.RenderEventItem) string {
 	renderData := types.ReportEventRenderData{
-		Notifiers: " " + m.SerializeNotifiers(event.Notifiers),
-		ValidatorLink: fmt.Sprintf(
-			"%s (%s)",
-			event.ValidatorLink.Text,
-			m.SerializeLink(types.Link{
-				Href: event.ValidatorLink.Href,
-				Text: "link",
-			}),
-		),
+		Notifiers:     " " + m.SerializeNotifiers(event.Notifiers),
+		ValidatorLink: m.SerializeLink(event.ValidatorLink),
 	}
 
 	switch entry := event.Event.(type) {

@@ -6,7 +6,7 @@ import (
 
 type ReportEventRenderData struct {
 	Notifiers     string
-	ValidatorLink string
+	ValidatorLink any
 	TimeToJail    string
 }
 
