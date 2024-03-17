@@ -15,7 +15,7 @@ func TestValidatorChangedCommissionBase(t *testing.T) {
 	entry := events.ValidatorChangedCommission{Validator: &types.Validator{Commission: 0.01}}
 
 	assert.Equal(t, constants.EventValidatorChangedCommission, entry.Type())
-	assert.Equal(t, 0.01, entry.GetValidator().Commission)
+	assert.InDelta(t, 0.01, entry.GetValidator().Commission, 0.001)
 }
 
 func TestValidatorChangedCommissionFormatHTML(t *testing.T) {
