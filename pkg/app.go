@@ -3,6 +3,7 @@ package pkg
 import (
 	configPkg "main/pkg/config"
 	databasePkg "main/pkg/database"
+	"main/pkg/fs"
 	loggerPkg "main/pkg/logger"
 	"main/pkg/metrics"
 
@@ -19,8 +20,8 @@ type App struct {
 	AppManagers []*AppManager
 }
 
-func NewApp(configPath string, version string) *App {
-	config, err := configPkg.GetConfig(configPath)
+func NewApp(configPath string, filesystem fs.FS, version string) *App {
+	config, err := configPkg.GetConfig(configPath, filesystem)
 	if err != nil {
 		loggerPkg.GetDefaultLogger().Fatal().Err(err).Msg("Could not load config")
 	}
