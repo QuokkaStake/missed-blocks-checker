@@ -1,0 +1,26 @@
+[log]
+level = "info"
+json = false
+
+[database]
+type = "sqlite"
+path = "database.sqlite"
+
+[metrics]
+enabled = true
+listen-addr = ":9570"
+
+[[chains]]
+name = "cosmos"
+pretty-name = "Cosmos Hub"
+rpc-endpoints = [
+    "https://rpc.cosmos.quokkastake.io",
+    "https://rpc-cosmoshub.ecostake.com",
+    "https://rpc.cosmos.dragonstake.io"
+]
+telegram = { token = "xxx:yyy", chat = 12345 }
+discord = { token = "xxx", guild = "12345", channel = "67890" }
+explorer = { mintscan-prefix = "cosmos" }
+store-blocks = 20000
+blocks-window = 10000
+min-signed-per-window = 0.05
