@@ -22,13 +22,13 @@ func (e ValidatorJoinedSignatory) Render(formatType constants.FormatType, render
 	switch formatType {
 	case constants.FormatTypeMarkdown:
 		return fmt.Sprintf(
-			"**🙋 %s is now required to sign blocks**%s",
+			"**🙋 %s is now required to sign blocks** %s",
 			renderData.ValidatorLink,
 			renderData.Notifiers,
 		)
 	case constants.FormatTypeHTML:
 		return fmt.Sprintf(
-			"<strong>🙋 %s is now required to sign blocks</strong>%s",
+			"<strong>🙋 %s is now required to sign blocks</strong> %s",
 			renderData.ValidatorLink,
 			renderData.Notifiers,
 		)

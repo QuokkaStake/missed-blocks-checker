@@ -23,14 +23,14 @@ func (e ValidatorChangedMoniker) Render(formatType constants.FormatType, renderD
 	switch formatType {
 	case constants.FormatTypeMarkdown:
 		return fmt.Sprintf(
-			"**✍️ %s has changed its moniker** (was \"%s\")%s",
+			"**✍️ %s has changed its moniker** (was \"%s\") %s",
 			renderData.ValidatorLink,
 			e.OldValidator.Moniker,
 			renderData.Notifiers,
 		)
 	case constants.FormatTypeHTML:
 		return fmt.Sprintf(
-			"<strong>✍️ %s has changed its moniker</strong> (was \"%s\")%s",
+			"<strong>✍️ %s has changed its moniker</strong> (was \"%s\") %s",
 			renderData.ValidatorLink,
 			e.OldValidator.Moniker,
 			renderData.Notifiers,

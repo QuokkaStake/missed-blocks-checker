@@ -106,7 +106,7 @@ func (m *DiscordTemplateManager) SerializeDate(date time.Time) string {
 
 func (m *DiscordTemplateManager) SerializeEvent(event types.RenderEventItem) string {
 	renderData := types.ReportEventRenderData{
-		Notifiers: " " + m.SerializeNotifiers(event.Notifiers),
+		Notifiers: m.SerializeNotifiers(event.Notifiers),
 		ValidatorLink: fmt.Sprintf(
 			"%s (%s)",
 			event.ValidatorLink.Text,

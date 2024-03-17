@@ -104,7 +104,7 @@ func TestValidatorGroupChangedFormatHTML(t *testing.T) {
 	rendered := entry.Render(constants.FormatTypeHTML, renderData)
 	assert.Equal(
 		t,
-		"<strong>emojiend1 <link> end1</strong><jail>notifier1 notifier2",
+		"<strong>emojiend1 <link> end1</strong><jail> notifier1 notifier2",
 		rendered,
 	)
 }
@@ -140,7 +140,7 @@ func TestValidatorGroupChangedFormatMarkdown(t *testing.T) {
 	rendered := entry.Render(constants.FormatTypeMarkdown, renderData)
 	assert.Equal(
 		t,
-		"**emojiend1 <link> end1**<jail>notifier1 notifier2",
+		"**emojiend1 <link> end1**<jail> notifier1 notifier2",
 		rendered,
 	)
 }

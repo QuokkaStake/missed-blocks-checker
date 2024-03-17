@@ -53,7 +53,7 @@ func (e ValidatorGroupChanged) Render(formatType constants.FormatType, renderDat
 	switch formatType {
 	case constants.FormatTypeMarkdown:
 		return fmt.Sprintf(
-			"**%s %s %s**%s%s",
+			"**%s %s %s**%s %s",
 			e.GetEmoji(),
 			renderData.ValidatorLink,
 			e.GetDescription(),
@@ -62,7 +62,7 @@ func (e ValidatorGroupChanged) Render(formatType constants.FormatType, renderDat
 		)
 	case constants.FormatTypeHTML:
 		return fmt.Sprintf(
-			"<strong>%s %s %s</strong>%s%s",
+			"<strong>%s %s %s</strong>%s %s",
 			e.GetEmoji(),
 			renderData.ValidatorLink,
 			html.EscapeString(e.GetDescription()),

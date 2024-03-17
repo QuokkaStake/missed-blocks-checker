@@ -29,7 +29,7 @@ func TestValidatorChangedMonikerFormatHTML(t *testing.T) {
 	rendered := entry.Render(constants.FormatTypeHTML, renderData)
 	assert.Equal(
 		t,
-		"<strong>✍️ <link> has changed its moniker</strong> (was \"before\")notifier1 notifier2",
+		"<strong>✍️ <link> has changed its moniker</strong> (was \"before\") notifier1 notifier2",
 		rendered,
 	)
 }
@@ -45,7 +45,7 @@ func TestValidatorChangedMonikerFormatMarkdown(t *testing.T) {
 	rendered := entry.Render(constants.FormatTypeMarkdown, renderData)
 	assert.Equal(
 		t,
-		"**✍️ <link> has changed its moniker** (was \"before\")notifier1 notifier2",
+		"**✍️ <link> has changed its moniker** (was \"before\") notifier1 notifier2",
 		rendered,
 	)
 }
