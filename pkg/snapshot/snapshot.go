@@ -113,6 +113,13 @@ func (snapshot *Snapshot) GetReport(
 			})
 		}
 
+		if entry.Validator.Commission != olderEntry.Validator.Commission {
+			entries = append(entries, events.ValidatorChangedCommission{
+				Validator:    entry.Validator,
+				OldValidator: olderEntry.Validator,
+			})
+		}
+
 		isTombstoned := hasNewerSigningInfo && entry.Validator.SigningInfo.Tombstoned
 		if isTombstoned || entry.Validator.Jailed || !entry.Validator.Active() {
 			continue
