@@ -22,13 +22,13 @@ func (e ValidatorTombstoned) Render(formatType constants.FormatType, renderData 
 	switch formatType {
 	case constants.FormatTypeMarkdown:
 		return fmt.Sprintf(
-			"**💀 %s has been tombstoned**%s",
+			"**💀 %s has been tombstoned** %s",
 			renderData.ValidatorLink,
 			renderData.Notifiers,
 		)
 	case constants.FormatTypeHTML:
 		return fmt.Sprintf(
-			"<strong>💀 %s has been tombstoned</strong>%s",
+			"<strong>💀 %s has been tombstoned</strong> %s",
 			renderData.ValidatorLink,
 			renderData.Notifiers,
 		)

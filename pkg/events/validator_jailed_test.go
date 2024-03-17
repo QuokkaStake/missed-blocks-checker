@@ -26,7 +26,7 @@ func TestValidatorJailedFormatHTML(t *testing.T) {
 	rendered := entry.Render(constants.FormatTypeHTML, renderData)
 	assert.Equal(
 		t,
-		"<strong>❌ <link> has been jailed</strong>notifier1 notifier2",
+		"<strong>❌ <link> has been jailed</strong> notifier1 notifier2",
 		rendered,
 	)
 }
@@ -39,7 +39,7 @@ func TestValidatorJailedFormatMarkdown(t *testing.T) {
 	rendered := entry.Render(constants.FormatTypeMarkdown, renderData)
 	assert.Equal(
 		t,
-		"**❌ <link> has been jailed**notifier1 notifier2",
+		"**❌ <link> has been jailed** notifier1 notifier2",
 		rendered,
 	)
 }

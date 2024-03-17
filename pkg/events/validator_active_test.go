@@ -26,7 +26,7 @@ func TestValidatorActiveFormatHTML(t *testing.T) {
 	rendered := entry.Render(constants.FormatTypeHTML, renderData)
 	assert.Equal(
 		t,
-		"✅ <strong><link> has joined the active set</strong>notifier1 notifier2",
+		"✅ <strong><link> has joined the active set</strong> notifier1 notifier2",
 		rendered,
 	)
 }
@@ -39,7 +39,7 @@ func TestValidatorActiveFormatMarkdown(t *testing.T) {
 	rendered := entry.Render(constants.FormatTypeMarkdown, renderData)
 	assert.Equal(
 		t,
-		"✅ **<link> has joined the active set**notifier1 notifier2",
+		"✅ **<link> has joined the active set** notifier1 notifier2",
 		rendered,
 	)
 }

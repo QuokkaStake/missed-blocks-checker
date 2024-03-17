@@ -26,7 +26,7 @@ func TestValidatorChangedKeyFormatHTML(t *testing.T) {
 	rendered := entry.Render(constants.FormatTypeHTML, renderData)
 	assert.Equal(
 		t,
-		"<strong>↔️ <link> has changed its signing key</strong>notifier1 notifier2",
+		"<strong>↔️ <link> has changed its signing key</strong> notifier1 notifier2",
 		rendered,
 	)
 }
@@ -39,7 +39,7 @@ func TestValidatorChangedKeyFormatMarkdown(t *testing.T) {
 	rendered := entry.Render(constants.FormatTypeMarkdown, renderData)
 	assert.Equal(
 		t,
-		"**↔️ <link> has changed its signing key**notifier1 notifier2",
+		"**↔️ <link> has changed its signing key** notifier1 notifier2",
 		rendered,
 	)
 }

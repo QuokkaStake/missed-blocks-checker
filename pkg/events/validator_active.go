@@ -22,13 +22,13 @@ func (e ValidatorActive) Render(formatType constants.FormatType, renderData type
 	switch formatType {
 	case constants.FormatTypeMarkdown:
 		return fmt.Sprintf(
-			"✅ **%s has joined the active set**%s",
+			"✅ **%s has joined the active set** %s",
 			renderData.ValidatorLink,
 			renderData.Notifiers,
 		)
 	case constants.FormatTypeHTML:
 		return fmt.Sprintf(
-			"✅ <strong>%s has joined the active set</strong>%s",
+			"✅ <strong>%s has joined the active set</strong> %s",
 			renderData.ValidatorLink,
 			renderData.Notifiers,
 		)

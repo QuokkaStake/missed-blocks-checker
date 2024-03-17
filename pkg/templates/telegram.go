@@ -107,7 +107,7 @@ func (m *TelegramTemplateManager) SerializeNotifier(notifier *types.Notifier) st
 
 func (m *TelegramTemplateManager) SerializeEvent(event types.RenderEventItem) string {
 	renderData := types.ReportEventRenderData{
-		Notifiers:     " " + m.SerializeNotifiers(event.Notifiers),
+		Notifiers:     m.SerializeNotifiers(event.Notifiers),
 		ValidatorLink: m.SerializeLink(event.ValidatorLink),
 	}
 

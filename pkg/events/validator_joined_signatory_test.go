@@ -26,7 +26,7 @@ func TestValidatorJoinedSignatoryFormatHTML(t *testing.T) {
 	rendered := entry.Render(constants.FormatTypeHTML, renderData)
 	assert.Equal(
 		t,
-		"<strong>🙋 <link> is now required to sign blocks</strong>notifier1 notifier2",
+		"<strong>🙋 <link> is now required to sign blocks</strong> notifier1 notifier2",
 		rendered,
 	)
 }
@@ -39,7 +39,7 @@ func TestValidatorJoinedSignatoryFormatMarkdown(t *testing.T) {
 	rendered := entry.Render(constants.FormatTypeMarkdown, renderData)
 	assert.Equal(
 		t,
-		"**🙋 <link> is now required to sign blocks**notifier1 notifier2",
+		"**🙋 <link> is now required to sign blocks** notifier1 notifier2",
 		rendered,
 	)
 }

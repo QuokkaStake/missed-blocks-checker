@@ -23,13 +23,13 @@ func (e ValidatorChangedKey) Render(formatType constants.FormatType, renderData 
 	switch formatType {
 	case constants.FormatTypeMarkdown:
 		return fmt.Sprintf(
-			"**↔️ %s has changed its signing key**%s",
+			"**↔️ %s has changed its signing key** %s",
 			renderData.ValidatorLink,
 			renderData.Notifiers,
 		)
 	case constants.FormatTypeHTML:
 		return fmt.Sprintf(
-			"<strong>↔️ %s has changed its signing key</strong>%s",
+			"<strong>↔️ %s has changed its signing key</strong> %s",
 			renderData.ValidatorLink,
 			renderData.Notifiers,
 		)

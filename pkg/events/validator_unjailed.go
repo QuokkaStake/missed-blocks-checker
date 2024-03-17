@@ -22,13 +22,13 @@ func (e ValidatorUnjailed) Render(formatType constants.FormatType, renderData ty
 	switch formatType {
 	case constants.FormatTypeMarkdown:
 		return fmt.Sprintf(
-			"**👌 %s has been unjailed**%s",
+			"**👌 %s has been unjailed** %s",
 			renderData.ValidatorLink,
 			renderData.Notifiers,
 		)
 	case constants.FormatTypeHTML:
 		return fmt.Sprintf(
-			"<strong>👌 %s has been unjailed</strong>%s",
+			"<strong>👌 %s has been unjailed</strong> %s",
 			renderData.ValidatorLink,
 			renderData.Notifiers,
 		)

@@ -26,7 +26,7 @@ func TestValidatorTombstonedFormatHTML(t *testing.T) {
 	rendered := entry.Render(constants.FormatTypeHTML, renderData)
 	assert.Equal(
 		t,
-		"<strong>💀 <link> has been tombstoned</strong>notifier1 notifier2",
+		"<strong>💀 <link> has been tombstoned</strong> notifier1 notifier2",
 		rendered,
 	)
 }
@@ -39,7 +39,7 @@ func TestValidatorTombstonedFormatMarkdown(t *testing.T) {
 	rendered := entry.Render(constants.FormatTypeMarkdown, renderData)
 	assert.Equal(
 		t,
-		"**💀 <link> has been tombstoned**notifier1 notifier2",
+		"**💀 <link> has been tombstoned** notifier1 notifier2",
 		rendered,
 	)
 }
