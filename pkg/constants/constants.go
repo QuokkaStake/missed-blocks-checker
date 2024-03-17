@@ -25,6 +25,7 @@ const (
 	EventValidatorJoinedSignatory EventName = "ValidatorJoinedSignatory"
 	EventValidatorLeftSignatory   EventName = "ValidatorLeftSignatory"
 	EventValidatorChangedKey      EventName = "ValidatorChangedKey"
+	EventValidatorChangedMoniker  EventName = "ValidatorChangedMoniker"
 
 	TelegramReporterName ReporterName = "telegram"
 	DiscordReporterName  ReporterName = "discord"
@@ -62,6 +63,7 @@ func GetEventNames() []EventName {
 		EventValidatorLeftSignatory,
 		EventValidatorJoinedSignatory,
 		EventValidatorChangedKey,
+		EventValidatorChangedMoniker,
 		EventValidatorCreated,
 		EventValidatorGroupChanged,
 	}

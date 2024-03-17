@@ -293,6 +293,22 @@ func TestValidatorChangedKey(t *testing.T) {
 	assert.Equal(t, constants.EventValidatorChangedKey, report.Events[0].Type())
 }
 
+func TestValidatorChangedMoniker(t *testing.T) {
+	t.Parallel()
+
+	olderSnapshot := Snapshot{Entries: map[string]Entry{
+		"validator": {Validator: &types.Validator{Moniker: "moniker1"}},
+	}}
+	newerSnapshot := Snapshot{Entries: map[string]Entry{
+		"validator": {Validator: &types.Validator{Moniker: "moniker2"}},
+	}}
+
+	report, err := newerSnapshot.GetReport(olderSnapshot, nil)
+	require.NoError(t, err)
+	assert.Len(t, report.Events, 1)
+	assert.Equal(t, constants.EventValidatorChangedMoniker, report.Events[0].Type())
+}
+
 func TestValidatorActive(t *testing.T) {
 	t.Parallel()
 

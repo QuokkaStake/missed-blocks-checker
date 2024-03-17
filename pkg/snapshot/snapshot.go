@@ -102,7 +102,14 @@ func (snapshot *Snapshot) GetReport(
 		if entry.Validator.ConsensusAddressValcons != olderEntry.Validator.ConsensusAddressValcons {
 			entries = append(entries, events.ValidatorChangedKey{
 				Validator:    entry.Validator,
-				OldValidator: entry.Validator,
+				OldValidator: olderEntry.Validator,
+			})
+		}
+
+		if entry.Validator.Moniker != olderEntry.Validator.Moniker {
+			entries = append(entries, events.ValidatorChangedMoniker{
+				Validator:    entry.Validator,
+				OldValidator: olderEntry.Validator,
 			})
 		}
 
