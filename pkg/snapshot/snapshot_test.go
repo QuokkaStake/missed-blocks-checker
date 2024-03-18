@@ -309,6 +309,22 @@ func TestValidatorChangedMoniker(t *testing.T) {
 	assert.Equal(t, constants.EventValidatorChangedMoniker, report.Events[0].Type())
 }
 
+func TestValidatorChangedCommission(t *testing.T) {
+	t.Parallel()
+
+	olderSnapshot := Snapshot{Entries: map[string]Entry{
+		"validator": {Validator: &types.Validator{Commission: 0.01}},
+	}}
+	newerSnapshot := Snapshot{Entries: map[string]Entry{
+		"validator": {Validator: &types.Validator{Commission: 0.02}},
+	}}
+
+	report, err := newerSnapshot.GetReport(olderSnapshot, nil)
+	require.NoError(t, err)
+	assert.Len(t, report.Events, 1)
+	assert.Equal(t, constants.EventValidatorChangedCommission, report.Events[0].Type())
+}
+
 func TestValidatorActive(t *testing.T) {
 	t.Parallel()
 

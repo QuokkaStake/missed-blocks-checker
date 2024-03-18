@@ -15,17 +15,18 @@ const (
 
 	PrometheusMetricsPrefix = "missed_blocks_checker_"
 
-	EventValidatorActive          EventName = "ValidatorActive"
-	EventValidatorGroupChanged    EventName = "ValidatorGroupChanged"
-	EventValidatorInactive        EventName = "ValidatorInactive"
-	EventValidatorJailed          EventName = "ValidatorJailed"
-	EventValidatorUnjailed        EventName = "ValidatorUnjailed"
-	EventValidatorTombstoned      EventName = "ValidatorTombstoned"
-	EventValidatorCreated         EventName = "ValidatorCreated"
-	EventValidatorJoinedSignatory EventName = "ValidatorJoinedSignatory"
-	EventValidatorLeftSignatory   EventName = "ValidatorLeftSignatory"
-	EventValidatorChangedKey      EventName = "ValidatorChangedKey"
-	EventValidatorChangedMoniker  EventName = "ValidatorChangedMoniker"
+	EventValidatorActive            EventName = "ValidatorActive"
+	EventValidatorGroupChanged      EventName = "ValidatorGroupChanged"
+	EventValidatorInactive          EventName = "ValidatorInactive"
+	EventValidatorJailed            EventName = "ValidatorJailed"
+	EventValidatorUnjailed          EventName = "ValidatorUnjailed"
+	EventValidatorTombstoned        EventName = "ValidatorTombstoned"
+	EventValidatorCreated           EventName = "ValidatorCreated"
+	EventValidatorJoinedSignatory   EventName = "ValidatorJoinedSignatory"
+	EventValidatorLeftSignatory     EventName = "ValidatorLeftSignatory"
+	EventValidatorChangedKey        EventName = "ValidatorChangedKey"
+	EventValidatorChangedMoniker    EventName = "ValidatorChangedMoniker"
+	EventValidatorChangedCommission EventName = "ValidatorChangedCommission"
 
 	TelegramReporterName ReporterName = "telegram"
 	DiscordReporterName  ReporterName = "discord"
@@ -64,6 +65,7 @@ func GetEventNames() []EventName {
 		EventValidatorJoinedSignatory,
 		EventValidatorChangedKey,
 		EventValidatorChangedMoniker,
+		EventValidatorChangedCommission,
 		EventValidatorCreated,
 		EventValidatorGroupChanged,
 	}
