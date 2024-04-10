@@ -20,7 +20,7 @@ path = "database.sqlite"
 [metrics]
 # Whether to enable metrics. If yes, a web server will be spawned at listen-addr,
 # and you can query metrics by fetching "<listen-addr>/metrics", or set a Prometheus
-# to scrape it. It's useful and you can build alerts to see if anything is going wrong.
+# to scrape it. It's useful, and you can build alerts to see if anything is going wrong.
 # Defaults to true
 enabled = true
 # Metrics webserver listen address. Defaults to ":9570".
@@ -65,7 +65,29 @@ store-blocks = 20000
 blocks-window = 10000
 # How much blocks a validator needs to sign in any specific window. Defaults to 0.05 (5%)
 min-signed-per-window = 0.05
-# Periodical intervals check params.
+# Reporting thresholds.
+# This is an array of percent thresholds for missed blocks groups.
+# For example, if it's [0, 50, 100], there are 2 groups: from 0% to 50% and from 50% to 100%
+# of missed blocks. An event is going to be sent once a validator's missed blocks count moves
+# from one group to another.
+# Should be an array of at least 2 values (2 values mean 1 group), the first value
+# should be always 0 (as in 0%, the last value should always be 100 (as in 100%).
+# Defaults to [0, 0.5, 1, 5, 10, 25, 50, 75, 90, 100]
+thresholds = [0, 5, 10, 25, 50, 75, 100]
+# An emoji that's going to appear in the message when a validator **enters** this group
+# (for example, when a validator is missing blocks and its missed blocks counter moves from one group
+# to another).
+# This and emoji-end arrays' length should be equal to the amount of missed blocks group
+# (so if you have 3 thresholds, you have 2 groups, so these arrays both should have 2 values).
+# Defaults to ["🟡", "🟡", "🟡", "🟠", "🟠", "🟠", "🔴", "🔴", "🔴"]
+emoji-start = ["🟡", "🟡", "🟠", "🟠", "🔴", "🔴"]
+# An emoji that's going to appear in the message when a validator **leaves** this group
+# (for example, when a validator is recovering and its missed blocks counter moves from one group
+# to another).
+# Defaults to ["🟢", "🟡", "🟡", "🟡", "🟡", "🟠", "🟠", "🟠", "🟠"]
+emoji-end = ["🟢", "🟡", "🟡", "🟠", "🟠", "🟠"]
+# Periodical intervals check params. You can omit this completely, or some fields inside and the default
+# ones will be used.
 [chains.intervals]
 # Interval to fetch blocks missed in the local state from chain.
 # Setting it to 0 would disable automatic blocks fetching, which is not desired.
@@ -85,7 +107,8 @@ soft-opt-out-threshold = 300
 # Interval to trim local database. Set it to 0 to disable database trimming.
 # Defaults to 300.
 trim = 300
-# Queries pagination params.
+# Queries pagination params.You can omit this completely, or some fields inside and the default
+# ones will be used.
 [chains.pagination]
 # How many blocks to query at once.
 # Defaults to 100.
