@@ -70,6 +70,14 @@ func (r paramsRender) GetConsumerRequiredValidators() int {
 	return len(r.Validators) - r.ConsumerOptOutValidators
 }
 
+func (r paramsRender) FormatSnapshotInterval() string {
+	if r.Config.SnapshotsInterval == 1 {
+		return "every block"
+	}
+
+	return fmt.Sprintf("every %d blocks", r.Config.SnapshotsInterval)
+}
+
 type notifierEntry struct {
 	Link      types.Link
 	Notifiers []*types.Notifier

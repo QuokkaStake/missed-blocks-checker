@@ -14,9 +14,10 @@ Soft opt-out percent is at {{ .FormatSoftOptOut }}%.
 Top {{ .GetConsumerRequiredValidators }} are required to sign blocks.
 {{- else -}}
 The chain is a sovereign chain.
-{{ end }}
+{{- end }}
 
 **App config**
+Interval between sending/generating reports: {{ .FormatSnapshotInterval }}
 Missed blocks thresholds:
 {{ range .Config.MissedBlocksGroups -}}
 {{ .EmojiEnd }} {{ .Start }} - {{ .End }} ({{ $render.FormatGroupPercent . }})
