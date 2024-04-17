@@ -86,6 +86,11 @@ emoji-start = ["🟡", "🟡", "🟠", "🟠", "🔴", "🔴"]
 # to another).
 # Defaults to ["🟢", "🟡", "🟡", "🟡", "🟡", "🟠", "🟠", "🟠", "🟠"]
 emoji-end = ["🟢", "🟡", "🟡", "🟠", "🟠", "🟠"]
+# Minimal interval between two snapshots to be reported.
+# For example, if a snapshot was generated at block 10, and snapshot-interval is 5,
+# then the next snapshot would be done on block 15 or later (if there were errors processing it/fetching datat).
+# Defaults to 1, so every block.
+snapshots-interval = 10
 # Periodical intervals check params. You can omit this completely, or some fields inside and the default
 # ones will be used.
 [chains.intervals]

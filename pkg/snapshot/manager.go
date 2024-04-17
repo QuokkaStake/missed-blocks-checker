@@ -50,6 +50,10 @@ func (m *Manager) GetOlderHeight() int64 {
 	return m.olderSnapshot.Height
 }
 
+func (m *Manager) GetNewerHeight() int64 {
+	return m.newerSnapshot.Height
+}
+
 func (m *Manager) GetReport() (*types.Report, error) {
 	return m.newerSnapshot.Snapshot.GetReport(m.olderSnapshot.Snapshot, m.config)
 }
