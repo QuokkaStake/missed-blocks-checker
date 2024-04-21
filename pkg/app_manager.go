@@ -171,7 +171,7 @@ func (a *AppManager) ProcessSnapshot(block *types.Block) {
 
 	if a.SnapshotManager.HasNewerSnapshot() {
 		if newerHeight := a.SnapshotManager.GetNewerHeight(); block.Height-newerHeight < a.Config.SnapshotsInterval {
-			a.Logger.Warn().
+			a.Logger.Debug().
 				Int64("older_height", newerHeight).
 				Int64("height", block.Height).
 				Int64("diff", block.Height-newerHeight).
