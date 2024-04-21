@@ -50,6 +50,7 @@ func TestManagerCommitNewSnapshot(t *testing.T) {
 
 	assert.True(t, manager.HasNewerSnapshot(), "Should not have older snapshot!")
 	assert.Equal(t, int64(10), manager.GetOlderHeight(), "Height mismatch!")
+	assert.Equal(t, int64(20), manager.GetNewerHeight(), "Height mismatch!")
 
 	report, err := manager.GetReport()
 	require.NoError(t, err, "Error should not be presented!")

@@ -169,6 +169,18 @@ func (a *AppManager) ProcessSnapshot(block *types.Block) {
 	a.snapshotMutex.Lock()
 	defer a.snapshotMutex.Unlock()
 
+	if a.SnapshotManager.HasNewerSnapshot() {
+		if newerHeight := a.SnapshotManager.GetNewerHeight(); block.Height-newerHeight < a.Config.SnapshotsInterval {
+			a.Logger.Debug().
+				Int64("older_height", newerHeight).
+				Int64("height", block.Height).
+				Int64("diff", block.Height-newerHeight).
+				Int64("snapshot_interval", a.Config.SnapshotsInterval).
+				Msg("Trying to generate a snapshot between two blocks which are too close, skipping.")
+			return
+		}
+	}
+
 	totalBlocksCount := a.StateManager.GetBlocksCountSinceLatest(a.Config.StoreBlocks)
 	a.Logger.Info().
 		Int64("count", totalBlocksCount).
@@ -450,7 +462,7 @@ func (a *AppManager) PopulateBlocks() {
 	a.IsPopulatingBlocks = true
 
 	// Populating latest block
-	a.Logger.Info().Msg("Populating latest block...")
+	a.Logger.Info().Msg("Populating blocks...")
 
 	blockRaw, err := a.DataManager.GetBlock(0)
 	if err != nil {
@@ -499,8 +511,6 @@ func (a *AppManager) PopulateBlocks() {
 		a.IsPopulatingBlocks = false
 		return
 	}
-
-	a.Logger.Info().Msg("Populating latest block...")
 
 	// Populating blocks
 	if a.StateManager.GetLastBlockHeight() == 0 {
