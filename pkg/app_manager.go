@@ -6,6 +6,7 @@ import (
 	dataPkg "main/pkg/data"
 	databasePkg "main/pkg/database"
 	"main/pkg/metrics"
+	populatorsPkg "main/pkg/populators"
 	reportersPkg "main/pkg/reporters"
 	"main/pkg/reporters/discord"
 	"main/pkg/reporters/telegram"
@@ -14,7 +15,6 @@ import (
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"main/pkg/utils"
-	"strconv"
 	"sync"
 	"time"
 
@@ -30,6 +30,7 @@ type AppManager struct {
 	SnapshotManager    *snapshotPkg.Manager
 	WebsocketManager   *tendermint.WebsocketManager
 	MetricsManager     *metrics.Manager
+	Populators         []*populatorsPkg.Wrapper
 	Reporters          []reportersPkg.Reporter
 	IsPopulatingBlocks bool
 
@@ -59,6 +60,24 @@ func NewAppManager(
 		discord.NewReporter(config, version, managerLogger, stateManager, metricsManager, snapshotManager),
 	}
 
+	populators := []*populatorsPkg.Wrapper{
+		populatorsPkg.NewWrapper(
+			populatorsPkg.NewSlashingParamsPopulator(config, dataManager, stateManager, metricsManager, managerLogger),
+			config.Intervals.SlashingParams*time.Second,
+			managerLogger,
+		),
+		populatorsPkg.NewWrapper(
+			populatorsPkg.NewSoftOptOutThresholdPopulator(config, dataManager, stateManager, metricsManager, managerLogger),
+			config.Intervals.SoftOptOutThreshold*time.Second,
+			managerLogger,
+		),
+		populatorsPkg.NewWrapper(
+			populatorsPkg.NewTrimDatabasePopulator(stateManager),
+			config.Intervals.Trim*time.Second,
+			managerLogger,
+		),
+	}
+
 	return &AppManager{
 		Logger:             managerLogger,
 		Config:             config,
@@ -69,6 +88,7 @@ func NewAppManager(
 		WebsocketManager:   websocketManager,
 		MetricsManager:     metricsManager,
 		Reporters:          reporters,
+		Populators:         populators,
 		IsPopulatingBlocks: false,
 	}
 }
@@ -99,6 +119,10 @@ func (a *AppManager) Start() {
 		} else {
 			a.Logger.Info().Str("name", string(reporter.Name())).Msg("Reporter is disabled")
 		}
+	}
+
+	for _, populator := range a.Populators {
+		go populator.Start()
 	}
 
 	go a.ListenForEvents()
@@ -281,82 +305,6 @@ func (a *AppManager) ProcessSnapshot(block *types.Block) {
 	}
 }
 
-func (a *AppManager) PopulateSlashingParams() {
-	if a.Config.Intervals.SlashingParams == 0 {
-		return
-	}
-
-	params, err := a.DataManager.GetSlashingParams(a.StateManager.GetLastBlockHeight() - 1)
-	if err != nil {
-		a.Logger.Warn().
-			Err(err).
-			Msg("Error updating slashing params")
-
-		return
-	}
-
-	minSignedPerWindow, err := params.Params.MinSignedPerWindow.Float64()
-	if err != nil {
-		a.Logger.Warn().
-			Err(err).
-			Msg("Got malformed slashing params from node")
-		return
-	}
-
-	a.Config.BlocksWindow = params.Params.SignedBlocksWindow
-	a.Config.MinSignedPerWindow = minSignedPerWindow
-
-	a.Logger.Info().
-		Int64("blocks_window", a.Config.BlocksWindow).
-		Float64("min_signed_per_window", a.Config.MinSignedPerWindow).
-		Msg("Got slashing params")
-
-	a.MetricsManager.LogSlashingParams(
-		a.Config.Name,
-		a.Config.BlocksWindow,
-		a.Config.MinSignedPerWindow,
-		a.Config.StoreBlocks,
-	)
-	a.Config.RecalculateMissedBlocksGroups()
-}
-
-func (a *AppManager) PopulateSoftOptOutThreshold() {
-	if !a.Config.IsConsumer.Bool {
-		return
-	}
-
-	if a.Config.Intervals.SlashingParams == 0 {
-		return
-	}
-
-	params, err := a.DataManager.GetConsumerSoftOutOutThreshold(a.StateManager.GetLastBlockHeight() - 1)
-	if err != nil {
-		a.Logger.Warn().
-			Err(err).
-			Msg("Error updating soft out-out threshold")
-
-		return
-	}
-
-	thresholdAsString := params.Param.Value[1 : len(params.Param.Value)-1]
-	threshold, err := strconv.ParseFloat(thresholdAsString, 64)
-	if err != nil {
-		a.Logger.Warn().
-			Err(err).
-			Msg("Error parsing soft out-out threshold")
-
-		return
-	}
-
-	a.Config.ConsumerSoftOptOut = threshold
-
-	a.Logger.Info().
-		Float64("threshold", threshold).
-		Msg("Got soft out-out threshold")
-
-	a.MetricsManager.LogConsumerSoftOutThreshold(a.Config.Name, threshold)
-}
-
 func (a *AppManager) UpdateValidators(height int64) []error {
 	validators, errs := a.DataManager.GetValidators(height)
 	if len(errs) > 0 {
@@ -368,17 +316,11 @@ func (a *AppManager) UpdateValidators(height int64) []error {
 }
 
 func (a *AppManager) PopulateInBackground() {
-	a.PopulateSlashingParams()
-	a.PopulateSoftOptOutThreshold()
-
 	// Start populating blocks in background
 	go a.PopulateBlocks()
 
 	// Setting timers
 	go a.SyncBlocks()
-	go a.SyncSlashingParams()
-	go a.SyncSoftOptOutThreshold()
-	go a.SyncTrim()
 }
 
 func (a *AppManager) SyncBlocks() {
@@ -392,63 +334,6 @@ func (a *AppManager) SyncBlocks() {
 		select {
 		case <-blocksTicker.C:
 			a.PopulateBlocks()
-		}
-	}
-}
-
-func (a *AppManager) SyncSlashingParams() {
-	if a.Config.Intervals.SlashingParams == 0 {
-		a.Logger.Info().Msg("Slashing params continuous population is disabled.")
-		return
-	}
-
-	slashingParamsTimer := time.NewTicker(a.Config.Intervals.SlashingParams * time.Second)
-
-	for {
-		select {
-		case <-slashingParamsTimer.C:
-			a.PopulateSlashingParams()
-		}
-	}
-}
-
-func (a *AppManager) SyncSoftOptOutThreshold() {
-	if !a.Config.IsConsumer.Bool {
-		a.Logger.Debug().
-			Msg("Chain is not a consumer chain, soft opt-out threshold fetching disabled.")
-	}
-
-	if a.Config.Intervals.SoftOptOutThreshold == 0 {
-		a.Logger.Info().Msg("Soft opt-out threshold continuous population is disabled.")
-		return
-	}
-
-	softOptOutTimer := time.NewTicker(a.Config.Intervals.SoftOptOutThreshold * time.Second)
-
-	for {
-		select {
-		case <-softOptOutTimer.C:
-			a.PopulateSoftOptOutThreshold()
-		}
-	}
-}
-
-func (a *AppManager) SyncTrim() {
-	if a.Config.Intervals.Trim == 0 {
-		a.Logger.Info().Msg("Trim continuous population is disabled.")
-		return
-	}
-
-	trimTimer := time.NewTicker(a.Config.Intervals.Trim * time.Second)
-
-	for {
-		select {
-		case <-trimTimer.C:
-			{
-				if err := a.StateManager.TrimBlocks(); err != nil {
-					a.Logger.Error().Err(err).Msg("Error trimming blocks")
-				}
-			}
 		}
 	}
 }
