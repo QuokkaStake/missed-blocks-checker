@@ -2,6 +2,7 @@ package populators
 
 import (
 	configPkg "main/pkg/config"
+	"main/pkg/constants"
 	"main/pkg/data"
 	"main/pkg/metrics"
 	"main/pkg/state"
@@ -69,6 +70,6 @@ func (p *SoftOptOutThresholdPopulator) Enabled() bool {
 	return p.Config.IsConsumer.Bool
 }
 
-func (p *SoftOptOutThresholdPopulator) Name() string {
-	return "soft-opt-out-threshold-populator"
+func (p *SoftOptOutThresholdPopulator) Name() constants.PopulatorType {
+	return constants.PopulatorSoftOptOutThreshold
 }

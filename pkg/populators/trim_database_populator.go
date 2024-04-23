@@ -1,6 +1,7 @@
 package populators
 
 import (
+	"main/pkg/constants"
 	"main/pkg/state"
 )
 
@@ -23,6 +24,6 @@ func (p *TrimDatabasePopulator) Enabled() bool {
 	return true
 }
 
-func (p *TrimDatabasePopulator) Name() string {
-	return "trim-database-populator"
+func (p *TrimDatabasePopulator) Name() constants.PopulatorType {
+	return constants.PopulatorTrimDatabase
 }

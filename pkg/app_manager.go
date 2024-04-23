@@ -3,6 +3,7 @@ package pkg
 import (
 	"fmt"
 	configPkg "main/pkg/config"
+	"main/pkg/constants"
 	dataPkg "main/pkg/data"
 	databasePkg "main/pkg/database"
 	"main/pkg/metrics"
@@ -30,7 +31,7 @@ type AppManager struct {
 	SnapshotManager    *snapshotPkg.Manager
 	WebsocketManager   *tendermint.WebsocketManager
 	MetricsManager     *metrics.Manager
-	Populators         []*populatorsPkg.Wrapper
+	Populators         map[constants.PopulatorType]*populatorsPkg.Wrapper
 	Reporters          []reportersPkg.Reporter
 	IsPopulatingBlocks bool
 
@@ -60,18 +61,18 @@ func NewAppManager(
 		discord.NewReporter(config, version, managerLogger, stateManager, metricsManager, snapshotManager),
 	}
 
-	populators := []*populatorsPkg.Wrapper{
-		populatorsPkg.NewWrapper(
+	populators := map[constants.PopulatorType]*populatorsPkg.Wrapper{
+		constants.PopulatorSlashingParams: populatorsPkg.NewWrapper(
 			populatorsPkg.NewSlashingParamsPopulator(config, dataManager, stateManager, metricsManager, managerLogger),
 			config.Intervals.SlashingParams*time.Second,
 			managerLogger,
 		),
-		populatorsPkg.NewWrapper(
+		constants.PopulatorSoftOptOutThreshold: populatorsPkg.NewWrapper(
 			populatorsPkg.NewSoftOptOutThresholdPopulator(config, dataManager, stateManager, metricsManager, managerLogger),
 			config.Intervals.SoftOptOutThreshold*time.Second,
 			managerLogger,
 		),
-		populatorsPkg.NewWrapper(
+		constants.PopulatorTrimDatabase: populatorsPkg.NewWrapper(
 			populatorsPkg.NewTrimDatabasePopulator(stateManager),
 			config.Intervals.Trim*time.Second,
 			managerLogger,

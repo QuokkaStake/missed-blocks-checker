@@ -2,6 +2,7 @@ package populators
 
 import (
 	configPkg "main/pkg/config"
+	"main/pkg/constants"
 	"main/pkg/data"
 	"main/pkg/metrics"
 	"main/pkg/state"
@@ -75,6 +76,6 @@ func (p *SlashingParamsPopulator) Enabled() bool {
 	return true
 }
 
-func (p *SlashingParamsPopulator) Name() string {
-	return "slashing-params-populator"
+func (p *SlashingParamsPopulator) Name() constants.PopulatorType {
+	return constants.PopulatorSlashingParams
 }

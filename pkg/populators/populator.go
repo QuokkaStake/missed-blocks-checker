@@ -1,6 +1,7 @@
 package populators
 
 import (
+	"main/pkg/constants"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -8,7 +9,7 @@ import (
 
 type Populator interface {
 	Populate() error
-	Name() string
+	Name() constants.PopulatorType
 	Enabled() bool
 }
 
@@ -35,20 +36,20 @@ func NewWrapper(
 func (w *Wrapper) Start() {
 	if w.Duration == 0 {
 		w.Logger.Info().
-			Str("name", w.Populator.Name()).
+			Str("name", string(w.Populator.Name())).
 			Msg("Populator is disabled in config")
 		return
 	}
 
 	if !w.Populator.Enabled() {
 		w.Logger.Info().
-			Str("name", w.Populator.Name()).
+			Str("name", string(w.Populator.Name())).
 			Msg("Populator is disabled")
 		return
 	}
 
 	w.Logger.Info().
-		Str("name", w.Populator.Name()).
+		Str("name", string(w.Populator.Name())).
 		Dur("interval", w.Duration).
 		Msg("Populator is enabled")
 
@@ -68,11 +69,11 @@ func (w *Wrapper) TryPopulate() {
 	if err := w.Populator.Populate(); err != nil {
 		w.Logger.Error().
 			Err(err).
-			Str("name", w.Populator.Name()).
+			Str("name", string(w.Populator.Name())).
 			Msg("Got error when populating data")
 	} else {
 		w.Logger.Debug().
-			Str("name", w.Populator.Name()).
+			Str("name", string(w.Populator.Name())).
 			Msg("Population finished successfully")
 	}
 }
