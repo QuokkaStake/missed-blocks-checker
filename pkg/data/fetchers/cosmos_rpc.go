@@ -160,26 +160,6 @@ func (f *CosmosRPCFetcher) GetSigningInfos(height int64) (*slashingTypes.QuerySi
 	return &response, nil
 }
 
-func (f *CosmosRPCFetcher) GetSigningInfo(valcons string, height int64) (*slashingTypes.QuerySigningInfoResponse, error) {
-	query := slashingTypes.QuerySigningInfoRequest{
-		ConsAddress: valcons,
-	}
-
-	var response slashingTypes.QuerySigningInfoResponse
-	if err := f.AbciQuery(
-		"/cosmos.slashing.v1beta1.Query/SigningInfo",
-		&query,
-		height,
-		constants.QueryTypeSigningInfo,
-		&response,
-		f.clients,
-	); err != nil {
-		return nil, err
-	}
-
-	return &response, nil
-}
-
 func (f *CosmosRPCFetcher) GetValidatorAssignedConsumerKey(
 	providerValcons string,
 	height int64,

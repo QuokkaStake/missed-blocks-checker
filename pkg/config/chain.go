@@ -16,16 +16,15 @@ type ChainPagination struct {
 	SigningInfos   uint64 `default:"1000" toml:"signing-infos"`
 }
 type ChainConfig struct {
-	Name                 string          `toml:"name"`
-	PrettyName           string          `toml:"pretty-name"`
-	RPCEndpoints         []string        `toml:"rpc-endpoints"`
-	StoreBlocks          int64           `default:"20000"      toml:"store-blocks"`
-	BlocksWindow         int64           `default:"10000"      toml:"blocks-window"`
-	MinSignedPerWindow   float64         `default:"0.05"       toml:"min-signed-per-window"`
-	QueryEachSigningInfo null.Bool       `default:"false"      toml:"query-each-signing-info"`
-	SnapshotsInterval    int64           `default:"1"          toml:"snapshots-interval"`
-	Pagination           ChainPagination `toml:"pagination"`
-	Intervals            IntervalsConfig `toml:"intervals"`
+	Name               string          `toml:"name"`
+	PrettyName         string          `toml:"pretty-name"`
+	RPCEndpoints       []string        `toml:"rpc-endpoints"`
+	StoreBlocks        int64           `default:"20000"      toml:"store-blocks"`
+	BlocksWindow       int64           `default:"10000"      toml:"blocks-window"`
+	MinSignedPerWindow float64         `default:"0.05"       toml:"min-signed-per-window"`
+	SnapshotsInterval  int64           `default:"1"          toml:"snapshots-interval"`
+	Pagination         ChainPagination `toml:"pagination"`
+	Intervals          IntervalsConfig `toml:"intervals"`
 
 	IsConsumer              null.Bool `default:"false"                  toml:"consumer"`
 	ProviderRPCEndpoints    []string  `toml:"provider-rpc-endpoints"`

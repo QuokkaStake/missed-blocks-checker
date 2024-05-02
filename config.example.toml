@@ -39,12 +39,6 @@ rpc-endpoints = [
     "https://rpc-cosmoshub.ecostake.com",
     "https://rpc.cosmos.dragonstake.io"
 ]
-# If set to true, the app will query a signing info for each validator separately.
-# There's a bug on Cosmos Hub when some validators do not have signing info address,
-# so it's impossible to map signing infos (containing missed blocks counter and tombstone info)
-# to a validator. Defaults to false. You may set it to true on Cosmos Hub, or other chains
-# if you see errors in logs that the signing info for validator was not found.
-query-each-signing-info = true
 # Telegram reporter configuration. Needs token and chat. See README.md on how to set it up
 telegram = { token = "xxx:yyy", chat = 12345 }
 # Discord reporter configuration. Needs token, server ID (aka guild) and channel ID.

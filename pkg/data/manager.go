@@ -48,10 +48,6 @@ func (manager *Manager) GetValidators(height int64) (types.Validators, []error) 
 		return manager.GetValidatorsAndSigningInfoForConsumerChain(height)
 	}
 
-	if manager.config.QueryEachSigningInfo.Bool {
-		return manager.GetValidatorsAndEachSigningInfo(height)
-	}
-
 	var (
 		wg                  sync.WaitGroup
 		validatorsResponse  *stakingTypes.QueryValidatorsResponse
@@ -113,55 +109,6 @@ func (manager *Manager) GetValidators(height int64) (types.Validators, []error) 
 	validators.SetVotingPowerPercent()
 
 	return validators, nil
-}
-
-func (manager *Manager) GetValidatorsAndEachSigningInfo(height int64) (types.Validators, []error) {
-	validatorsResponse, validatorsError := manager.fetcher.GetValidators(height)
-	if validatorsError != nil {
-		return nil, []error{validatorsError}
-	}
-
-	var wg sync.WaitGroup
-	var mutex sync.Mutex
-	errs := make([]error, 0)
-
-	validators := make(types.Validators, len(validatorsResponse.Validators))
-	for index, validatorRaw := range validatorsResponse.Validators {
-		wg.Add(1)
-		go func(validatorRaw stakingTypes.Validator, index int) {
-			defer wg.Done()
-
-			consensusAddr := manager.converter.GetConsensusAddress(validatorRaw)
-			signingInfoResponse, signingInfoErr := manager.fetcher.GetSigningInfo(consensusAddr, height)
-			if signingInfoErr != nil {
-				manager.logger.Warn().
-					Str("operator_address", validatorRaw.OperatorAddress).
-					Err(signingInfoErr).
-					Msg("Error fetching validator signing info")
-				mutex.Lock()
-				errs = append(errs, signingInfoErr)
-				mutex.Unlock()
-				return
-			}
-
-			var signingInfo *slashingTypes.ValidatorSigningInfo
-			if signingInfoResponse != nil {
-				signingInfo = &signingInfoResponse.ValSigningInfo
-			}
-
-			validator := manager.converter.ValidatorFromCosmosValidator(validatorRaw, signingInfo)
-
-			mutex.Lock()
-			validators[index] = validator
-			mutex.Unlock()
-		}(validatorRaw, index)
-	}
-
-	wg.Wait()
-
-	validators.SetVotingPowerPercent()
-
-	return validators, errs
 }
 
 func (manager *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64) (types.Validators, []error) {
@@ -292,10 +239,6 @@ func (manager *Manager) GetValidatorAssignedConsumerKey(
 
 func (manager *Manager) GetSigningInfos(height int64) (*slashingTypes.QuerySigningInfosResponse, error) {
 	return manager.fetcher.GetSigningInfos(height)
-}
-
-func (manager *Manager) GetSigningInfo(valcons string, height int64) (*slashingTypes.QuerySigningInfoResponse, error) {
-	return manager.fetcher.GetSigningInfo(valcons, height)
 }
 
 func (manager *Manager) GetSlashingParams(height int64) (*slashingTypes.QueryParamsResponse, error) {

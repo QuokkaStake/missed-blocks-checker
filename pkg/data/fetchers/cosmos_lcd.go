@@ -130,30 +130,6 @@ func (f *CosmosLCDFetcher) GetSigningInfos(height int64) (*slashingTypes.QuerySi
 	return &response, nil
 }
 
-func (f *CosmosLCDFetcher) GetSigningInfo(valcons string, height int64) (*slashingTypes.QuerySigningInfoResponse, error) {
-	var response slashingTypes.QuerySigningInfoResponse
-
-	if err := f.Get(
-		"/cosmos/slashing/v1beta1/signing_infos/"+valcons,
-		constants.QueryTypeSigningInfo,
-		&response,
-		f.clients,
-		height,
-		func(v interface{}) error {
-			_, ok := v.(*slashingTypes.QuerySigningInfoResponse)
-			if !ok {
-				return errors.New("error converting signing info response")
-			}
-
-			return nil
-		},
-	); err != nil {
-		return nil, err
-	}
-
-	return &response, nil
-}
-
 func (f *CosmosLCDFetcher) GetValidatorAssignedConsumerKey(
 	providerValcons string,
 	height int64,
