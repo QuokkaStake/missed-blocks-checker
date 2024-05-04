@@ -83,6 +83,7 @@ func (reporter *Reporter) Init() {
 	reporter.Commands = map[string]*Command{
 		"params":      reporter.GetParamsCommand(),
 		"missing":     reporter.GetMissingCommand(),
+		"validators":  reporter.GetValidatorsCommand(),
 		"subscribe":   reporter.GetSubscribeCommand(),
 		"unsubscribe": reporter.GetUnsubscribeCommand(),
 		"status":      reporter.GetStatusCommand(),
