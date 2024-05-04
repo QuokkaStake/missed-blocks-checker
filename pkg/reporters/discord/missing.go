@@ -66,18 +66,7 @@ func (reporter *Reporter) GetMissingCommand() *Command {
 				return
 			}
 
-			chunks := utils.SplitStringIntoChunks(template, 2000)
-
-			for _, chunk := range chunks {
-				if err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-					Type: discordgo.InteractionResponseChannelMessageWithSource,
-					Data: &discordgo.InteractionResponseData{
-						Content: chunk,
-					},
-				}); err != nil {
-					reporter.Logger.Error().Err(err).Msg("Error sending missing")
-				}
-			}
+			reporter.BotRespond(s, i, template)
 		},
 	}
 }

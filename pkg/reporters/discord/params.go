@@ -36,14 +36,7 @@ func (reporter *Reporter) GetParamsCommand() *Command {
 				return
 			}
 
-			if err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Content: template,
-				},
-			}); err != nil {
-				reporter.Logger.Error().Err(err).Msg("Error sending params")
-			}
+			reporter.BotRespond(s, i, template)
 		},
 	}
 }
