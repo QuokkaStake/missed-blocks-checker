@@ -54,3 +54,4 @@ linters:
     - durationcheck
     - gocyclo
     - exhaustive
+    - mnd
