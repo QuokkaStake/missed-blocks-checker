@@ -10,7 +10,7 @@ The bot can understand the following commands:
 - </subscribe:{{ .Commands.subscribe.Info.ID }}> [validator address] - subscribe to validator's notifications
 - </unsubscribe:{{ .Commands.unsubscribe.Info.ID }}> [validator address] - unsubscribe from validator's notifications
 - </status:{{ .Commands.status.Info.ID }}> - see the notification on validators you are subscribed to
-- /missing - see the missed blocks counter of validators missing blocks
-- /validators - see the missed blocks counter of all validators
+- </missing:{{ .Commands.missing.Info.ID }}> - see the missed blocks counter of validators missing blocks
+- </validators:{{ .Commands.validators.Info.ID }}> - see the missed blocks counter of all validators
 - </params:{{ .Commands.params.Info.ID }}> - see the app config and chain params
 - </notifiers:{{ .Commands.notifiers.Info.ID }}> - see notifiers for each validator
