@@ -10,31 +10,26 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func (reporter *Reporter) GetMissingCommand() *Command {
+func (reporter *Reporter) GetValidatorsCommand() *Command {
 	return &Command{
 		Info: &discordgo.ApplicationCommand{
-			Name:        "missing",
-			Description: "Get the list of validators missing blocks",
+			Name:        "validators",
+			Description: "Get the list of all validators and their missing blocks",
 		},
 		Handler: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, "missing")
+			reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, "validators")
 
 			snapshot, found := reporter.SnapshotManager.GetNewerSnapshot()
 			if !found {
 				reporter.Logger.Info().
-					Msg("No older snapshot on discord missing query!")
+					Msg("No older snapshot on discord validators query!")
 				reporter.BotRespond(s, i, "Error getting validators list")
 				return
 			}
 
 			validatorEntries := snapshot.Entries.ToSlice()
 			activeValidatorsEntries := utils.Filter(validatorEntries, func(v snapshotPkg.Entry) bool {
-				if !v.Validator.Active() {
-					return false
-				}
-
-				group, _, _ := reporter.Config.MissedBlocksGroups.GetGroup(v.SignatureInfo.GetNotSigned())
-				return group.Start > 0
+				return v.Validator.Active()
 			})
 
 			sort.Slice(activeValidatorsEntries, func(firstIndex, secondIndex int) bool {
@@ -60,7 +55,7 @@ func (reporter *Reporter) GetMissingCommand() *Command {
 				}),
 			}
 
-			template, err := reporter.TemplatesManager.Render("Missing", render)
+			template, err := reporter.TemplatesManager.Render("Validators", render)
 			if err != nil {
 				reporter.Logger.Error().Err(err).Msg("Error rendering missing")
 				return

@@ -9,6 +9,7 @@ import (
 	statePkg "main/pkg/state"
 	templatesPkg "main/pkg/templates"
 	types "main/pkg/types"
+	"main/pkg/utils"
 	"strings"
 	"sync"
 	"time"
@@ -82,6 +83,7 @@ func (reporter *Reporter) Init() {
 	reporter.Commands = map[string]*Command{
 		"params":      reporter.GetParamsCommand(),
 		"missing":     reporter.GetMissingCommand(),
+		"validators":  reporter.GetValidatorsCommand(),
 		"subscribe":   reporter.GetSubscribeCommand(),
 		"unsubscribe": reporter.GetUnsubscribeCommand(),
 		"status":      reporter.GetStatusCommand(),
@@ -199,15 +201,27 @@ func (reporter *Reporter) Send(report *types.Report) error {
 }
 
 func (reporter *Reporter) BotRespond(s *discordgo.Session, i *discordgo.InteractionCreate, text string) {
-	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+	chunks := utils.SplitStringIntoChunks(text, 2000)
+	firstChunk, rest := chunks[0], chunks[1:]
+
+	if err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: text,
+			Content: firstChunk,
 		},
-	})
-
-	if err != nil {
+	}); err != nil {
 		reporter.Logger.Error().Err(err).Msg("Error sending response")
+	}
+
+	for index, chunk := range rest {
+		if _, err := s.FollowupMessageCreate(i.Interaction, false, &discordgo.WebhookParams{
+			Content: chunk,
+		}); err != nil {
+			reporter.Logger.Error().
+				Int("chunk", index).
+				Err(err).
+				Msg("Error sending followup message")
+		}
 	}
 }
 
