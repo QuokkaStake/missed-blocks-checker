@@ -19,7 +19,7 @@ import (
 	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	providerTypes "github.com/cosmos/interchain-security/v3/x/ccv/provider/types"
+	providerTypes "github.com/cosmos/interchain-security/v4/x/ccv/provider/types"
 	"github.com/rs/zerolog"
 )
 
@@ -160,21 +160,19 @@ func (f *CosmosRPCFetcher) GetSigningInfos(height int64) (*slashingTypes.QuerySi
 	return &response, nil
 }
 
-func (f *CosmosRPCFetcher) GetValidatorAssignedConsumerKey(
-	providerValcons string,
+func (f *CosmosRPCFetcher) GetValidatorsAssignedConsumerKeys(
 	height int64,
-) (*providerTypes.QueryValidatorConsumerAddrResponse, error) {
-	query := providerTypes.QueryValidatorConsumerAddrRequest{
-		ChainId:         f.config.ConsumerChainID,
-		ProviderAddress: providerValcons,
+) (*providerTypes.QueryAllPairsValConAddrByConsumerChainIDResponse, error) {
+	query := providerTypes.QueryAllPairsValConAddrByConsumerChainIDRequest{
+		ChainId: f.config.ConsumerChainID,
 	}
 
-	var response providerTypes.QueryValidatorConsumerAddrResponse
+	var response providerTypes.QueryAllPairsValConAddrByConsumerChainIDResponse
 	if err := f.AbciQuery(
-		"/interchain_security.ccv.provider.v1.Query/QueryValidatorConsumerAddr",
+		"/interchain_security.ccv.provider.v1.Query/QueryAllPairsValConAddrByConsumerChainID",
 		&query,
 		height,
-		constants.QueryTypeConsumerAddr,
+		constants.QueryTypeConsumerAddrs,
 		&response,
 		f.providerClients,
 	); err != nil {

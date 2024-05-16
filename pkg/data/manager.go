@@ -11,7 +11,7 @@ import (
 	"sync"
 
 	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
-	providerTypes "github.com/cosmos/interchain-security/v3/x/ccv/provider/types"
+	providerTypes "github.com/cosmos/interchain-security/v4/x/ccv/provider/types"
 
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -113,15 +113,17 @@ func (manager *Manager) GetValidators(height int64) (types.Validators, []error) 
 
 func (manager *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64) (types.Validators, []error) {
 	var (
-		wg                  sync.WaitGroup
-		validatorsResponse  *stakingTypes.QueryValidatorsResponse
-		validatorsError     error
-		signingInfoResponse *slashingTypes.QuerySigningInfosResponse
-		signingInfoErr      error
-		mutex               sync.Mutex
+		wg                   sync.WaitGroup
+		validatorsResponse   *stakingTypes.QueryValidatorsResponse
+		validatorsError      error
+		signingInfoResponse  *slashingTypes.QuerySigningInfosResponse
+		signingInfoErr       error
+		assignedKeysResponse *providerTypes.QueryAllPairsValConAddrByConsumerChainIDResponse
+		assignedKeysError    error
+		mutex                sync.Mutex
 	)
 
-	wg.Add(2)
+	wg.Add(3)
 	go func() {
 		validatorsResponse, validatorsError = manager.fetcher.GetValidators(0)
 		wg.Done()
@@ -129,6 +131,11 @@ func (manager *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64
 
 	go func() {
 		signingInfoResponse, signingInfoErr = manager.fetcher.GetSigningInfos(height)
+		wg.Done()
+	}()
+
+	go func() {
+		assignedKeysResponse, assignedKeysError = manager.fetcher.GetValidatorsAssignedConsumerKeys(0)
 		wg.Done()
 	}()
 
@@ -140,6 +147,10 @@ func (manager *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64
 
 	if signingInfoErr != nil {
 		return nil, []error{signingInfoErr}
+	}
+
+	if assignedKeysError != nil {
+		return nil, []error{assignedKeysError}
 	}
 
 	validators := make(types.Validators, len(validatorsResponse.Validators))
@@ -159,59 +170,59 @@ func (manager *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64
 			}
 		}
 
-		wg.Add(1)
-		go func(validatorRaw stakingTypes.Validator, index int) {
-			defer wg.Done()
+		consensusAddrProvider := manager.converter.GetConsensusAddress(validatorRaw)
+		consensusAddr := consensusAddrProvider
 
-			consensusAddrProvider := manager.converter.GetConsensusAddress(validatorRaw)
-			consensusAddr := consensusAddrProvider
-
-			consensusAddrConsumer, err := manager.fetcher.GetValidatorAssignedConsumerKey(consensusAddrProvider, 0)
-			if err != nil {
-				manager.logger.Warn().
-					Str("operator_address", validatorRaw.OperatorAddress).
-					Err(err).
-					Msg("Error fetching validator assigned consumer key")
-
-				mutex.Lock()
-				errs = append(errs, err)
-				mutex.Unlock()
-			} else if consensusAddrConsumer.ConsumerAddress != "" {
-				consensusAddr = consensusAddrConsumer.ConsumerAddress
-			}
-
-			signingInfo, ok := utils.Find(signingInfoResponse.Info, func(i slashingTypes.ValidatorSigningInfo) bool {
-				equal, compareErr := utils.CompareTwoBech32(i.Address, consensusAddr)
+		assignedConsensusAddr, ok := utils.Find(
+			assignedKeysResponse.PairValConAddr,
+			func(i *providerTypes.PairValConAddrProviderAndConsumer) bool {
+				equal, compareErr := utils.CompareTwoBech32(i.ProviderAddress, consensusAddr)
 				if compareErr != nil {
 					manager.logger.Error().
 						Str("operator_address", validatorRaw.OperatorAddress).
-						Str("first", i.Address).
+						Str("first", i.ProviderAddress).
 						Str("second", consensusAddr).
 						Msg("Error converting bech32 address")
 					return false
 				}
 
 				return equal
-			})
+			},
+		)
 
-			if !ok {
-				manager.logger.Debug().
+		if ok {
+			consensusAddr = assignedConsensusAddr.ConsumerAddress
+		}
+
+		signingInfo, ok := utils.Find(signingInfoResponse.Info, func(i slashingTypes.ValidatorSigningInfo) bool {
+			equal, compareErr := utils.CompareTwoBech32(i.Address, consensusAddr)
+			if compareErr != nil {
+				manager.logger.Error().
 					Str("operator_address", validatorRaw.OperatorAddress).
-					Msg("Could not find signing info for validator")
+					Str("first", i.Address).
+					Str("second", consensusAddr).
+					Msg("Error converting bech32 address")
+				return false
 			}
 
-			validator := manager.converter.ValidatorFromCosmosValidator(validatorRaw, &signingInfo)
-			if err := manager.converter.SetValidatorConsumerConsensusAddr(validator, consensusAddr); err != nil {
-				manager.logger.Warn().Err(err).Msg("Could not set validator consumer consensus address")
-			}
+			return equal
+		})
 
-			mutex.Lock()
-			validators[index] = validator
-			mutex.Unlock()
-		}(validatorRaw, index)
+		if !ok {
+			manager.logger.Debug().
+				Str("operator_address", validatorRaw.OperatorAddress).
+				Msg("Could not find signing info for validator")
+		}
+
+		validator := manager.converter.ValidatorFromCosmosValidator(validatorRaw, &signingInfo)
+		if err := manager.converter.SetValidatorConsumerConsensusAddr(validator, consensusAddr); err != nil {
+			manager.logger.Warn().Err(err).Msg("Could not set validator consumer consensus address")
+		}
+
+		mutex.Lock()
+		validators[index] = validator
+		mutex.Unlock()
 	}
-
-	wg.Wait()
 
 	threshold, _ := validators.GetSoftOutOutThreshold(manager.config.ConsumerSoftOptOut)
 
@@ -228,13 +239,6 @@ func (manager *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64
 
 func (manager *Manager) GetBlock(height int64) (*responses.SingleBlockResponse, error) {
 	return manager.rpc.GetBlock(height)
-}
-
-func (manager *Manager) GetValidatorAssignedConsumerKey(
-	providerValcons string,
-	height int64,
-) (*providerTypes.QueryValidatorConsumerAddrResponse, error) {
-	return manager.fetcher.GetValidatorAssignedConsumerKey(providerValcons, height)
 }
 
 func (manager *Manager) GetSigningInfos(height int64) (*slashingTypes.QuerySigningInfosResponse, error) {

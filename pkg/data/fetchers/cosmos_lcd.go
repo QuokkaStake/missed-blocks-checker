@@ -22,7 +22,7 @@ import (
 	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	providerTypes "github.com/cosmos/interchain-security/v3/x/ccv/provider/types"
+	providerTypes "github.com/cosmos/interchain-security/v4/x/ccv/provider/types"
 	"github.com/rs/zerolog"
 )
 
@@ -130,26 +130,22 @@ func (f *CosmosLCDFetcher) GetSigningInfos(height int64) (*slashingTypes.QuerySi
 	return &response, nil
 }
 
-func (f *CosmosLCDFetcher) GetValidatorAssignedConsumerKey(
-	providerValcons string,
+func (f *CosmosLCDFetcher) GetValidatorsAssignedConsumerKeys(
 	height int64,
-) (*providerTypes.QueryValidatorConsumerAddrResponse, error) {
-	var response providerTypes.QueryValidatorConsumerAddrResponse
+) (*providerTypes.QueryAllPairsValConAddrByConsumerChainIDResponse, error) {
+	var response providerTypes.QueryAllPairsValConAddrByConsumerChainIDResponse
 
 	if err := f.Get(
-		fmt.Sprintf(
-			"/interchain_security/ccv/provider/validator_consumer_addr?chain_id=%s&provider_address=%s",
-			f.config.ConsumerChainID,
-			providerValcons,
-		),
-		constants.QueryTypeConsumerAddr,
+
+		"interchain_security/ccv/provider/consumer_chain_id?chain_id="+f.config.ConsumerChainID,
+		constants.QueryTypeConsumerAddrs,
 		&response,
 		f.providerClients,
 		height,
 		func(v interface{}) error {
-			_, ok := v.(*providerTypes.QueryValidatorConsumerAddrResponse)
+			_, ok := v.(*providerTypes.QueryAllPairsValConAddrByConsumerChainIDResponse)
 			if !ok {
-				return errors.New("error converting assigned consumer key response")
+				return errors.New("error converting assigned consumer keys response")
 			}
 
 			return nil
