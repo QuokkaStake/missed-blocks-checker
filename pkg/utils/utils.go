@@ -49,6 +49,57 @@ func Find[T any](slice []T, f func(T) bool) (T, bool) {
 	return *new(T), false
 }
 
+func Subtract[T any, C comparable](first, second []T, predicate func(T) C) []T {
+	valuesMap := make(map[C]bool, len(second))
+	for _, value := range second {
+		valuesMap[predicate(value)] = true
+	}
+
+	newSlice := make([]T, 0)
+
+	for _, value := range first {
+		predicateResult := predicate(value)
+		_, ok := valuesMap[predicateResult]
+		if !ok {
+			newSlice = append(newSlice, value)
+		}
+	}
+
+	return newSlice
+}
+
+func Union[T any, C comparable](first, second []T, predicate func(T) C) []T {
+	valuesMap := make(map[C]bool, len(second))
+	for _, value := range second {
+		valuesMap[predicate(value)] = true
+	}
+
+	newSlice := make([]T, 0)
+
+	for _, value := range first {
+		predicateResult := predicate(value)
+		_, ok := valuesMap[predicateResult]
+		if ok {
+			newSlice = append(newSlice, value)
+		}
+	}
+
+	return newSlice
+}
+
+func MapToArray[K comparable, T any](source map[K]T) []T {
+	newSlice := make([]T, len(source))
+
+	index := 0
+
+	for _, value := range source {
+		newSlice[index] = value
+		index++
+	}
+
+	return newSlice
+}
+
 func SplitStringIntoChunks(msg string, maxLineLength int) []string {
 	msgsByNewline := strings.Split(msg, "\n")
 	outMessages := []string{}
