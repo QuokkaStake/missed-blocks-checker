@@ -13,6 +13,7 @@ import (
 )
 
 type Entry struct {
+	IsActive      bool
 	Validator     *types.Validator
 	SignatureInfo types.SignatureInto
 }
@@ -63,7 +64,7 @@ func (snapshot *Snapshot) GetReport(
 			continue
 		}
 
-		if entry.Validator.Jailed && !olderEntry.Validator.Jailed && olderEntry.Validator.Active() {
+		if entry.Validator.Jailed && !olderEntry.Validator.Jailed && olderEntry.IsActive {
 			entries = append(entries, events.ValidatorJailed{
 				Validator: entry.Validator,
 			})
@@ -75,25 +76,25 @@ func (snapshot *Snapshot) GetReport(
 			})
 		}
 
-		if entry.Validator.Active() && olderEntry.Validator.Active() && entry.Validator.NeedsToSign && !olderEntry.Validator.NeedsToSign {
+		if entry.IsActive && olderEntry.IsActive && entry.Validator.NeedsToSign && !olderEntry.Validator.NeedsToSign {
 			entries = append(entries, events.ValidatorJoinedSignatory{
 				Validator: entry.Validator,
 			})
 		}
 
-		if entry.Validator.Active() && olderEntry.Validator.Active() && !entry.Validator.NeedsToSign && olderEntry.Validator.NeedsToSign {
+		if entry.IsActive && olderEntry.IsActive && !entry.Validator.NeedsToSign && olderEntry.Validator.NeedsToSign {
 			entries = append(entries, events.ValidatorLeftSignatory{
 				Validator: entry.Validator,
 			})
 		}
 
-		if entry.Validator.Active() && !olderEntry.Validator.Active() {
+		if entry.IsActive && !olderEntry.IsActive {
 			entries = append(entries, events.ValidatorActive{
 				Validator: entry.Validator,
 			})
 		}
 
-		if !entry.Validator.Active() && olderEntry.Validator.Active() {
+		if !entry.IsActive && olderEntry.IsActive {
 			entries = append(entries, events.ValidatorInactive{
 				Validator: entry.Validator,
 			})

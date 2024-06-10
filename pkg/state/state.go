@@ -125,6 +125,10 @@ func (s *State) GetLastBlockHeight() int64 {
 	return s.blocks.lastHeight
 }
 
+func (s *State) GetLastActiveSet() *types.Block {
+	return s.blocks.blocks[s.blocks.lastHeight]
+}
+
 func (s *State) GetValidators() types.ValidatorsMap {
 	return s.validators
 }

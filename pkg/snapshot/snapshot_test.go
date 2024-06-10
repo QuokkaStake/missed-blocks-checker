@@ -128,12 +128,14 @@ func TestValidatorJailed(t *testing.T) {
 
 	olderSnapshot := Snapshot{Entries: map[string]Entry{
 		"validator": {
+			IsActive:      true,
 			Validator:     &types.Validator{Jailed: false, Status: 3},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
 	newerSnapshot := Snapshot{Entries: map[string]Entry{
 		"validator": {
+			IsActive:      false,
 			Validator:     &types.Validator{Jailed: true, Status: 1},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
@@ -197,12 +199,14 @@ func TestValidatorJoinedSignatory(t *testing.T) {
 
 	olderSnapshot := Snapshot{Entries: map[string]Entry{
 		"validator": {
+			IsActive:      true,
 			Validator:     &types.Validator{NeedsToSign: false, Status: 3},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
 	newerSnapshot := Snapshot{Entries: map[string]Entry{
 		"validator": {
+			IsActive:      true,
 			Validator:     &types.Validator{NeedsToSign: true, Status: 3},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
@@ -228,12 +232,14 @@ func TestValidatorLeftSignatory(t *testing.T) {
 
 	olderSnapshot := Snapshot{Entries: map[string]Entry{
 		"validator": {
+			IsActive:      true,
 			Validator:     &types.Validator{NeedsToSign: true, Status: 3},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
 	newerSnapshot := Snapshot{Entries: map[string]Entry{
 		"validator": {
+			IsActive:      true,
 			Validator:     &types.Validator{NeedsToSign: false, Status: 3},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
@@ -259,12 +265,14 @@ func TestValidatorInactive(t *testing.T) {
 
 	olderSnapshot := Snapshot{Entries: map[string]Entry{
 		"validator": {
+			IsActive:      true,
 			Validator:     &types.Validator{Jailed: false, Status: 3},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
 	newerSnapshot := Snapshot{Entries: map[string]Entry{
 		"validator": {
+			IsActive:      false,
 			Validator:     &types.Validator{Jailed: false, Status: 1},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
@@ -337,12 +345,14 @@ func TestValidatorActive(t *testing.T) {
 
 	olderSnapshot := Snapshot{Entries: map[string]Entry{
 		"validator": {
+			IsActive:      false,
 			Validator:     &types.Validator{Jailed: false, Status: 1},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
 	newerSnapshot := Snapshot{Entries: map[string]Entry{
 		"validator": {
+			IsActive:      true,
 			Validator:     &types.Validator{Jailed: false, Status: 3},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
@@ -499,28 +509,34 @@ func TestSorting(t *testing.T) {
 
 	olderSnapshot := Snapshot{Entries: map[string]Entry{
 		"validator1": {
+			IsActive:      true,
 			Validator:     &types.Validator{Jailed: false, Status: 3},
 			SignatureInfo: types.SignatureInto{NotSigned: 25},
 		},
 		"validator2": {
+			IsActive:      true,
 			Validator:     &types.Validator{Jailed: false, Status: 3},
 			SignatureInfo: types.SignatureInto{NotSigned: 25},
 		},
 		"validator3": {
+			IsActive:      true,
 			Validator:     &types.Validator{Jailed: false, Status: 3, SigningInfo: &types.SigningInfo{Tombstoned: false}},
 			SignatureInfo: types.SignatureInto{NotSigned: 25},
 		},
 	}}
 	newerSnapshot := Snapshot{Entries: map[string]Entry{
 		"validator1": {
+			IsActive:      true,
 			Validator:     &types.Validator{Jailed: true, Status: 3},
 			SignatureInfo: types.SignatureInto{NotSigned: 25},
 		},
 		"validator2": {
+			IsActive:      true,
 			Validator:     &types.Validator{Jailed: false, Status: 3},
 			SignatureInfo: types.SignatureInto{NotSigned: 75},
 		},
 		"validator3": {
+			IsActive:      true,
 			Validator:     &types.Validator{Jailed: false, Status: 3, SigningInfo: &types.SigningInfo{Tombstoned: true}},
 			SignatureInfo: types.SignatureInto{NotSigned: 25},
 		},
