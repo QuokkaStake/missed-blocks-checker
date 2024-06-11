@@ -74,6 +74,22 @@ func (s *State) SetBlocks(blocks map[int64]*types.Block) {
 	s.blocks.SetBlocks(blocks)
 }
 
+func (s *State) GetActiveValidators() types.Validators {
+	activeValidators := make(types.Validators, 0)
+	latestActiveSet := s.GetLastActiveSet()
+	if latestActiveSet == nil {
+		return activeValidators
+	}
+
+	for _, validator := range s.validators {
+		if _, ok := latestActiveSet.Validators[validator.ConsensusAddressHex]; ok {
+			activeValidators = append(activeValidators, validator)
+		}
+	}
+
+	return activeValidators
+}
+
 func (s *State) AddNotifier(
 	operatorAddress string,
 	reporter constants.ReporterName,

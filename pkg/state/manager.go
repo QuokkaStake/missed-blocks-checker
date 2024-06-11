@@ -215,6 +215,10 @@ func (m *Manager) GetValidators() types.ValidatorsMap {
 	return m.state.GetValidators()
 }
 
+func (m *Manager) GetActiveValidators() types.Validators {
+	return m.state.GetActiveValidators()
+}
+
 func (m *Manager) GetTimeTillJail(missingBlocks int64) time.Duration {
 	return m.state.GetTimeTillJail(m.config, missingBlocks)
 }

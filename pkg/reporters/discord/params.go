@@ -18,7 +18,7 @@ func (reporter *Reporter) GetParamsCommand() *Command {
 			blockTime := reporter.Manager.GetBlockTime()
 			maxTimeToJail := reporter.Manager.GetTimeTillJail(0)
 
-			validators := reporter.Manager.GetValidators().ToSlice().GetActive()
+			validators := reporter.Manager.GetActiveValidators()
 			var amount int
 			if reporter.Config.IsConsumer.Bool {
 				_, amount = validators.GetSoftOutOutThreshold(reporter.Config.ConsumerSoftOptOut)
