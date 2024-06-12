@@ -138,7 +138,7 @@ func (m *Manager) GetSnapshot() (snapshotPkg.Snapshot, error) {
 	lastBlock := m.state.GetLastActiveSet()
 
 	validators := m.state.GetValidators()
-	entries := make(map[string]snapshotPkg.Entry, len(validators))
+	entries := make(map[string]types.Entry, len(validators))
 
 	neededBlocks := utils.MinInt64(m.config.BlocksWindow, m.GetLastBlockHeight())
 
@@ -156,7 +156,7 @@ func (m *Manager) GetSnapshot() (snapshotPkg.Snapshot, error) {
 			return snapshotPkg.Snapshot{}, err
 		}
 
-		entries[validator.OperatorAddress] = snapshotPkg.Entry{
+		entries[validator.OperatorAddress] = types.Entry{
 			IsActive:      isActiveAtLastBlock,
 			Validator:     validator,
 			SignatureInfo: signatureInfo,

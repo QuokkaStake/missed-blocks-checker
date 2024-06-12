@@ -12,16 +12,10 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-type Entry struct {
-	IsActive      bool
-	Validator     *types.Validator
-	SignatureInfo types.SignatureInto
-}
+type Entries map[string]types.Entry
 
-type Entries map[string]Entry
-
-func (e Entries) ToSlice() []Entry {
-	entries := make([]Entry, len(e))
+func (e Entries) ToSlice() []types.Entry {
+	entries := make([]types.Entry, len(e))
 
 	index := 0
 	for _, entry := range e {
