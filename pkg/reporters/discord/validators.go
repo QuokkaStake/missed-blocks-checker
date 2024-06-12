@@ -29,7 +29,7 @@ func (reporter *Reporter) GetValidatorsCommand() *Command {
 
 			validatorEntries := snapshot.Entries.ToSlice()
 			activeValidatorsEntries := utils.Filter(validatorEntries, func(v snapshotPkg.Entry) bool {
-				return v.Validator.Active()
+				return v.IsActive
 			})
 
 			sort.Slice(activeValidatorsEntries, func(firstIndex, secondIndex int) bool {

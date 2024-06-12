@@ -29,7 +29,7 @@ func (reporter *Reporter) HandleMissingValidators(c tele.Context) error {
 
 	validatorEntries := snapshot.Entries.ToSlice()
 	activeValidatorsEntries := utils.Filter(validatorEntries, func(v snapshotPkg.Entry) bool {
-		if !v.Validator.Active() {
+		if !v.IsActive {
 			return false
 		}
 

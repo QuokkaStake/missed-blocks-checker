@@ -122,7 +122,7 @@ func (snapshot *Snapshot) GetReport(
 		}
 
 		isTombstoned := hasNewerSigningInfo && entry.Validator.SigningInfo.Tombstoned
-		if isTombstoned || entry.Validator.Jailed || !entry.Validator.Active() {
+		if isTombstoned || entry.Validator.Jailed || !entry.IsActive {
 			continue
 		}
 
