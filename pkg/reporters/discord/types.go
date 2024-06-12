@@ -89,6 +89,7 @@ type notifierRender struct {
 }
 
 type statusEntry struct {
+	IsActive    bool
 	Validator   *types.Validator
 	Error       error
 	SigningInfo types.SignatureInto
