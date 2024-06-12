@@ -12,22 +12,8 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-type Entries map[string]types.Entry
-
-func (e Entries) ToSlice() []types.Entry {
-	entries := make([]types.Entry, len(e))
-
-	index := 0
-	for _, entry := range e {
-		entries[index] = entry
-		index++
-	}
-
-	return entries
-}
-
 type Snapshot struct {
-	Entries Entries
+	Entries types.Entries
 }
 
 func (snapshot *Snapshot) GetReport(

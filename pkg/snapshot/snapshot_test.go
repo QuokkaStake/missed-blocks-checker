@@ -429,22 +429,6 @@ func TestTombstonedAndNoPreviousSigningInfo(t *testing.T) {
 	assert.Empty(t, report.Events)
 }
 
-func TestToSlice(t *testing.T) {
-	t.Parallel()
-
-	entries := Entries{
-		"validator": types.Entry{
-			Validator:     &types.Validator{Moniker: "test", Jailed: false, Status: 1},
-			SignatureInfo: types.SignatureInto{NotSigned: 0},
-		},
-	}
-
-	slice := entries.ToSlice()
-	assert.NotEmpty(t, slice)
-	assert.Len(t, slice, 1)
-	assert.Equal(t, "test", slice[0].Validator.Moniker)
-}
-
 func TestNewMissedBlocksGroupNotPresent(t *testing.T) {
 	t.Parallel()
 
