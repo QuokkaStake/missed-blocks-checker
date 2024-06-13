@@ -42,7 +42,7 @@ type paramsRender struct {
 	BlockTime                time.Duration
 	MaxTimeToJail            time.Duration
 	ConsumerOptOutValidators int
-	Validators               types.Validators
+	ValidatorsCount          int
 }
 
 func (r paramsRender) FormatMinSignedPerWindow() string {
@@ -66,7 +66,7 @@ func (r paramsRender) FormatGroupPercent(group *config.MissedBlocksGroup) string
 }
 
 func (r paramsRender) GetConsumerRequiredValidators() int {
-	return len(r.Validators) - r.ConsumerOptOutValidators
+	return r.ValidatorsCount - r.ConsumerOptOutValidators
 }
 
 func (r paramsRender) FormatSnapshotInterval() string {
