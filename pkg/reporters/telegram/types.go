@@ -83,6 +83,7 @@ func (r paramsRender) FormatSoftOptOut() string {
 
 type statusEntry struct {
 	IsActive    bool
+	NeedsToSign bool
 	Validator   *types.Validator
 	Error       error
 	SigningInfo types.SignatureInto
@@ -102,7 +103,7 @@ func (s statusRender) FormatVotingPower(entry statusEntry) string {
 	text := fmt.Sprintf("%.2f%% VP", entry.Validator.VotingPowerPercent*100)
 
 	if s.ChainConfig.IsConsumer.Bool {
-		if entry.Validator.NeedsToSign {
+		if entry.NeedsToSign {
 			text += ", needs to sign blocks"
 		} else {
 			text += ", does not need to sign blocks"

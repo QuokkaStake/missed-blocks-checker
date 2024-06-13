@@ -138,7 +138,7 @@ func (m *Manager) GetSnapshot() (snapshotPkg.Snapshot, error) {
 	lastBlock := m.state.GetLastActiveSet()
 
 	validators := m.state.GetValidators()
-	entries := make(map[string]types.Entry, len(validators))
+	entries := make(types.Entries, len(validators))
 
 	neededBlocks := utils.MinInt64(m.config.BlocksWindow, m.GetLastBlockHeight())
 
@@ -160,6 +160,14 @@ func (m *Manager) GetSnapshot() (snapshotPkg.Snapshot, error) {
 			IsActive:      isActiveAtLastBlock,
 			Validator:     validator,
 			SignatureInfo: signatureInfo,
+		}
+	}
+
+	threshold, _ := entries.GetSoftOutOutThreshold(m.config.ConsumerSoftOptOut)
+
+	for _, entry := range entries {
+		if entry.Validator.VotingPower.Cmp(threshold) < 0 {
+			entry.NeedsToSign = false
 		}
 	}
 

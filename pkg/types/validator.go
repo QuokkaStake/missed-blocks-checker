@@ -28,7 +28,6 @@ type Validator struct {
 	VotingPowerPercent           float64
 	CumulativeVotingPowerPercent float64
 	Rank                         int
-	NeedsToSign                  bool // for consumer chains
 }
 
 func (v *Validator) Active() bool {

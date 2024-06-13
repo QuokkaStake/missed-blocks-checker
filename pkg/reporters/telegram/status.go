@@ -41,9 +41,10 @@ func (reporter *Reporter) HandleStatus(c tele.Context) error {
 
 	for index, entry := range userEntries {
 		entries[index] = statusEntry{
-			Validator: entry.Validator,
-			Link:      reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator),
-			IsActive:  entry.IsActive,
+			Validator:   entry.Validator,
+			Link:        reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator),
+			IsActive:    entry.IsActive,
+			NeedsToSign: entry.NeedsToSign,
 		}
 
 		if entry.IsActive && !entry.Validator.Jailed {

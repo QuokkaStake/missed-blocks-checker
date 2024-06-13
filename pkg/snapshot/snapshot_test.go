@@ -204,14 +204,16 @@ func TestValidatorJoinedSignatory(t *testing.T) {
 	olderSnapshot := Snapshot{Entries: map[string]types.Entry{
 		"validator": {
 			IsActive:      true,
-			Validator:     &types.Validator{NeedsToSign: false, Status: 3},
+			NeedsToSign:   false,
+			Validator:     &types.Validator{Status: 3},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
 	newerSnapshot := Snapshot{Entries: map[string]types.Entry{
 		"validator": {
 			IsActive:      true,
-			Validator:     &types.Validator{NeedsToSign: true, Status: 3},
+			NeedsToSign:   true,
+			Validator:     &types.Validator{Status: 3},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
@@ -237,14 +239,16 @@ func TestValidatorLeftSignatory(t *testing.T) {
 	olderSnapshot := Snapshot{Entries: map[string]types.Entry{
 		"validator": {
 			IsActive:      true,
-			Validator:     &types.Validator{NeedsToSign: true, Status: 3},
+			NeedsToSign:   true,
+			Validator:     &types.Validator{Status: 3},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
 	newerSnapshot := Snapshot{Entries: map[string]types.Entry{
 		"validator": {
 			IsActive:      true,
-			Validator:     &types.Validator{NeedsToSign: false, Status: 3},
+			NeedsToSign:   false,
+			Validator:     &types.Validator{Status: 3},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}

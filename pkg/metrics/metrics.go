@@ -434,7 +434,7 @@ func (m *Manager) LogValidatorStats(
 					"moniker": entry.Validator.Moniker,
 					"address": entry.Validator.OperatorAddress,
 				}).
-				Set(utils.BoolToFloat64(entry.Validator.NeedsToSign))
+				Set(utils.BoolToFloat64(entry.NeedsToSign))
 		}
 
 		m.votingPowerGauge.

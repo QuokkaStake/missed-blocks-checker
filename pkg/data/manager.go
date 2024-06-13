@@ -224,14 +224,6 @@ func (manager *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64
 		mutex.Unlock()
 	}
 
-	threshold, _ := validators.GetSoftOutOutThreshold(manager.config.ConsumerSoftOptOut)
-
-	for _, validator := range validators {
-		if validator.VotingPower.Cmp(threshold) < 0 {
-			validator.NeedsToSign = false
-		}
-	}
-
 	validators.SetVotingPowerPercent()
 
 	return validators, errs
