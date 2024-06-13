@@ -211,3 +211,16 @@ func TestEntriesSetTotalVotingPower(t *testing.T) {
 	assert.InDelta(t, float64(1), entries["firstaddr"].CumulativeVotingPowerPercent, 0.001)
 	assert.InDelta(t, 0.75, entries["secondaddr"].CumulativeVotingPowerPercent, 0.001)
 }
+
+func TestEntriesGetByValidatorAddresses(t *testing.T) {
+	t.Parallel()
+
+	entries := Entries{
+		"firstaddr":  {Validator: &Validator{OperatorAddress: "firstaddr"}},
+		"secondaddr": {Validator: &Validator{OperatorAddress: "secondaddr"}},
+		"thirdaddr":  {Validator: &Validator{OperatorAddress: "thirdaddr"}},
+	}
+
+	filteredEntries := entries.ByValidatorAddresses([]string{"firstaddr", "secondaddr"})
+	assert.Len(t, filteredEntries, 2)
+}
