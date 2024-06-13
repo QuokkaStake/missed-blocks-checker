@@ -135,7 +135,7 @@ func (m *Manager) GetMissingBlocksSinceLatest(expected int64) []int64 {
 }
 
 func (m *Manager) GetSnapshot() (snapshotPkg.Snapshot, error) {
-	lastBlock := m.state.GetLastActiveSet()
+	lastBlock := m.state.GetLastBlock()
 
 	validators := m.state.GetValidators()
 	entries := make(types.Entries, len(validators))

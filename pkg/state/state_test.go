@@ -312,3 +312,43 @@ func TestValidatorsMissedBlocksSomeSkipped(t *testing.T) {
 	assert.Equal(t, int64(1), signature.NotActive, "Argument mismatch!")
 	assert.Equal(t, int64(0), signature.Proposed, "Argument mismatch!")
 }
+
+func TestGetLastBlock(t *testing.T) {
+	t.Parallel()
+
+	state := NewState()
+	block1 := state.GetLastBlock()
+	assert.Nil(t, block1)
+
+	state.AddBlock(&types.Block{Height: 1, Signatures: map[string]int32{}, Validators: map[string]bool{}})
+	state.AddBlock(&types.Block{Height: 2, Signatures: map[string]int32{}, Validators: map[string]bool{}})
+
+	block2 := state.GetLastBlock()
+	assert.Equal(t, int64(2), block2.Height)
+}
+
+func TestGetActiveValidators(t *testing.T) {
+	t.Parallel()
+
+	state := NewState()
+	validators1 := state.GetActiveValidators()
+	assert.Empty(t, validators1)
+
+	state.AddBlock(&types.Block{Height: 1, Signatures: map[string]int32{}, Validators: map[string]bool{
+		"validator1": true,
+	}})
+	state.AddBlock(&types.Block{Height: 2, Signatures: map[string]int32{}, Validators: map[string]bool{
+		"validator2": true,
+	}})
+
+	state.SetValidators(types.ValidatorsMap{
+		"validator1": &types.Validator{OperatorAddress: "validator1", ConsensusAddressHex: "validator1"},
+		"validator2": &types.Validator{OperatorAddress: "validator2", ConsensusAddressHex: "validator2"},
+	})
+
+	validators2 := state.GetActiveValidators()
+	assert.Len(t, validators2, 1)
+
+	validator := validators2[0]
+	assert.Equal(t, "validator2", validator.OperatorAddress)
+}
