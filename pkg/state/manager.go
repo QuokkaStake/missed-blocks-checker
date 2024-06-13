@@ -156,7 +156,7 @@ func (m *Manager) GetSnapshot() (snapshotPkg.Snapshot, error) {
 			return snapshotPkg.Snapshot{}, err
 		}
 
-		entries[validator.OperatorAddress] = types.Entry{
+		entries[validator.OperatorAddress] = &types.Entry{
 			IsActive:      isActiveAtLastBlock,
 			Validator:     validator,
 			SignatureInfo: signatureInfo,
@@ -170,6 +170,8 @@ func (m *Manager) GetSnapshot() (snapshotPkg.Snapshot, error) {
 			entry.NeedsToSign = false
 		}
 	}
+
+	entries.SetVotingPowerPercent()
 
 	return snapshotPkg.Snapshot{Entries: entries}, nil
 }

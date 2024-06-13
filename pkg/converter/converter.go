@@ -79,7 +79,6 @@ func (c *Converter) ValidatorFromCosmosValidator(
 		ConsensusAddressHex:     fmt.Sprintf("%x", addr),
 		ConsensusAddressValcons: addr.String(),
 		OperatorAddress:         validator.OperatorAddress,
-		Status:                  int32(validator.Status),
 		Jailed:                  validator.Jailed,
 		SigningInfo:             valSigningInfo,
 		VotingPower:             big.NewFloat(0).SetInt(validator.DelegatorShares.BigInt()),

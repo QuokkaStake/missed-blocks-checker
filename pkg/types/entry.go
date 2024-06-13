@@ -11,12 +11,16 @@ type Entry struct {
 	NeedsToSign   bool
 	Validator     *Validator
 	SignatureInfo SignatureInto
+
+	VotingPowerPercent           float64
+	CumulativeVotingPowerPercent float64
+	Rank                         int
 }
 
-type Entries map[string]Entry
+type Entries map[string]*Entry
 
-func (e Entries) ToSlice() []Entry {
-	entries := make([]Entry, len(e))
+func (e Entries) ToSlice() []*Entry {
+	entries := make([]*Entry, len(e))
 
 	index := 0
 	for _, entry := range e {
@@ -27,8 +31,8 @@ func (e Entries) ToSlice() []Entry {
 	return entries
 }
 
-func (e Entries) ByValidatorAddresses(addresses []string) []Entry {
-	entries := make([]Entry, 0)
+func (e Entries) ByValidatorAddresses(addresses []string) []*Entry {
+	entries := make([]*Entry, 0)
 
 	for _, entry := range e {
 		if utils.Contains(addresses, entry.Validator.OperatorAddress) {
@@ -39,8 +43,8 @@ func (e Entries) ByValidatorAddresses(addresses []string) []Entry {
 	return entries
 }
 
-func (e Entries) GetActive() []Entry {
-	activeValidators := make([]Entry, 0)
+func (e Entries) GetActive() []*Entry {
+	activeValidators := make([]*Entry, 0)
 	for _, entry := range e {
 		if entry.IsActive {
 			activeValidators = append(activeValidators, entry)
@@ -88,4 +92,28 @@ func (e Entries) GetSoftOutOutThreshold(softOptOut float64) (*big.Float, int) {
 
 	// should've never reached here
 	return sortedEntries[0].Validator.VotingPower, len(sortedEntries)
+}
+
+func (e Entries) SetVotingPowerPercent() {
+	totalVP := e.GetTotalVotingPower()
+
+	activeAndSortedEntries := e.GetActive()
+
+	// sorting by voting power desc
+	sort.Slice(activeAndSortedEntries, func(first, second int) bool {
+		return activeAndSortedEntries[first].Validator.VotingPower.Cmp(activeAndSortedEntries[second].Validator.VotingPower) > 0
+	})
+
+	var cumulativeVotingPowerPercent float64 = 0
+	for index, sortedEntry := range activeAndSortedEntries {
+		percent, _ := new(big.Float).Quo(sortedEntry.Validator.VotingPower, totalVP).Float64()
+
+		entry := e[sortedEntry.Validator.OperatorAddress]
+
+		entry.VotingPowerPercent = percent
+		entry.Rank = index + 1
+
+		cumulativeVotingPowerPercent += percent
+		entry.CumulativeVotingPowerPercent = cumulativeVotingPowerPercent
+	}
 }

@@ -11,8 +11,8 @@ func TestEntriesToSlice(t *testing.T) {
 	t.Parallel()
 
 	entries := Entries{
-		"validator": Entry{
-			Validator:     &Validator{Moniker: "test", Jailed: false, Status: 1},
+		"validator": &Entry{
+			Validator:     &Validator{Moniker: "test", Jailed: false},
 			SignatureInfo: SignatureInto{NotSigned: 0},
 		},
 	}
@@ -29,11 +29,11 @@ func TestEntriesGetActive(t *testing.T) {
 	entries := Entries{
 		"firstaddr": {
 			IsActive:  true,
-			Validator: &Validator{Moniker: "first", OperatorAddress: "firstaddr", Status: 3},
+			Validator: &Validator{Moniker: "first", OperatorAddress: "firstaddr"},
 		},
 		"secondaddr": {
 			IsActive:  false,
-			Validator: &Validator{Moniker: "second", OperatorAddress: "secondaddr", Status: 1},
+			Validator: &Validator{Moniker: "second", OperatorAddress: "secondaddr"},
 		},
 	}
 
@@ -47,15 +47,15 @@ func TestValidatorsGetTotalVotingPower(t *testing.T) {
 	entries := Entries{
 		"firstaddr": {
 			IsActive:  true,
-			Validator: &Validator{Moniker: "first", OperatorAddress: "firstaddr", Status: 3, VotingPower: big.NewFloat(1)},
+			Validator: &Validator{Moniker: "first", OperatorAddress: "firstaddr", VotingPower: big.NewFloat(1)},
 		},
 		"secondaddr": {
 			IsActive:  true,
-			Validator: &Validator{Moniker: "second", OperatorAddress: "secondaddr", Status: 3, VotingPower: big.NewFloat(2)},
+			Validator: &Validator{Moniker: "second", OperatorAddress: "secondaddr", VotingPower: big.NewFloat(2)},
 		},
 		"thirdaddr": {
 			IsActive:  false,
-			Validator: &Validator{Moniker: "third", OperatorAddress: "thirdaddr", Status: 1, VotingPower: big.NewFloat(3)},
+			Validator: &Validator{Moniker: "third", OperatorAddress: "thirdaddr", VotingPower: big.NewFloat(3)},
 		},
 	}
 
@@ -74,7 +74,6 @@ func TestEntriesGetSoftOptOutThresholdAchievable(t *testing.T) {
 			Validator: &Validator{
 				Moniker:         "first",
 				OperatorAddress: "firstaddr",
-				Status:          3,
 				VotingPower:     big.NewFloat(80),
 			},
 		},
@@ -83,7 +82,6 @@ func TestEntriesGetSoftOptOutThresholdAchievable(t *testing.T) {
 			Validator: &Validator{
 				Moniker:         "second",
 				OperatorAddress: "secondaddr",
-				Status:          3,
 				VotingPower:     big.NewFloat(15),
 			},
 		},
@@ -92,7 +90,6 @@ func TestEntriesGetSoftOptOutThresholdAchievable(t *testing.T) {
 			Validator: &Validator{
 				Moniker:         "third",
 				OperatorAddress: "thirdaddr",
-				Status:          1,
 				VotingPower:     big.NewFloat(2),
 			},
 		},
@@ -101,7 +98,6 @@ func TestEntriesGetSoftOptOutThresholdAchievable(t *testing.T) {
 			Validator: &Validator{
 				Moniker:         "fourth",
 				OperatorAddress: "fourthaddr",
-				Status:          3,
 				VotingPower:     big.NewFloat(5),
 			},
 		},
@@ -123,7 +119,6 @@ func TestEntriesGetSoftOptOutThresholdNotAchievable(t *testing.T) {
 			Validator: &Validator{
 				Moniker:         "first",
 				OperatorAddress: "firstaddr",
-				Status:          3,
 				VotingPower:     big.NewFloat(80),
 			},
 		},
@@ -132,7 +127,6 @@ func TestEntriesGetSoftOptOutThresholdNotAchievable(t *testing.T) {
 			Validator: &Validator{
 				Moniker:         "second",
 				OperatorAddress: "secondaddr",
-				Status:          3,
 				VotingPower:     big.NewFloat(15),
 			},
 		},
@@ -141,7 +135,6 @@ func TestEntriesGetSoftOptOutThresholdNotAchievable(t *testing.T) {
 			Validator: &Validator{
 				Moniker:         "third",
 				OperatorAddress: "thirdaddr",
-				Status:          1,
 				VotingPower:     big.NewFloat(2),
 			},
 		},
@@ -150,7 +143,6 @@ func TestEntriesGetSoftOptOutThresholdNotAchievable(t *testing.T) {
 			Validator: &Validator{
 				Moniker:         "fourth",
 				OperatorAddress: "fourthaddr",
-				Status:          3,
 				VotingPower:     big.NewFloat(5),
 			},
 		},
@@ -170,7 +162,6 @@ func TestEntriesGetSoftOptOutThresholdEmpty(t *testing.T) {
 			Validator: &Validator{
 				Moniker:         "third",
 				OperatorAddress: "thirdaddr",
-				Status:          1,
 				VotingPower:     big.NewFloat(2),
 			},
 		},
@@ -179,4 +170,44 @@ func TestEntriesGetSoftOptOutThresholdEmpty(t *testing.T) {
 	threshold, count := entries.GetSoftOutOutThreshold(0.05)
 	assert.Equal(t, big.NewFloat(0), threshold)
 	assert.Equal(t, 0, count)
+}
+
+func TestEntriesSetTotalVotingPower(t *testing.T) {
+	t.Parallel()
+
+	entries := Entries{
+		"firstaddr": {
+			IsActive: true,
+			Validator: &Validator{
+				Moniker:         "first",
+				OperatorAddress: "firstaddr",
+				VotingPower:     big.NewFloat(1),
+			},
+		},
+		"secondaddr": {
+			IsActive: true,
+			Validator: &Validator{
+				Moniker:         "second",
+				OperatorAddress: "secondaddr",
+				VotingPower:     big.NewFloat(3),
+			},
+		},
+		"thirdaddr": {
+			IsActive: false,
+			Validator: &Validator{
+				Moniker:         "third",
+				OperatorAddress: "thirdaddr",
+				VotingPower:     big.NewFloat(2),
+			},
+		},
+	}
+
+	entries.SetVotingPowerPercent()
+	assert.Len(t, entries, 3)
+	assert.InDelta(t, 0.25, entries["firstaddr"].VotingPowerPercent, 0.001)
+	assert.InDelta(t, 0.75, entries["secondaddr"].VotingPowerPercent, 0.001)
+	assert.Equal(t, 2, entries["firstaddr"].Rank)
+	assert.Equal(t, 1, entries["secondaddr"].Rank)
+	assert.InDelta(t, float64(1), entries["firstaddr"].CumulativeVotingPowerPercent, 0.001)
+	assert.InDelta(t, 0.75, entries["secondaddr"].CumulativeVotingPowerPercent, 0.001)
 }

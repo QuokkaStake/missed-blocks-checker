@@ -374,7 +374,7 @@ func (m *Manager) LogNodeReconnect(chain string, node string) {
 
 func (m *Manager) LogValidatorStats(
 	chain *configPkg.ChainConfig,
-	entry types.Entry,
+	entry *types.Entry,
 ) {
 	m.missingBlocksGauge.
 		With(prometheus.Labels{

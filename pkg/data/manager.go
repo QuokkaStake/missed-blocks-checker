@@ -106,8 +106,6 @@ func (manager *Manager) GetValidators(height int64) (types.Validators, []error) 
 		validators[index] = validator
 	}
 
-	validators.SetVotingPowerPercent()
-
 	return validators, nil
 }
 
@@ -223,8 +221,6 @@ func (manager *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64
 		validators[index] = validator
 		mutex.Unlock()
 	}
-
-	validators.SetVotingPowerPercent()
 
 	return validators, errs
 }

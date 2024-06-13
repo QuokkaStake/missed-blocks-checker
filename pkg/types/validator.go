@@ -1,7 +1,6 @@
 package types
 
 import (
-	"main/pkg/constants"
 	"math/big"
 )
 
@@ -20,7 +19,6 @@ type Validator struct {
 	ConsensusAddressValcons string
 	OperatorAddress         string
 	Commission              float64
-	Status                  int32
 	Jailed                  bool
 	SigningInfo             *SigningInfo
 
@@ -28,8 +26,4 @@ type Validator struct {
 	VotingPowerPercent           float64
 	CumulativeVotingPowerPercent float64
 	Rank                         int
-}
-
-func (v *Validator) Active() bool {
-	return v.Status == constants.ValidatorBonded
 }
