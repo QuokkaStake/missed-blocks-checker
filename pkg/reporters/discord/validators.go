@@ -3,7 +3,7 @@ package discord
 import (
 	"fmt"
 	"main/pkg/constants"
-	snapshotPkg "main/pkg/snapshot"
+	"main/pkg/types"
 	"main/pkg/utils"
 	"sort"
 
@@ -28,8 +28,8 @@ func (reporter *Reporter) GetValidatorsCommand() *Command {
 			}
 
 			validatorEntries := snapshot.Entries.ToSlice()
-			activeValidatorsEntries := utils.Filter(validatorEntries, func(v snapshotPkg.Entry) bool {
-				return v.Validator.Active()
+			activeValidatorsEntries := utils.Filter(validatorEntries, func(v *types.Entry) bool {
+				return v.IsActive
 			})
 
 			sort.Slice(activeValidatorsEntries, func(firstIndex, secondIndex int) bool {
@@ -41,7 +41,7 @@ func (reporter *Reporter) GetValidatorsCommand() *Command {
 
 			render := missingValidatorsRender{
 				Config: reporter.Config,
-				Validators: utils.Map(activeValidatorsEntries, func(v snapshotPkg.Entry) missingValidatorsEntry {
+				Validators: utils.Map(activeValidatorsEntries, func(v *types.Entry) missingValidatorsEntry {
 					link := reporter.Config.ExplorerConfig.GetValidatorLink(v.Validator)
 					group, _, _ := reporter.Config.MissedBlocksGroups.GetGroup(v.SignatureInfo.GetNotSigned())
 					link.Text = fmt.Sprintf("%s %s", group.EmojiEnd, v.Validator.Moniker)

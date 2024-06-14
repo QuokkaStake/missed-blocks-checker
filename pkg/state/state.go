@@ -74,6 +74,22 @@ func (s *State) SetBlocks(blocks map[int64]*types.Block) {
 	s.blocks.SetBlocks(blocks)
 }
 
+func (s *State) GetActiveValidators() types.Validators {
+	activeValidators := make(types.Validators, 0)
+	latestBlock := s.GetLastBlock()
+	if latestBlock == nil {
+		return activeValidators
+	}
+
+	for _, validator := range s.validators {
+		if _, ok := latestBlock.Validators[validator.ConsensusAddressHex]; ok {
+			activeValidators = append(activeValidators, validator)
+		}
+	}
+
+	return activeValidators
+}
+
 func (s *State) AddNotifier(
 	operatorAddress string,
 	reporter constants.ReporterName,
@@ -123,6 +139,10 @@ func (s *State) GetValidatorsForNotifier(
 
 func (s *State) GetLastBlockHeight() int64 {
 	return s.blocks.lastHeight
+}
+
+func (s *State) GetLastBlock() *types.Block {
+	return s.blocks.blocks[s.blocks.lastHeight]
 }
 
 func (s *State) GetValidators() types.ValidatorsMap {

@@ -17,10 +17,19 @@ func (reporter *Reporter) HandleParams(c tele.Context) error {
 	blockTime := reporter.Manager.GetBlockTime()
 	maxTimeToJail := reporter.Manager.GetTimeTillJail(0)
 
-	validators := reporter.Manager.GetValidators().ToSlice().GetActive()
+	snapshot, found := reporter.SnapshotManager.GetNewerSnapshot()
+	if !found {
+		reporter.Logger.Info().
+			Str("sender", c.Sender().Username).
+			Str("text", c.Text()).
+			Msg("No older snapshot on telegram params query!")
+		return reporter.BotReply(c, "Error getting params")
+	}
+
+	activeValidators := snapshot.Entries.GetActive()
 	var amount int
 	if reporter.Config.IsConsumer.Bool {
-		_, amount = validators.GetSoftOutOutThreshold(reporter.Config.ConsumerSoftOptOut)
+		_, amount = snapshot.Entries.GetSoftOutOutThreshold(reporter.Config.ConsumerSoftOptOut)
 	}
 
 	template, err := reporter.TemplatesManager.Render("Params", paramsRender{
@@ -28,7 +37,7 @@ func (reporter *Reporter) HandleParams(c tele.Context) error {
 		BlockTime:                blockTime,
 		MaxTimeToJail:            maxTimeToJail,
 		ConsumerOptOutValidators: amount,
-		Validators:               validators,
+		ValidatorsCount:          len(activeValidators),
 	})
 	if err != nil {
 		return err

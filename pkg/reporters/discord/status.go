@@ -36,26 +36,28 @@ func (reporter *Reporter) GetStatusCommand() *Command {
 				return
 			}
 
-			entries := make([]statusEntry, len(operatorAddresses))
+			snapshot, found := reporter.SnapshotManager.GetNewerSnapshot()
+			if !found {
+				reporter.Logger.Info().
+					Msg("No older snapshot on discord status query!")
+				reporter.BotRespond(s, i, "Could not fetch user!")
+				return
+			}
 
-			for index, operatorAddress := range operatorAddresses {
-				validator, found := reporter.Manager.GetValidator(operatorAddress)
-				if !found {
-					reporter.BotRespond(s, i, fmt.Sprintf(
-						"Could not find a validator with address <code>%s</code> on %s",
-						operatorAddress,
-						reporter.Config.GetName(),
-					))
-					return
-				}
+			userEntries := snapshot.Entries.ByValidatorAddresses(operatorAddresses)
 
+			entries := make([]statusEntry, len(userEntries))
+
+			for index, entry := range userEntries {
 				entries[index] = statusEntry{
-					Validator: validator,
-					Link:      reporter.Config.ExplorerConfig.GetValidatorLink(validator),
+					IsActive:    entry.IsActive,
+					NeedsToSign: entry.NeedsToSign,
+					Validator:   entry.Validator,
+					Link:        reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator),
 				}
 
-				if validator.Active() && !validator.Jailed {
-					signatureInfo, err := reporter.Manager.GetValidatorMissedBlocks(validator)
+				if entry.IsActive && !entry.Validator.Jailed {
+					signatureInfo, err := reporter.Manager.GetValidatorMissedBlocks(entry.Validator)
 					entries[index].Error = err
 					entries[index].SigningInfo = signatureInfo
 				}
@@ -69,8 +71,8 @@ func (reporter *Reporter) GetStatusCommand() *Command {
 					return utils.BoolToFloat64(second.Validator.Jailed)-utils.BoolToFloat64(first.Validator.Jailed) > 0
 				}
 
-				if first.Validator.Active() != second.Validator.Active() {
-					return utils.BoolToFloat64(second.Validator.Active())-utils.BoolToFloat64(first.Validator.Active()) > 0
+				if first.IsActive != second.IsActive {
+					return utils.BoolToFloat64(second.IsActive)-utils.BoolToFloat64(first.IsActive) > 0
 				}
 
 				return second.Validator.VotingPowerPercent < first.Validator.VotingPowerPercent

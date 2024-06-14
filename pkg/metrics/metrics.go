@@ -374,93 +374,92 @@ func (m *Manager) LogNodeReconnect(chain string, node string) {
 
 func (m *Manager) LogValidatorStats(
 	chain *configPkg.ChainConfig,
-	validator *types.Validator,
-	signatureInfo types.SignatureInto,
+	entry *types.Entry,
 ) {
 	m.missingBlocksGauge.
 		With(prometheus.Labels{
 			"chain":   chain.Name,
-			"moniker": validator.Moniker,
-			"address": validator.OperatorAddress,
+			"moniker": entry.Validator.Moniker,
+			"address": entry.Validator.OperatorAddress,
 		}).
-		Set(float64(signatureInfo.GetNotSigned()))
+		Set(float64(entry.SignatureInfo.GetNotSigned()))
 
 	m.activeBlocksGauge.
 		With(prometheus.Labels{
 			"chain":   chain.Name,
-			"moniker": validator.Moniker,
-			"address": validator.OperatorAddress,
+			"moniker": entry.Validator.Moniker,
+			"address": entry.Validator.OperatorAddress,
 		}).
-		Set(float64(signatureInfo.Active))
+		Set(float64(entry.SignatureInfo.Active))
 
 	m.isActiveGauge.
 		With(prometheus.Labels{
 			"chain":   chain.Name,
-			"moniker": validator.Moniker,
-			"address": validator.OperatorAddress,
+			"moniker": entry.Validator.Moniker,
+			"address": entry.Validator.OperatorAddress,
 		}).
-		Set(utils.BoolToFloat64(validator.Active()))
+		Set(utils.BoolToFloat64(entry.IsActive))
 
 	m.isJailedGauge.
 		With(prometheus.Labels{
 			"chain":   chain.Name,
-			"moniker": validator.Moniker,
-			"address": validator.OperatorAddress,
+			"moniker": entry.Validator.Moniker,
+			"address": entry.Validator.OperatorAddress,
 		}).
-		Set(utils.BoolToFloat64(validator.Jailed))
+		Set(utils.BoolToFloat64(entry.Validator.Jailed))
 
 	m.missingBlocksGauge.
 		With(prometheus.Labels{
 			"chain":   chain.Name,
-			"moniker": validator.Moniker,
-			"address": validator.OperatorAddress,
+			"moniker": entry.Validator.Moniker,
+			"address": entry.Validator.OperatorAddress,
 		}).
-		Set(float64(signatureInfo.GetNotSigned()))
+		Set(float64(entry.SignatureInfo.GetNotSigned()))
 
-	if validator.SigningInfo != nil {
+	if entry.Validator.SigningInfo != nil {
 		m.isTombstonedGauge.
 			With(prometheus.Labels{
 				"chain":   chain.Name,
-				"moniker": validator.Moniker,
-				"address": validator.OperatorAddress,
+				"moniker": entry.Validator.Moniker,
+				"address": entry.Validator.OperatorAddress,
 			}).
-			Set(utils.BoolToFloat64(validator.SigningInfo.Tombstoned))
+			Set(utils.BoolToFloat64(entry.Validator.SigningInfo.Tombstoned))
 	}
 
-	if validator.Active() {
+	if entry.IsActive {
 		if chain.IsConsumer.Bool {
 			m.needsToSignGauge.
 				With(prometheus.Labels{
 					"chain":   chain.Name,
-					"moniker": validator.Moniker,
-					"address": validator.OperatorAddress,
+					"moniker": entry.Validator.Moniker,
+					"address": entry.Validator.OperatorAddress,
 				}).
-				Set(utils.BoolToFloat64(validator.NeedsToSign))
+				Set(utils.BoolToFloat64(entry.NeedsToSign))
 		}
 
 		m.votingPowerGauge.
 			With(prometheus.Labels{
 				"chain":   chain.Name,
-				"moniker": validator.Moniker,
-				"address": validator.OperatorAddress,
+				"moniker": entry.Validator.Moniker,
+				"address": entry.Validator.OperatorAddress,
 			}).
-			Set(validator.VotingPowerPercent)
+			Set(entry.Validator.VotingPowerPercent)
 
 		m.cumulativeVotingPowerGauge.
 			With(prometheus.Labels{
 				"chain":   chain.Name,
-				"moniker": validator.Moniker,
-				"address": validator.OperatorAddress,
+				"moniker": entry.Validator.Moniker,
+				"address": entry.Validator.OperatorAddress,
 			}).
-			Set(validator.CumulativeVotingPowerPercent)
+			Set(entry.Validator.CumulativeVotingPowerPercent)
 
 		m.validatorRankGauge.
 			With(prometheus.Labels{
 				"chain":   chain.Name,
-				"moniker": validator.Moniker,
-				"address": validator.OperatorAddress,
+				"moniker": entry.Validator.Moniker,
+				"address": entry.Validator.OperatorAddress,
 			}).
-			Set(float64(validator.Rank))
+			Set(float64(entry.Validator.Rank))
 	}
 }
 

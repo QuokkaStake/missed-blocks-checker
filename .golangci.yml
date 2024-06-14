@@ -18,16 +18,11 @@ linters:
   enable-all: true
   disable:
     - funlen
-    - scopelint
-    - interfacer
-    - exhaustivestruct
-    - maligned
-    - golint
     - nlreturn
     - wrapcheck
     - gomnd
     - cyclop
-    - goerr113
+    - err113
     - exhaustruct
     - wsl
     - lll
@@ -46,11 +41,6 @@ linters:
     - gofmt
     - ireturn
     - depguard
-    - nosnakecase
-    - ifshort
-    - structcheck
-    - deadcode
-    - varcheck
     - durationcheck
     - gocyclo
     - exhaustive

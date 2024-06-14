@@ -12,27 +12,8 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-type Entry struct {
-	Validator     *types.Validator
-	SignatureInfo types.SignatureInto
-}
-
-type Entries map[string]Entry
-
-func (e Entries) ToSlice() []Entry {
-	entries := make([]Entry, len(e))
-
-	index := 0
-	for _, entry := range e {
-		entries[index] = entry
-		index++
-	}
-
-	return entries
-}
-
 type Snapshot struct {
-	Entries Entries
+	Entries types.Entries
 }
 
 func (snapshot *Snapshot) GetReport(
@@ -63,7 +44,7 @@ func (snapshot *Snapshot) GetReport(
 			continue
 		}
 
-		if entry.Validator.Jailed && !olderEntry.Validator.Jailed && olderEntry.Validator.Active() {
+		if entry.Validator.Jailed && !olderEntry.Validator.Jailed && olderEntry.IsActive {
 			entries = append(entries, events.ValidatorJailed{
 				Validator: entry.Validator,
 			})
@@ -75,25 +56,25 @@ func (snapshot *Snapshot) GetReport(
 			})
 		}
 
-		if entry.Validator.Active() && olderEntry.Validator.Active() && entry.Validator.NeedsToSign && !olderEntry.Validator.NeedsToSign {
+		if entry.IsActive && olderEntry.IsActive && entry.NeedsToSign && !olderEntry.NeedsToSign {
 			entries = append(entries, events.ValidatorJoinedSignatory{
 				Validator: entry.Validator,
 			})
 		}
 
-		if entry.Validator.Active() && olderEntry.Validator.Active() && !entry.Validator.NeedsToSign && olderEntry.Validator.NeedsToSign {
+		if entry.IsActive && olderEntry.IsActive && !entry.NeedsToSign && olderEntry.NeedsToSign {
 			entries = append(entries, events.ValidatorLeftSignatory{
 				Validator: entry.Validator,
 			})
 		}
 
-		if entry.Validator.Active() && !olderEntry.Validator.Active() {
+		if entry.IsActive && !olderEntry.IsActive {
 			entries = append(entries, events.ValidatorActive{
 				Validator: entry.Validator,
 			})
 		}
 
-		if !entry.Validator.Active() && olderEntry.Validator.Active() {
+		if !entry.IsActive && olderEntry.IsActive {
 			entries = append(entries, events.ValidatorInactive{
 				Validator: entry.Validator,
 			})
@@ -121,7 +102,7 @@ func (snapshot *Snapshot) GetReport(
 		}
 
 		isTombstoned := hasNewerSigningInfo && entry.Validator.SigningInfo.Tombstoned
-		if isTombstoned || entry.Validator.Jailed || !entry.Validator.Active() {
+		if isTombstoned || entry.Validator.Jailed || !entry.IsActive {
 			continue
 		}
 

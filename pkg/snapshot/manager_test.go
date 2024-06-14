@@ -38,12 +38,12 @@ func TestManagerCommitNewSnapshot(t *testing.T) {
 	manager := NewManager(*log, config, metricsManager)
 
 	manager.CommitNewSnapshot(10, Snapshot{
-		Entries: map[string]Entry{
+		Entries: types.Entries{
 			"validator": {Validator: &types.Validator{}},
 		},
 	})
 	manager.CommitNewSnapshot(20, Snapshot{
-		Entries: map[string]Entry{
+		Entries: types.Entries{
 			"validator": {Validator: &types.Validator{}},
 		},
 	})
@@ -77,7 +77,7 @@ func TestManagerGetNewerSnapshot(t *testing.T) {
 	assert.Nil(t, firstSnapshot, "Snapshot should not be presented!")
 
 	manager.CommitNewSnapshot(20, Snapshot{
-		Entries: map[string]Entry{
+		Entries: types.Entries{
 			"validator": {Validator: &types.Validator{}},
 		},
 	})

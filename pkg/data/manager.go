@@ -106,8 +106,6 @@ func (manager *Manager) GetValidators(height int64) (types.Validators, []error) 
 		validators[index] = validator
 	}
 
-	validators.SetVotingPowerPercent()
-
 	return validators, nil
 }
 
@@ -223,16 +221,6 @@ func (manager *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64
 		validators[index] = validator
 		mutex.Unlock()
 	}
-
-	threshold, _ := validators.GetSoftOutOutThreshold(manager.config.ConsumerSoftOptOut)
-
-	for _, validator := range validators {
-		if validator.VotingPower.Cmp(threshold) < 0 {
-			validator.NeedsToSign = false
-		}
-	}
-
-	validators.SetVotingPowerPercent()
 
 	return validators, errs
 }

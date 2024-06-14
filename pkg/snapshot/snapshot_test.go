@@ -15,8 +15,8 @@ import (
 func TestValidatorCreated(t *testing.T) {
 	t.Parallel()
 
-	olderSnapshot := Snapshot{Entries: map[string]Entry{}}
-	newerSnapshot := Snapshot{Entries: map[string]Entry{
+	olderSnapshot := Snapshot{Entries: types.Entries{}}
+	newerSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {Validator: &types.Validator{}},
 	}}
 
@@ -36,15 +36,17 @@ func TestValidatorGroupChanged(t *testing.T) {
 		},
 	}
 
-	olderSnapshot := Snapshot{Entries: map[string]Entry{
+	olderSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
-			Validator:     &types.Validator{Jailed: false, Status: 3},
+			IsActive:      true,
+			Validator:     &types.Validator{Jailed: false},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
-	newerSnapshot := Snapshot{Entries: map[string]Entry{
+	newerSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
-			Validator:     &types.Validator{Jailed: false, Status: 3},
+			IsActive:      true,
+			Validator:     &types.Validator{Jailed: false},
 			SignatureInfo: types.SignatureInto{NotSigned: 50},
 		},
 	}}
@@ -67,15 +69,17 @@ func TestValidatorGroupChangedAnomaly(t *testing.T) {
 		},
 	}
 
-	olderSnapshot := Snapshot{Entries: map[string]Entry{
+	olderSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
-			Validator:     &types.Validator{Jailed: false, Status: 3},
+			IsActive:      true,
+			Validator:     &types.Validator{Jailed: false},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
-	newerSnapshot := Snapshot{Entries: map[string]Entry{
+	newerSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
-			Validator:     &types.Validator{Jailed: false, Status: 3},
+			IsActive:      true,
+			Validator:     &types.Validator{Jailed: false},
 			SignatureInfo: types.SignatureInto{NotSigned: 125},
 		},
 	}}
@@ -95,13 +99,13 @@ func TestValidatorTombstoned(t *testing.T) {
 		},
 	}
 
-	olderSnapshot := Snapshot{Entries: map[string]Entry{
+	olderSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
 			Validator:     &types.Validator{SigningInfo: &types.SigningInfo{Tombstoned: false}},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
-	newerSnapshot := Snapshot{Entries: map[string]Entry{
+	newerSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
 			Validator:     &types.Validator{SigningInfo: &types.SigningInfo{Tombstoned: true}},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
@@ -126,15 +130,17 @@ func TestValidatorJailed(t *testing.T) {
 		},
 	}
 
-	olderSnapshot := Snapshot{Entries: map[string]Entry{
+	olderSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
-			Validator:     &types.Validator{Jailed: false, Status: 3},
+			IsActive:      true,
+			Validator:     &types.Validator{Jailed: false},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
-	newerSnapshot := Snapshot{Entries: map[string]Entry{
+	newerSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
-			Validator:     &types.Validator{Jailed: true, Status: 1},
+			IsActive:      false,
+			Validator:     &types.Validator{Jailed: true},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
@@ -164,13 +170,13 @@ func TestValidatorUnjailed(t *testing.T) {
 		},
 	}
 
-	olderSnapshot := Snapshot{Entries: map[string]Entry{
+	olderSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
 			Validator:     &types.Validator{Jailed: true},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
-	newerSnapshot := Snapshot{Entries: map[string]Entry{
+	newerSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
 			Validator:     &types.Validator{Jailed: false},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
@@ -195,15 +201,19 @@ func TestValidatorJoinedSignatory(t *testing.T) {
 		},
 	}
 
-	olderSnapshot := Snapshot{Entries: map[string]Entry{
+	olderSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
-			Validator:     &types.Validator{NeedsToSign: false, Status: 3},
+			IsActive:      true,
+			NeedsToSign:   false,
+			Validator:     &types.Validator{},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
-	newerSnapshot := Snapshot{Entries: map[string]Entry{
+	newerSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
-			Validator:     &types.Validator{NeedsToSign: true, Status: 3},
+			IsActive:      true,
+			NeedsToSign:   true,
+			Validator:     &types.Validator{},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
@@ -226,15 +236,19 @@ func TestValidatorLeftSignatory(t *testing.T) {
 		},
 	}
 
-	olderSnapshot := Snapshot{Entries: map[string]Entry{
+	olderSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
-			Validator:     &types.Validator{NeedsToSign: true, Status: 3},
+			IsActive:      true,
+			NeedsToSign:   true,
+			Validator:     &types.Validator{},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
-	newerSnapshot := Snapshot{Entries: map[string]Entry{
+	newerSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
-			Validator:     &types.Validator{NeedsToSign: false, Status: 3},
+			IsActive:      true,
+			NeedsToSign:   false,
+			Validator:     &types.Validator{},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
@@ -257,15 +271,17 @@ func TestValidatorInactive(t *testing.T) {
 		},
 	}
 
-	olderSnapshot := Snapshot{Entries: map[string]Entry{
+	olderSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
-			Validator:     &types.Validator{Jailed: false, Status: 3},
+			IsActive:      true,
+			Validator:     &types.Validator{Jailed: false},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
-	newerSnapshot := Snapshot{Entries: map[string]Entry{
+	newerSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
-			Validator:     &types.Validator{Jailed: false, Status: 1},
+			IsActive:      false,
+			Validator:     &types.Validator{Jailed: false},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
@@ -280,10 +296,10 @@ func TestValidatorInactive(t *testing.T) {
 func TestValidatorChangedKey(t *testing.T) {
 	t.Parallel()
 
-	olderSnapshot := Snapshot{Entries: map[string]Entry{
+	olderSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {Validator: &types.Validator{ConsensusAddressValcons: "key1"}},
 	}}
-	newerSnapshot := Snapshot{Entries: map[string]Entry{
+	newerSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {Validator: &types.Validator{ConsensusAddressValcons: "key2"}},
 	}}
 
@@ -296,10 +312,10 @@ func TestValidatorChangedKey(t *testing.T) {
 func TestValidatorChangedMoniker(t *testing.T) {
 	t.Parallel()
 
-	olderSnapshot := Snapshot{Entries: map[string]Entry{
+	olderSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {Validator: &types.Validator{Moniker: "moniker1"}},
 	}}
-	newerSnapshot := Snapshot{Entries: map[string]Entry{
+	newerSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {Validator: &types.Validator{Moniker: "moniker2"}},
 	}}
 
@@ -312,10 +328,10 @@ func TestValidatorChangedMoniker(t *testing.T) {
 func TestValidatorChangedCommission(t *testing.T) {
 	t.Parallel()
 
-	olderSnapshot := Snapshot{Entries: map[string]Entry{
+	olderSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {Validator: &types.Validator{Commission: 0.01}},
 	}}
-	newerSnapshot := Snapshot{Entries: map[string]Entry{
+	newerSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {Validator: &types.Validator{Commission: 0.02}},
 	}}
 
@@ -335,15 +351,17 @@ func TestValidatorActive(t *testing.T) {
 		},
 	}
 
-	olderSnapshot := Snapshot{Entries: map[string]Entry{
+	olderSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
-			Validator:     &types.Validator{Jailed: false, Status: 1},
+			IsActive:      false,
+			Validator:     &types.Validator{Jailed: false},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
-	newerSnapshot := Snapshot{Entries: map[string]Entry{
+	newerSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
-			Validator:     &types.Validator{Jailed: false, Status: 3},
+			IsActive:      true,
+			Validator:     &types.Validator{Jailed: false},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
@@ -365,15 +383,15 @@ func TestValidatorJailedAndChangedGroup(t *testing.T) {
 		},
 	}
 
-	olderSnapshot := Snapshot{Entries: map[string]Entry{
+	olderSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
-			Validator:     &types.Validator{Jailed: true, Status: 3},
+			Validator:     &types.Validator{Jailed: true},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
-	newerSnapshot := Snapshot{Entries: map[string]Entry{
+	newerSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
-			Validator:     &types.Validator{Jailed: true, Status: 3},
+			Validator:     &types.Validator{Jailed: true},
 			SignatureInfo: types.SignatureInto{NotSigned: 50},
 		},
 	}}
@@ -393,17 +411,16 @@ func TestTombstonedAndNoPreviousSigningInfo(t *testing.T) {
 		},
 	}
 
-	olderSnapshot := Snapshot{Entries: map[string]Entry{
+	olderSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
-			Validator:     &types.Validator{Jailed: true, Status: 3},
+			Validator:     &types.Validator{Jailed: true},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
-	newerSnapshot := Snapshot{Entries: map[string]Entry{
+	newerSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
 			Validator: &types.Validator{
 				Jailed:      true,
-				Status:      3,
 				SigningInfo: &types.SigningInfo{Tombstoned: true},
 			},
 			SignatureInfo: types.SignatureInto{NotSigned: 50},
@@ -413,22 +430,6 @@ func TestTombstonedAndNoPreviousSigningInfo(t *testing.T) {
 	report, err := newerSnapshot.GetReport(olderSnapshot, config)
 	require.NoError(t, err)
 	assert.Empty(t, report.Events)
-}
-
-func TestToSlice(t *testing.T) {
-	t.Parallel()
-
-	entries := Entries{
-		"validator": {
-			Validator:     &types.Validator{Moniker: "test", Jailed: false, Status: 1},
-			SignatureInfo: types.SignatureInto{NotSigned: 0},
-		},
-	}
-
-	slice := entries.ToSlice()
-	assert.NotEmpty(t, slice)
-	assert.Len(t, slice, 1)
-	assert.Equal(t, "test", slice[0].Validator.Moniker)
 }
 
 func TestNewMissedBlocksGroupNotPresent(t *testing.T) {
@@ -441,15 +442,17 @@ func TestNewMissedBlocksGroupNotPresent(t *testing.T) {
 		},
 	}
 
-	olderSnapshot := Snapshot{Entries: map[string]Entry{
+	olderSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
-			Validator:     &types.Validator{Jailed: false, Status: 3},
+			IsActive:      true,
+			Validator:     &types.Validator{Jailed: false},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
-	newerSnapshot := Snapshot{Entries: map[string]Entry{
+	newerSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
-			Validator:     &types.Validator{Jailed: false, Status: 3},
+			IsActive:      true,
+			Validator:     &types.Validator{Jailed: false},
 			SignatureInfo: types.SignatureInto{NotSigned: 150},
 		},
 	}}
@@ -469,15 +472,17 @@ func TestOldMissedBlocksGroupNotPresent(t *testing.T) {
 		},
 	}
 
-	olderSnapshot := Snapshot{Entries: map[string]Entry{
+	olderSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
-			Validator:     &types.Validator{Jailed: false, Status: 3},
+			IsActive:      true,
+			Validator:     &types.Validator{Jailed: false},
 			SignatureInfo: types.SignatureInto{NotSigned: 150},
 		},
 	}}
-	newerSnapshot := Snapshot{Entries: map[string]Entry{
+	newerSnapshot := Snapshot{Entries: types.Entries{
 		"validator": {
-			Validator:     &types.Validator{Jailed: false, Status: 3},
+			IsActive:      true,
+			Validator:     &types.Validator{Jailed: false},
 			SignatureInfo: types.SignatureInto{NotSigned: 0},
 		},
 	}}
@@ -497,31 +502,37 @@ func TestSorting(t *testing.T) {
 		},
 	}
 
-	olderSnapshot := Snapshot{Entries: map[string]Entry{
+	olderSnapshot := Snapshot{Entries: types.Entries{
 		"validator1": {
-			Validator:     &types.Validator{Jailed: false, Status: 3},
+			IsActive:      true,
+			Validator:     &types.Validator{Jailed: false},
 			SignatureInfo: types.SignatureInto{NotSigned: 25},
 		},
 		"validator2": {
-			Validator:     &types.Validator{Jailed: false, Status: 3},
+			IsActive:      true,
+			Validator:     &types.Validator{Jailed: false},
 			SignatureInfo: types.SignatureInto{NotSigned: 25},
 		},
 		"validator3": {
-			Validator:     &types.Validator{Jailed: false, Status: 3, SigningInfo: &types.SigningInfo{Tombstoned: false}},
+			IsActive:      true,
+			Validator:     &types.Validator{Jailed: false, SigningInfo: &types.SigningInfo{Tombstoned: false}},
 			SignatureInfo: types.SignatureInto{NotSigned: 25},
 		},
 	}}
-	newerSnapshot := Snapshot{Entries: map[string]Entry{
+	newerSnapshot := Snapshot{Entries: types.Entries{
 		"validator1": {
-			Validator:     &types.Validator{Jailed: true, Status: 3},
+			IsActive:      true,
+			Validator:     &types.Validator{Jailed: true},
 			SignatureInfo: types.SignatureInto{NotSigned: 25},
 		},
 		"validator2": {
-			Validator:     &types.Validator{Jailed: false, Status: 3},
+			IsActive:      true,
+			Validator:     &types.Validator{Jailed: false},
 			SignatureInfo: types.SignatureInto{NotSigned: 75},
 		},
 		"validator3": {
-			Validator:     &types.Validator{Jailed: false, Status: 3, SigningInfo: &types.SigningInfo{Tombstoned: true}},
+			IsActive:      true,
+			Validator:     &types.Validator{Jailed: false, SigningInfo: &types.SigningInfo{Tombstoned: true}},
 			SignatureInfo: types.SignatureInto{NotSigned: 25},
 		},
 	}}
@@ -546,43 +557,51 @@ func TestSortingMissedBlocksGroups(t *testing.T) {
 		},
 	}
 
-	olderSnapshot := Snapshot{Entries: map[string]Entry{
+	olderSnapshot := Snapshot{Entries: types.Entries{
 		"validator1": {
-			Validator:     &types.Validator{OperatorAddress: "validator1", Status: 3},
+			IsActive:      true,
+			Validator:     &types.Validator{OperatorAddress: "validator1"},
 			SignatureInfo: types.SignatureInto{NotSigned: 25},
 		},
 		"validator2": {
-			Validator:     &types.Validator{OperatorAddress: "validator2", Status: 3},
+			IsActive:      true,
+			Validator:     &types.Validator{OperatorAddress: "validator2"},
 			SignatureInfo: types.SignatureInto{NotSigned: 75},
 		},
 		"validator3": {
-			Validator:     &types.Validator{OperatorAddress: "validator3", Status: 3},
+			IsActive:      true,
+			Validator:     &types.Validator{OperatorAddress: "validator3"},
 			SignatureInfo: types.SignatureInto{NotSigned: 125},
 		},
 		"validator4": {
-			Validator:     &types.Validator{OperatorAddress: "validator4", Status: 3},
+			IsActive:      true,
+			Validator:     &types.Validator{OperatorAddress: "validator4"},
 			SignatureInfo: types.SignatureInto{NotSigned: 75},
 		},
 	}}
-	newerSnapshot := Snapshot{Entries: map[string]Entry{
+	newerSnapshot := Snapshot{Entries: types.Entries{
 		// skipping blocks: 25 -> 75
 		"validator1": {
-			Validator:     &types.Validator{OperatorAddress: "validator1", Status: 3},
+			IsActive:      true,
+			Validator:     &types.Validator{OperatorAddress: "validator1"},
 			SignatureInfo: types.SignatureInto{NotSigned: 75},
 		},
 		// skipping blocks: 75 -> 125
 		"validator2": {
-			Validator:     &types.Validator{OperatorAddress: "validator2", Status: 3},
+			IsActive:      true,
+			Validator:     &types.Validator{OperatorAddress: "validator2"},
 			SignatureInfo: types.SignatureInto{NotSigned: 125},
 		},
 		// recovering: 125 -> 75
 		"validator3": {
-			Validator:     &types.Validator{OperatorAddress: "validator3", Status: 3},
+			IsActive:      true,
+			Validator:     &types.Validator{OperatorAddress: "validator3"},
 			SignatureInfo: types.SignatureInto{NotSigned: 75},
 		},
 		// recovering: 75 -> 25
 		"validator4": {
-			Validator:     &types.Validator{OperatorAddress: "validator4", Status: 3},
+			IsActive:      true,
+			Validator:     &types.Validator{OperatorAddress: "validator4"},
 			SignatureInfo: types.SignatureInto{NotSigned: 25},
 		},
 	}}

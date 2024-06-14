@@ -135,22 +135,43 @@ func (m *Manager) GetMissingBlocksSinceLatest(expected int64) []int64 {
 }
 
 func (m *Manager) GetSnapshot() (snapshotPkg.Snapshot, error) {
+	lastBlock := m.state.GetLastBlock()
+
 	validators := m.state.GetValidators()
-	entries := make(map[string]snapshotPkg.Entry, len(validators))
+	entries := make(types.Entries, len(validators))
 
 	neededBlocks := utils.MinInt64(m.config.BlocksWindow, m.GetLastBlockHeight())
 
 	for _, validator := range validators {
+		// Taking the active status from the last block, as there might be a case
+		// when it's a consumer chain, a validator is an active validator on a provider chain,
+		// but is not an active validator on a consumer chain (like bottom 5% VP and opted out).
+		// For sovereign chains: should be the same as taking the validator info from the validators query.
+		// For consumer chains: might be different when a validator is active on provider
+		// but is not active on consumer.
+		_, isActiveAtLastBlock := lastBlock.Validators[validator.ConsensusAddressHex]
+
 		signatureInfo, err := m.state.GetValidatorMissedBlocks(validator, neededBlocks)
 		if err != nil {
 			return snapshotPkg.Snapshot{}, err
 		}
 
-		entries[validator.OperatorAddress] = snapshotPkg.Entry{
+		entries[validator.OperatorAddress] = &types.Entry{
+			IsActive:      isActiveAtLastBlock,
 			Validator:     validator,
 			SignatureInfo: signatureInfo,
 		}
 	}
+
+	threshold, _ := entries.GetSoftOutOutThreshold(m.config.ConsumerSoftOptOut)
+
+	for _, entry := range entries {
+		if entry.Validator.VotingPower.Cmp(threshold) < 0 {
+			entry.NeedsToSign = false
+		}
+	}
+
+	entries.SetVotingPowerPercent()
 
 	return snapshotPkg.Snapshot{Entries: entries}, nil
 }
@@ -202,6 +223,10 @@ func (m *Manager) GetValidator(operatorAddress string) (*types.Validator, bool) 
 
 func (m *Manager) GetValidators() types.ValidatorsMap {
 	return m.state.GetValidators()
+}
+
+func (m *Manager) GetActiveValidators() types.Validators {
+	return m.state.GetActiveValidators()
 }
 
 func (m *Manager) GetTimeTillJail(missingBlocks int64) time.Duration {
