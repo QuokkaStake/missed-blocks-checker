@@ -3,7 +3,7 @@ You are subscribed to the following validators' updates on {{ .ChainConfig.GetNa
 {{- range .Entries }}
 {{ if .Validator.Jailed -}}
 **{{ SerializeLink .Link }}:** jailed
-{{- else if not .Validator.Active -}}
+{{- else if not .IsActive -}}
 **{{ SerializeLink .Link }}:** not in the active set
 {{- else if .Error -}}
 **{{ SerializeLink .Link }}:**: error getting validators missed blocks: {{ .Error }}
