@@ -96,19 +96,46 @@ func (reporter *Reporter) Init() {
 		reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, query)
 	}
 
-	bot.Handle("/start", reporter.HandleHelp)
-	bot.Handle("/help", reporter.HandleHelp)
-	bot.Handle("/subscribe", reporter.HandleSubscribe)
-	bot.Handle("/unsubscribe", reporter.HandleUnsubscribe)
-	bot.Handle("/status", reporter.HandleStatus)
-	bot.Handle("/validators", reporter.HandleListValidators)
-	bot.Handle("/missing", reporter.HandleMissingValidators)
-	bot.Handle("/notifiers", reporter.HandleNotifiers)
-	bot.Handle("/params", reporter.HandleParams)
-	bot.Handle("/config", reporter.HandleParams)
+	reporter.AddCommand("/start", bot, reporter.GetHelpCommand())
+	reporter.AddCommand("/help", bot, reporter.GetHelpCommand())
+	reporter.AddCommand("/subscribe", bot, reporter.GetSubscribeCommand())
+	reporter.AddCommand("/unsubscribe", bot, reporter.GetUnsubscribeCommand())
+	reporter.AddCommand("/status", bot, reporter.GetStatusCommand())
+	reporter.AddCommand("/validators", bot, reporter.GetListValidatorsCommand())
+	reporter.AddCommand("/missing", bot, reporter.GetMissingValidatorsCommand())
+	reporter.AddCommand("/notifiers", bot, reporter.GetNotifiersCommand())
+	reporter.AddCommand("/params", bot, reporter.GetParamsCommand())
+	reporter.AddCommand("/config", bot, reporter.GetParamsCommand())
 
 	reporter.TelegramBot = bot
 	go reporter.TelegramBot.Start()
+}
+
+func (reporter *Reporter) AddCommand(query string, bot *tele.Bot, command Command) {
+	bot.Handle(query, func(c tele.Context) error {
+		reporter.Logger.Info().
+			Str("sender", c.Sender().Username).
+			Str("text", c.Text()).
+			Str("command", command.Name).
+			Msg("Got query")
+
+		reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, command.Name)
+
+		result, err := command.Execute(c)
+		if err != nil {
+			reporter.Logger.Error().
+				Err(err).
+				Str("command", command.Name).
+				Msg("Error processing command")
+			if result != "" {
+				return reporter.BotReply(c, result)
+			} else {
+				return reporter.BotReply(c, "Internal error!")
+			}
+		}
+
+		return reporter.BotReply(c, result)
+	})
 }
 
 func (reporter *Reporter) Enabled() bool {

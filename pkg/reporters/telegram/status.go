@@ -1,8 +1,8 @@
 package telegram
 
 import (
+	"errors"
 	"fmt"
-	"main/pkg/constants"
 	"main/pkg/utils"
 	"sort"
 	"strconv"
@@ -10,20 +10,20 @@ import (
 	tele "gopkg.in/telebot.v3"
 )
 
-func (reporter *Reporter) HandleStatus(c tele.Context) error {
-	reporter.Logger.Info().
-		Str("sender", c.Sender().Username).
-		Str("text", c.Text()).
-		Msg("Got status query")
+func (reporter *Reporter) GetStatusCommand() Command {
+	return Command{
+		Name:    "status",
+		Execute: reporter.HandleStatus,
+	}
+}
 
-	reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, "status")
-
+func (reporter *Reporter) HandleStatus(c tele.Context) (string, error) {
 	operatorAddresses := reporter.Manager.GetValidatorsForNotifier(reporter.Name(), strconv.FormatInt(c.Sender().ID, 10))
 	if len(operatorAddresses) == 0 {
-		return reporter.BotReply(c, fmt.Sprintf(
+		return fmt.Sprintf(
 			"You are not subscribed to any validator's notifications on %s.",
 			reporter.Config.GetName(),
-		))
+		), nil
 	}
 
 	snapshot, found := reporter.SnapshotManager.GetNewerSnapshot()
@@ -32,7 +32,7 @@ func (reporter *Reporter) HandleStatus(c tele.Context) error {
 			Str("sender", c.Sender().Username).
 			Str("text", c.Text()).
 			Msg("No older snapshot on telegram status query!")
-		return reporter.BotReply(c, "Error getting your validators status")
+		return "", errors.New("no older snapshot")
 	}
 
 	userEntries := snapshot.Entries.ByValidatorAddresses(operatorAddresses)
@@ -69,13 +69,8 @@ func (reporter *Reporter) HandleStatus(c tele.Context) error {
 		return second.Validator.VotingPowerPercent < first.Validator.VotingPowerPercent
 	})
 
-	template, err := reporter.TemplatesManager.Render("Status", statusRender{
+	return reporter.TemplatesManager.Render("Status", statusRender{
 		ChainConfig: reporter.Config,
 		Entries:     entries,
 	})
-	if err != nil {
-		return err
-	}
-
-	return reporter.BotReply(c, template)
 }

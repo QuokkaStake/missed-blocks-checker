@@ -1,53 +1,54 @@
 package telegram
 
 import (
+	"errors"
 	"fmt"
 	"html"
-	"main/pkg/constants"
 	"strconv"
 	"strings"
 
 	tele "gopkg.in/telebot.v3"
 )
 
-func (reporter *Reporter) HandleUnsubscribe(c tele.Context) error {
-	reporter.Logger.Info().
-		Str("sender", c.Sender().Username).
-		Str("text", c.Text()).
-		Msg("Got unsubscribe query")
+func (reporter *Reporter) GetUnsubscribeCommand() Command {
+	return Command{
+		Name:    "unsubscribe",
+		Execute: reporter.HandleUnsubscribe,
+	}
+}
 
-	reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, "unsubscribe")
-
+func (reporter *Reporter) HandleUnsubscribe(c tele.Context) (string, error) {
 	args := strings.Split(c.Text(), " ")
 	if len(args) < 2 {
-		return reporter.BotReply(c, html.EscapeString(fmt.Sprintf(
+		return html.EscapeString(fmt.Sprintf(
 			"Usage: %s <validator address>",
 			args[0],
-		)))
+		)), errors.New("invalid invocation")
 	}
 
 	address := args[1]
 
 	validator, found := reporter.Manager.GetValidator(address)
 	if !found {
-		return reporter.BotReply(c, fmt.Sprintf(
-			"Could not find a validator with address <code>%s</code>",
+		return fmt.Sprintf(
+			"Could not find a validator with address <code>%s</code> on %s",
 			address,
-		))
+			reporter.Config.GetName(),
+		), errors.New("could not find validator")
 	}
 
 	removed := reporter.Manager.RemoveNotifier(address, reporter.Name(), strconv.FormatInt(c.Sender().ID, 10))
 
 	if !removed {
-		return reporter.BotReply(c, "You are not subscribed to this validator's notifications")
+		return "You are not subscribed to this validator's notifications", errors.New("not subscribed")
 	}
 
 	validatorLink := reporter.Config.ExplorerConfig.GetValidatorLink(validator)
 	validatorLinkSerialized := reporter.TemplatesManager.SerializeLink(validatorLink)
 
-	return reporter.BotReply(c, fmt.Sprintf(
+	return fmt.Sprintf(
 		"Unsubscribed from validator's notifications on %s: %s",
 		reporter.Config.GetName(),
 		validatorLinkSerialized,
-	))
+	), nil
 }

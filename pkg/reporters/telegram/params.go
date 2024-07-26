@@ -1,19 +1,19 @@
 package telegram
 
 import (
-	"main/pkg/constants"
+	"errors"
 
 	tele "gopkg.in/telebot.v3"
 )
 
-func (reporter *Reporter) HandleParams(c tele.Context) error {
-	reporter.Logger.Info().
-		Str("sender", c.Sender().Username).
-		Str("text", c.Text()).
-		Msg("Got params query")
+func (reporter *Reporter) GetParamsCommand() Command {
+	return Command{
+		Name:    "subscribe",
+		Execute: reporter.HandleParams,
+	}
+}
 
-	reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, "params")
-
+func (reporter *Reporter) HandleParams(c tele.Context) (string, error) {
 	blockTime := reporter.Manager.GetBlockTime()
 	maxTimeToJail := reporter.Manager.GetTimeTillJail(0)
 
@@ -23,7 +23,7 @@ func (reporter *Reporter) HandleParams(c tele.Context) error {
 			Str("sender", c.Sender().Username).
 			Str("text", c.Text()).
 			Msg("No older snapshot on telegram params query!")
-		return reporter.BotReply(c, "Error getting params")
+		return "", errors.New("no older snapshot")
 	}
 
 	activeValidators := snapshot.Entries.GetActive()
@@ -32,16 +32,11 @@ func (reporter *Reporter) HandleParams(c tele.Context) error {
 		_, amount = snapshot.Entries.GetSoftOutOutThreshold(reporter.Config.ConsumerSoftOptOut)
 	}
 
-	template, err := reporter.TemplatesManager.Render("Params", paramsRender{
+	return reporter.TemplatesManager.Render("Params", paramsRender{
 		Config:                   reporter.Config,
 		BlockTime:                blockTime,
 		MaxTimeToJail:            maxTimeToJail,
 		ConsumerOptOutValidators: amount,
 		ValidatorsCount:          len(activeValidators),
 	})
-	if err != nil {
-		return err
-	}
-
-	return reporter.BotReply(c, template)
 }

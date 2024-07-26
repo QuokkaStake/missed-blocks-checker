@@ -6,7 +6,14 @@ import (
 	"main/pkg/types"
 	"main/pkg/utils"
 	"time"
+
+	tele "gopkg.in/telebot.v3"
 )
+
+type Command struct {
+	Name    string
+	Execute func(c tele.Context) (string, error)
+}
 
 type missingValidatorsRender struct {
 	Config     *config.ChainConfig

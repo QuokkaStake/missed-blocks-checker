@@ -1,23 +1,23 @@
 package telegram
 
 import (
+	"errors"
 	"fmt"
 	"html"
-	"main/pkg/constants"
 	"strconv"
 	"strings"
 
 	tele "gopkg.in/telebot.v3"
 )
 
-func (reporter *Reporter) HandleSubscribe(c tele.Context) error {
-	reporter.Logger.Info().
-		Str("sender", c.Sender().Username).
-		Str("text", c.Text()).
-		Msg("Got subscribe query")
+func (reporter *Reporter) GetSubscribeCommand() Command {
+	return Command{
+		Name:    "subscribe",
+		Execute: reporter.HandleSubscribe,
+	}
+}
 
-	reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, "subscribe")
-
+func (reporter *Reporter) HandleSubscribe(c tele.Context) (string, error) {
 	username := c.Sender().Username
 	if username == "" {
 		username = c.Sender().FirstName
@@ -27,21 +27,21 @@ func (reporter *Reporter) HandleSubscribe(c tele.Context) error {
 
 	args := strings.Split(c.Text(), " ")
 	if len(args) < 2 {
-		return reporter.BotReply(c, html.EscapeString(fmt.Sprintf(
+		return html.EscapeString(fmt.Sprintf(
 			"Usage: %s <validator address>",
 			args[0],
-		)))
+		)), errors.New("invalid invocation")
 	}
 
 	address := args[1]
 
 	validator, found := reporter.Manager.GetValidator(address)
 	if !found {
-		return reporter.BotReply(c, fmt.Sprintf(
+		return fmt.Sprintf(
 			"Could not find a validator with address <code>%s</code> on %s",
 			address,
 			reporter.Config.GetName(),
-		))
+		), errors.New("could not find validator")
 	}
 
 	added := reporter.Manager.AddNotifier(
@@ -52,15 +52,15 @@ func (reporter *Reporter) HandleSubscribe(c tele.Context) error {
 	)
 
 	if !added {
-		return reporter.BotReply(c, "You are already subscribed to this validator's notifications")
+		return "You are already subscribed to this validator's notifications", errors.New("not subscribed")
 	}
 
 	validatorLink := reporter.Config.ExplorerConfig.GetValidatorLink(validator)
 	validatorLinkSerialized := reporter.TemplatesManager.SerializeLink(validatorLink)
 
-	return reporter.BotReply(c, fmt.Sprintf(
+	return fmt.Sprintf(
 		"Subscribed to validator's notifications on %s: %s",
 		reporter.Config.GetName(),
 		validatorLinkSerialized,
-	))
+	), nil
 }

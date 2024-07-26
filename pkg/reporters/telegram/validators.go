@@ -1,8 +1,8 @@
 package telegram
 
 import (
+	"errors"
 	"fmt"
-	"main/pkg/constants"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"sort"
@@ -10,21 +10,21 @@ import (
 	tele "gopkg.in/telebot.v3"
 )
 
-func (reporter *Reporter) HandleListValidators(c tele.Context) error {
-	reporter.Logger.Info().
-		Str("sender", c.Sender().Username).
-		Str("text", c.Text()).
-		Msg("Got list validators query")
+func (reporter *Reporter) GetListValidatorsCommand() Command {
+	return Command{
+		Name:    "validators",
+		Execute: reporter.HandleListValidators,
+	}
+}
 
-	reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, "validators")
-
+func (reporter *Reporter) HandleListValidators(c tele.Context) (string, error) {
 	snapshot, found := reporter.SnapshotManager.GetNewerSnapshot()
 	if !found {
 		reporter.Logger.Info().
 			Str("sender", c.Sender().Username).
 			Str("text", c.Text()).
 			Msg("No older snapshot on telegram validators query!")
-		return reporter.BotReply(c, "Error getting validators list")
+		return "", errors.New("no older snapshot")
 	}
 
 	validatorEntries := snapshot.Entries.ToSlice()
@@ -55,10 +55,5 @@ func (reporter *Reporter) HandleListValidators(c tele.Context) error {
 		}),
 	}
 
-	template, err := reporter.TemplatesManager.Render("Missing", render)
-	if err != nil {
-		return err
-	}
-
-	return reporter.BotReply(c, template)
+	return reporter.TemplatesManager.Render("Missing", render)
 }

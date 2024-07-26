@@ -6,14 +6,14 @@ import (
 	tele "gopkg.in/telebot.v3"
 )
 
-func (reporter *Reporter) HandleNotifiers(c tele.Context) error {
-	reporter.Logger.Info().
-		Str("sender", c.Sender().Username).
-		Str("text", c.Text()).
-		Msg("Got notifiers query")
+func (reporter *Reporter) GetNotifiersCommand() Command {
+	return Command{
+		Name:    "validators",
+		Execute: reporter.HandleNotifiers,
+	}
+}
 
-	reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, "notifiers")
-
+func (reporter *Reporter) HandleNotifiers(c tele.Context) (string, error) {
 	validators := reporter.Manager.GetValidators().ToSlice()
 	entries := make([]notifierEntry, 0)
 
@@ -30,13 +30,8 @@ func (reporter *Reporter) HandleNotifiers(c tele.Context) error {
 		})
 	}
 
-	template, err := reporter.TemplatesManager.Render("Notifiers", notifierRender{
+	return reporter.TemplatesManager.Render("Notifiers", notifierRender{
 		Entries: entries,
 		Config:  reporter.Config,
 	})
-	if err != nil {
-		return err
-	}
-
-	return reporter.BotReply(c, template)
 }
