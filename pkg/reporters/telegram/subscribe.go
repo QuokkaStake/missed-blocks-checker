@@ -3,9 +3,7 @@ package telegram
 import (
 	"errors"
 	"fmt"
-	"html"
 	"strconv"
-	"strings"
 
 	tele "gopkg.in/telebot.v3"
 )
@@ -14,6 +12,8 @@ func (reporter *Reporter) GetSubscribeCommand() Command {
 	return Command{
 		Name:    "subscribe",
 		Execute: reporter.HandleSubscribe,
+		MinArgs: 1,
+		Usage:   "Usage: %s <validator address>",
 	}
 }
 
@@ -25,15 +25,7 @@ func (reporter *Reporter) HandleSubscribe(c tele.Context) (string, error) {
 		username = "@" + username
 	}
 
-	args := strings.Split(c.Text(), " ")
-	if len(args) < 2 {
-		return html.EscapeString(fmt.Sprintf(
-			"Usage: %s <validator address>",
-			args[0],
-		)), errors.New("invalid invocation")
-	}
-
-	address := args[1]
+	address := c.Args()[0]
 
 	validator, found := reporter.Manager.GetValidator(address)
 	if !found {

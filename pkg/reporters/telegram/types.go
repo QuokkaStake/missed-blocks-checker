@@ -12,6 +12,8 @@ import (
 
 type Command struct {
 	Name    string
+	MinArgs int
+	Usage   string
 	Execute func(c tele.Context) (string, error)
 }
 

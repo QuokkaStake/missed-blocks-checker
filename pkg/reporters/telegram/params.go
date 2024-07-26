@@ -8,7 +8,7 @@ import (
 
 func (reporter *Reporter) GetParamsCommand() Command {
 	return Command{
-		Name:    "subscribe",
+		Name:    "params",
 		Execute: reporter.HandleParams,
 	}
 }

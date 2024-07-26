@@ -1,6 +1,9 @@
 package telegram
 
 import (
+	"errors"
+	"fmt"
+	"html"
 	"main/pkg/constants"
 	"main/pkg/events"
 	"main/pkg/metrics"
@@ -120,6 +123,16 @@ func (reporter *Reporter) AddCommand(query string, bot *tele.Bot, command Comman
 			Msg("Got query")
 
 		reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, command.Name)
+
+		args := strings.Split(c.Text(), " ")
+
+		if len(args)-1 < command.MinArgs {
+			if err := reporter.BotReply(c, html.EscapeString(fmt.Sprintf(command.Usage, args[0]))); err != nil {
+				return err
+			}
+
+			return errors.New("invalid invocation")
+		}
 
 		result, err := command.Execute(c)
 		if err != nil {

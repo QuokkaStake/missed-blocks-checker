@@ -3,9 +3,7 @@ package telegram
 import (
 	"errors"
 	"fmt"
-	"html"
 	"strconv"
-	"strings"
 
 	tele "gopkg.in/telebot.v3"
 )
@@ -14,19 +12,13 @@ func (reporter *Reporter) GetUnsubscribeCommand() Command {
 	return Command{
 		Name:    "unsubscribe",
 		Execute: reporter.HandleUnsubscribe,
+		MinArgs: 1,
+		Usage:   "Usage: %s <validator address>",
 	}
 }
 
 func (reporter *Reporter) HandleUnsubscribe(c tele.Context) (string, error) {
-	args := strings.Split(c.Text(), " ")
-	if len(args) < 2 {
-		return html.EscapeString(fmt.Sprintf(
-			"Usage: %s <validator address>",
-			args[0],
-		)), errors.New("invalid invocation")
-	}
-
-	address := args[1]
+	address := c.Args()[0]
 
 	validator, found := reporter.Manager.GetValidator(address)
 	if !found {
