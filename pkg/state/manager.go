@@ -140,7 +140,7 @@ func (m *Manager) GetSnapshot() (snapshotPkg.Snapshot, error) {
 	validators := m.state.GetValidators()
 	entries := make(types.Entries, len(validators))
 
-	neededBlocks := utils.MinInt64(m.config.BlocksWindow, m.GetLastBlockHeight()-m.config.FirstBlock)
+	neededBlocks := utils.MinInt64(m.config.BlocksWindow, m.GetLastBlockHeight()-m.config.FirstBlock-1)
 
 	for _, validator := range validators {
 		// Taking the active status from the last block, as there might be a case
@@ -238,7 +238,7 @@ func (m *Manager) GetBlockTime() time.Duration {
 }
 
 func (m *Manager) GetValidatorMissedBlocks(validator *types.Validator) (types.SignatureInto, error) {
-	blocksToCheck := utils.MinInt64(m.config.BlocksWindow, m.GetLastBlockHeight()-m.config.FirstBlock)
+	blocksToCheck := utils.MinInt64(m.config.BlocksWindow, m.GetLastBlockHeight()-m.config.FirstBlock-1)
 	return m.state.GetValidatorMissedBlocks(validator, blocksToCheck)
 }
 
