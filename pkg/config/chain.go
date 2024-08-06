@@ -23,6 +23,7 @@ type ChainConfig struct {
 	BlocksWindow       int64           `default:"10000"      toml:"blocks-window"`
 	MinSignedPerWindow float64         `default:"0.05"       toml:"min-signed-per-window"`
 	SnapshotsInterval  int64           `default:"1"          toml:"snapshots-interval"`
+	FirstBlock         int64           `default:"0"          toml:"first-block"`
 	Pagination         ChainPagination `toml:"pagination"`
 	Intervals          IntervalsConfig `toml:"intervals"`
 
