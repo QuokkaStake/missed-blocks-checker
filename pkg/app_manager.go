@@ -417,7 +417,7 @@ func (a *AppManager) PopulateBlocks() {
 	blocksChunks := utils.SplitIntoChunks(missingBlocks, a.Config.Pagination.BlocksSearch)
 
 	for _, chunk := range blocksChunks {
-		count := a.StateManager.GetBlocksCountSinceLatest(a.Config.StoreBlocks)
+		count := a.StateManager.GetBlocksCountSinceLatest(a.Config.StoreBlocks - a.Config.FirstBlock)
 
 		a.Logger.Info().
 			Int64("count", count).
