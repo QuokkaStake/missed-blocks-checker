@@ -206,7 +206,7 @@ func (a *AppManager) ProcessSnapshot(block *types.Block) {
 		}
 	}
 
-	totalBlocksCount := a.StateManager.GetBlocksCountSinceLatest(a.Config.StoreBlocks)
+	totalBlocksCount := a.StateManager.GetBlocksCountSinceLatest(a.Config.StoreBlocks - a.Config.FirstBlock + 1)
 	a.Logger.Info().
 		Int64("count", totalBlocksCount).
 		Int64("height", block.Height).
@@ -214,7 +214,7 @@ func (a *AppManager) ProcessSnapshot(block *types.Block) {
 
 	blocksCount := a.StateManager.GetBlocksCountSinceLatest(a.Config.BlocksWindow)
 
-	neededBlocks := utils.MinInt64(a.Config.BlocksWindow, a.StateManager.GetLastBlockHeight()-a.Config.FirstBlock)
+	neededBlocks := utils.MinInt64(a.Config.BlocksWindow, a.StateManager.GetLastBlockHeight()-a.Config.FirstBlock+1)
 	hasEnoughBlocks := blocksCount >= neededBlocks
 
 	if !hasEnoughBlocks {
@@ -405,10 +405,10 @@ func (a *AppManager) PopulateBlocks() {
 		return
 	}
 
-	missingBlocks := a.StateManager.GetMissingBlocksSinceLatest(a.Config.StoreBlocks - a.Config.FirstBlock)
+	missingBlocks := a.StateManager.GetMissingBlocksSinceLatest(a.Config.StoreBlocks - a.Config.FirstBlock + 1)
 	if len(missingBlocks) == 0 {
 		a.Logger.Info().
-			Int64("count", a.Config.StoreBlocks).
+			Int64("count", a.Config.StoreBlocks-a.Config.FirstBlock+1).
 			Msg("Got enough blocks for populating")
 		a.IsPopulatingBlocks = false
 		return
@@ -417,11 +417,11 @@ func (a *AppManager) PopulateBlocks() {
 	blocksChunks := utils.SplitIntoChunks(missingBlocks, a.Config.Pagination.BlocksSearch)
 
 	for _, chunk := range blocksChunks {
-		count := a.StateManager.GetBlocksCountSinceLatest(a.Config.StoreBlocks - a.Config.FirstBlock)
+		count := a.StateManager.GetBlocksCountSinceLatest(a.Config.StoreBlocks - a.Config.FirstBlock + 1)
 
 		a.Logger.Info().
 			Int64("count", count).
-			Int64("required", a.Config.StoreBlocks).
+			Int64("required", a.Config.StoreBlocks-a.Config.FirstBlock+1).
 			Int("needed_blocks", len(chunk)).
 			Ints64("blocks", chunk).
 			Msg("Fetching more blocks...")
