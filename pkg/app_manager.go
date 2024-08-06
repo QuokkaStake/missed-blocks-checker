@@ -405,7 +405,7 @@ func (a *AppManager) PopulateBlocks() {
 		return
 	}
 
-	missingBlocks := a.StateManager.GetMissingBlocksSinceLatest(a.Config.StoreBlocks)
+	missingBlocks := a.StateManager.GetMissingBlocksSinceLatest(a.Config.StoreBlocks - a.Config.FirstBlock)
 	if len(missingBlocks) == 0 {
 		a.Logger.Info().
 			Int64("count", a.Config.StoreBlocks).
