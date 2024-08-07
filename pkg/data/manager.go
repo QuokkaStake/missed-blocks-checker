@@ -10,7 +10,6 @@ import (
 	"main/pkg/utils"
 	"sync"
 
-	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	providerTypes "github.com/cosmos/interchain-security/v4/x/ccv/provider/types"
 
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -235,10 +234,6 @@ func (manager *Manager) GetSigningInfos(height int64) (*slashingTypes.QuerySigni
 
 func (manager *Manager) GetSlashingParams(height int64) (*slashingTypes.QueryParamsResponse, error) {
 	return manager.fetcher.GetSlashingParams(height)
-}
-
-func (manager *Manager) GetConsumerSoftOutOutThreshold(height int64) (*paramsTypes.QueryParamsResponse, error) {
-	return manager.fetcher.GetConsumerSoftOutOutThreshold(height)
 }
 
 func (manager *Manager) GetActiveSetAtBlock(height int64) (map[string]bool, error) {

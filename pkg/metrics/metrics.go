@@ -50,10 +50,9 @@ type Manager struct {
 	appVersionGauge *prometheus.GaugeVec
 	startTimeGauge  *prometheus.GaugeVec
 
-	chainInfoGauge           *prometheus.GaugeVec
-	signedBlocksWindowGauge  *prometheus.GaugeVec
-	minSignedPerWindowGauge  *prometheus.GaugeVec
-	softOptOutThresholdGauge *prometheus.GaugeVec
+	chainInfoGauge          *prometheus.GaugeVec
+	signedBlocksWindowGauge *prometheus.GaugeVec
+	minSignedPerWindowGauge *prometheus.GaugeVec
 
 	storeBlocksGauge *prometheus.GaugeVec
 }
@@ -165,10 +164,6 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 		Name: constants.PrometheusMetricsPrefix + "min_signed",
 		Help: "A % of blocks validator needs to sign within window",
 	}, []string{"chain"})
-	softOptOutThresholdGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: constants.PrometheusMetricsPrefix + "soft_opt_out_threshold",
-		Help: "Soft opt out threshold for consumer chains",
-	}, []string{"chain"})
 	chainInfoGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: constants.PrometheusMetricsPrefix + "chain_info",
 		Help: "Chain info, with constant 1 as value and pretty_name and chain as labels",
@@ -200,7 +195,6 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 	registry.MustRegister(signedBlocksWindowGauge)
 	registry.MustRegister(storeBlocksGauge)
 	registry.MustRegister(minSignedPerWindowGauge)
-	registry.MustRegister(softOptOutThresholdGauge)
 	registry.MustRegister(chainInfoGauge)
 
 	startTimeGauge.
@@ -237,7 +231,6 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 		signedBlocksWindowGauge:    signedBlocksWindowGauge,
 		storeBlocksGauge:           storeBlocksGauge,
 		minSignedPerWindowGauge:    minSignedPerWindowGauge,
-		softOptOutThresholdGauge:   softOptOutThresholdGauge,
 		chainInfoGauge:             chainInfoGauge,
 	}
 }
@@ -480,15 +473,6 @@ func (m *Manager) LogSlashingParams(
 	m.storeBlocksGauge.
 		With(prometheus.Labels{"chain": chain}).
 		Set(float64(storeBlocks))
-}
-
-func (m *Manager) LogConsumerSoftOutThreshold(
-	chain string,
-	threshold float64,
-) {
-	m.softOptOutThresholdGauge.
-		With(prometheus.Labels{"chain": chain}).
-		Set(threshold)
 }
 
 func (m *Manager) LogChainInfo(chain string, prettyName string) {

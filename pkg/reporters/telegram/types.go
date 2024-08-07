@@ -38,11 +38,10 @@ type notifierEntry struct {
 }
 
 type paramsRender struct {
-	Config                   *config.ChainConfig
-	BlockTime                time.Duration
-	MaxTimeToJail            time.Duration
-	ConsumerOptOutValidators int
-	ValidatorsCount          int
+	Config          *config.ChainConfig
+	BlockTime       time.Duration
+	MaxTimeToJail   time.Duration
+	ValidatorsCount int
 }
 
 func (r paramsRender) FormatMinSignedPerWindow() string {
@@ -65,20 +64,12 @@ func (r paramsRender) FormatGroupPercent(group *config.MissedBlocksGroup) string
 	)
 }
 
-func (r paramsRender) GetConsumerRequiredValidators() int {
-	return r.ValidatorsCount - r.ConsumerOptOutValidators
-}
-
 func (r paramsRender) FormatSnapshotInterval() string {
 	if r.Config.SnapshotsInterval == 1 {
 		return "every block"
 	}
 
 	return fmt.Sprintf("every %d blocks", r.Config.SnapshotsInterval)
-}
-
-func (r paramsRender) FormatSoftOptOut() string {
-	return fmt.Sprintf("%.2f", r.Config.ConsumerSoftOptOut*100)
 }
 
 type statusEntry struct {

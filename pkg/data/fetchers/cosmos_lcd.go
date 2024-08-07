@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 
-	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	providerTypes "github.com/cosmos/interchain-security/v4/x/ccv/provider/types"
@@ -174,34 +173,6 @@ func (f *CosmosLCDFetcher) GetSlashingParams(height int64) (*slashingTypes.Query
 
 			if response.Params.SignedBlocksWindow == 0 {
 				return errors.New("malformed response: got 0 as signed blocks window")
-			}
-
-			return nil
-		},
-	); err != nil {
-		return nil, err
-	}
-
-	return &response, nil
-}
-
-func (f *CosmosLCDFetcher) GetConsumerSoftOutOutThreshold(height int64) (*paramsTypes.QueryParamsResponse, error) {
-	var response paramsTypes.QueryParamsResponse
-
-	if err := f.Get(
-		"/cosmos/params/v1beta1/params?subspace=ccvconsumer&key=SoftOptOutThreshold",
-		constants.QueryTypeSubspaceParams,
-		&response,
-		f.clients,
-		height,
-		func(v interface{}) error {
-			response, ok := v.(*paramsTypes.QueryParamsResponse)
-			if !ok {
-				return errors.New("error converting subspace param response")
-			}
-
-			if response.Param.Value == "" {
-				return errors.New("malformed response: got empty subspace param")
 			}
 
 			return nil

@@ -31,7 +31,6 @@ type ChainConfig struct {
 	ProviderRPCEndpoints    []string  `toml:"provider-rpc-endpoints"`
 	ConsumerValidatorPrefix string    `toml:"consumer-validator-prefix"`
 	ConsumerChainID         string    `toml:"consumer-chain-id"`
-	ConsumerSoftOptOut      float64   `default:"0.05"                   toml:"consumer-soft-opt-out"`
 
 	FetcherType          string   `default:"cosmos-rpc"          toml:"fetcher-type"`
 	LCDEndpoints         []string `toml:"lcd-endpoints"`

@@ -26,17 +26,11 @@ func (reporter *Reporter) GetParamsCommand() *Command {
 			}
 
 			activeValidators := snapshot.Entries.GetActive()
-			var amount int
-			if reporter.Config.IsConsumer.Bool {
-				_, amount = snapshot.Entries.GetSoftOutOutThreshold(reporter.Config.ConsumerSoftOptOut)
-			}
-
 			template, err := reporter.TemplatesManager.Render("Params", paramsRender{
-				Config:                   reporter.Config,
-				BlockTime:                blockTime,
-				MaxTimeToJail:            maxTimeToJail,
-				ConsumerOptOutValidators: amount,
-				ValidatorsCount:          len(activeValidators),
+				Config:          reporter.Config,
+				BlockTime:       blockTime,
+				MaxTimeToJail:   maxTimeToJail,
+				ValidatorsCount: len(activeValidators),
 			})
 			if err != nil {
 				reporter.Logger.Error().Err(err).Msg("Error rendering params template")

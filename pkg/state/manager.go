@@ -163,14 +163,6 @@ func (m *Manager) GetSnapshot() (snapshotPkg.Snapshot, error) {
 		}
 	}
 
-	threshold, _ := entries.GetSoftOutOutThreshold(m.config.ConsumerSoftOptOut)
-
-	for _, entry := range entries {
-		if entry.Validator.VotingPower.Cmp(threshold) < 0 {
-			entry.NeedsToSign = false
-		}
-	}
-
 	entries.SetVotingPowerPercent()
 
 	return snapshotPkg.Snapshot{Entries: entries}, nil
