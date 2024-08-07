@@ -44,8 +44,8 @@ func (s *State) GetBlocksCountSinceLatest(expected int64) int64 {
 	return s.blocks.GetCountSinceLatest(expected)
 }
 
-func (s *State) GetMissingBlocksSinceLatest(expected int64) []int64 {
-	return s.blocks.GetMissingSinceLatest(expected)
+func (s *State) GetMissingBlocksSinceLatest(expected int64, firstBlock int64) []int64 {
+	return s.blocks.GetMissingSinceLatest(expected, firstBlock)
 }
 
 func (s *State) HasBlockAtHeight(height int64) bool {

@@ -91,7 +91,7 @@ func TestBlocksGetMissingSinceLatest(t *testing.T) {
 	state.AddBlock(&types.Block{Height: 3})
 	state.AddBlock(&types.Block{Height: 5})
 
-	missing := state.GetMissingBlocksSinceLatest(5)
+	missing := state.GetMissingBlocksSinceLatest(5, 1)
 
 	assert.Len(t, missing, 2, "There should be 3 blocks!")
 	assert.Contains(t, missing, int64(2), "Blocks mismatch!")
@@ -105,7 +105,7 @@ func TestBlocksGetMissingSinceLatestNotEnoughBlocks(t *testing.T) {
 	state.AddBlock(&types.Block{Height: 1})
 	state.AddBlock(&types.Block{Height: 3})
 
-	missing := state.GetMissingBlocksSinceLatest(5)
+	missing := state.GetMissingBlocksSinceLatest(5, 1)
 	assert.Len(t, missing, 1, "There should be 2 blocks!")
 	assert.Contains(t, missing, int64(2), "Blocks mismatch!")
 }

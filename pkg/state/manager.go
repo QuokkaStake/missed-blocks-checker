@@ -130,8 +130,8 @@ func (m *Manager) GetBlocksCountSinceLatest(expected int64) int64 {
 	return m.state.GetBlocksCountSinceLatest(expected)
 }
 
-func (m *Manager) GetMissingBlocksSinceLatest(expected int64) []int64 {
-	return m.state.GetMissingBlocksSinceLatest(expected)
+func (m *Manager) GetMissingBlocksSinceLatest(expected int64, firstBlock int64) []int64 {
+	return m.state.GetMissingBlocksSinceLatest(expected, firstBlock)
 }
 
 func (m *Manager) GetSnapshot() (snapshotPkg.Snapshot, error) {
