@@ -214,7 +214,7 @@ func (a *AppManager) ProcessSnapshot(block *types.Block) {
 
 	blocksCount := a.StateManager.GetBlocksCountSinceLatest(a.Config.BlocksWindow)
 
-	neededBlocks := utils.MinInt64(a.Config.BlocksWindow, a.StateManager.GetLastBlockHeight())
+	neededBlocks := utils.MinInt64(a.Config.BlocksWindow, a.StateManager.GetLastBlockHeight()-a.Config.FirstBlock+1)
 	hasEnoughBlocks := blocksCount >= neededBlocks
 
 	if !hasEnoughBlocks {
@@ -405,7 +405,7 @@ func (a *AppManager) PopulateBlocks() {
 		return
 	}
 
-	missingBlocks := a.StateManager.GetMissingBlocksSinceLatest(a.Config.StoreBlocks)
+	missingBlocks := a.StateManager.GetMissingBlocksSinceLatest(a.Config.StoreBlocks, a.Config.FirstBlock)
 	if len(missingBlocks) == 0 {
 		a.Logger.Info().
 			Int64("count", a.Config.StoreBlocks).
