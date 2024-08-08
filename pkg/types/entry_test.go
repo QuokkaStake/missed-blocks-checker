@@ -1,8 +1,9 @@
 package types
 
 import (
-	"math/big"
 	"testing"
+
+	"cosmossdk.io/math"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -47,20 +48,20 @@ func TestValidatorsGetTotalVotingPower(t *testing.T) {
 	entries := Entries{
 		"firstaddr": {
 			IsActive:  true,
-			Validator: &Validator{Moniker: "first", OperatorAddress: "firstaddr", VotingPower: big.NewFloat(1)},
+			Validator: &Validator{Moniker: "first", OperatorAddress: "firstaddr", VotingPower: math.LegacyNewDec(1)},
 		},
 		"secondaddr": {
 			IsActive:  true,
-			Validator: &Validator{Moniker: "second", OperatorAddress: "secondaddr", VotingPower: big.NewFloat(2)},
+			Validator: &Validator{Moniker: "second", OperatorAddress: "secondaddr", VotingPower: math.LegacyNewDec(2)},
 		},
 		"thirdaddr": {
 			IsActive:  false,
-			Validator: &Validator{Moniker: "third", OperatorAddress: "thirdaddr", VotingPower: big.NewFloat(3)},
+			Validator: &Validator{Moniker: "third", OperatorAddress: "thirdaddr", VotingPower: math.LegacyNewDec(3)},
 		},
 	}
 
 	totalVotingPower := entries.GetTotalVotingPower()
-	assert.Equal(t, totalVotingPower, big.NewFloat(3))
+	assert.Equal(t, totalVotingPower, math.LegacyNewDec(3))
 }
 
 func TestEntriesSetTotalVotingPower(t *testing.T) {
@@ -72,7 +73,7 @@ func TestEntriesSetTotalVotingPower(t *testing.T) {
 			Validator: &Validator{
 				Moniker:         "first",
 				OperatorAddress: "firstaddr",
-				VotingPower:     big.NewFloat(1),
+				VotingPower:     math.LegacyNewDec(1),
 			},
 		},
 		"secondaddr": {
@@ -80,7 +81,7 @@ func TestEntriesSetTotalVotingPower(t *testing.T) {
 			Validator: &Validator{
 				Moniker:         "second",
 				OperatorAddress: "secondaddr",
-				VotingPower:     big.NewFloat(3),
+				VotingPower:     math.LegacyNewDec(3),
 			},
 		},
 		"thirdaddr": {
@@ -88,7 +89,7 @@ func TestEntriesSetTotalVotingPower(t *testing.T) {
 			Validator: &Validator{
 				Moniker:         "third",
 				OperatorAddress: "thirdaddr",
-				VotingPower:     big.NewFloat(2),
+				VotingPower:     math.LegacyNewDec(2),
 			},
 		},
 	}

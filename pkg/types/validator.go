@@ -1,7 +1,7 @@
 package types
 
 import (
-	"math/big"
+	"cosmossdk.io/math"
 )
 
 type SigningInfo struct {
@@ -22,7 +22,7 @@ type Validator struct {
 	Jailed                  bool
 	SigningInfo             *SigningInfo
 
-	VotingPower                  *big.Float
+	VotingPower                  math.LegacyDec
 	VotingPowerPercent           float64
 	CumulativeVotingPowerPercent float64
 	Rank                         int

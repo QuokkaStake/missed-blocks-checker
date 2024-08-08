@@ -2,8 +2,9 @@ package types
 
 import (
 	"main/pkg/utils"
-	"math/big"
 	"sort"
+
+	"cosmossdk.io/math"
 )
 
 type Entry struct {
@@ -50,12 +51,12 @@ func (e Entries) GetActive() []*Entry {
 	return activeValidators
 }
 
-func (e Entries) GetTotalVotingPower() *big.Float {
-	sum := big.NewFloat(0)
+func (e Entries) GetTotalVotingPower() math.LegacyDec {
+	sum := math.LegacyZeroDec()
 
 	for _, entry := range e {
 		if entry.IsActive {
-			sum.Add(sum, entry.Validator.VotingPower)
+			sum = sum.Add(entry.Validator.VotingPower)
 		}
 	}
 
@@ -69,12 +70,12 @@ func (e Entries) SetVotingPowerPercent() {
 
 	// sorting by voting power desc
 	sort.Slice(activeAndSortedEntries, func(first, second int) bool {
-		return activeAndSortedEntries[first].Validator.VotingPower.Cmp(activeAndSortedEntries[second].Validator.VotingPower) > 0
+		return activeAndSortedEntries[first].Validator.VotingPower.GT(activeAndSortedEntries[second].Validator.VotingPower)
 	})
 
 	var cumulativeVotingPowerPercent float64 = 0
 	for index, sortedEntry := range activeAndSortedEntries {
-		percent, _ := new(big.Float).Quo(sortedEntry.Validator.VotingPower, totalVP).Float64()
+		percent := sortedEntry.Validator.VotingPower.Quo(totalVP).MustFloat64()
 
 		entry := e[sortedEntry.Validator.OperatorAddress]
 
