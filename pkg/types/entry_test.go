@@ -1,6 +1,7 @@
 package types
 
 import (
+	"main/pkg/utils"
 	"math/big"
 	"testing"
 
@@ -107,11 +108,25 @@ func TestEntriesGetByValidatorAddresses(t *testing.T) {
 	t.Parallel()
 
 	entries := Entries{
-		"firstaddr":  {Validator: &Validator{OperatorAddress: "firstaddr"}},
-		"secondaddr": {Validator: &Validator{OperatorAddress: "secondaddr"}},
-		"thirdaddr":  {Validator: &Validator{OperatorAddress: "thirdaddr"}},
+		"firstaddr":  {IsActive: true, Validator: &Validator{OperatorAddress: "firstaddr", VotingPower: big.NewFloat(1)}},
+		"secondaddr": {IsActive: true, Validator: &Validator{OperatorAddress: "secondaddr", VotingPower: big.NewFloat(2)}},
+		"thirdaddr":  {IsActive: true, Validator: &Validator{OperatorAddress: "thirdaddr", VotingPower: big.NewFloat(7)}},
 	}
 
 	filteredEntries := entries.ByValidatorAddresses([]string{"firstaddr", "secondaddr"})
 	assert.Len(t, filteredEntries, 2)
+
+	firstEntry, firstFound := utils.Find(filteredEntries, func(e *Entry) bool {
+		return e.Validator.OperatorAddress == "firstaddr"
+	})
+	assert.True(t, firstFound)
+	assert.InDelta(t, 0.1, firstEntry.VotingPowerPercent, 0.001)
+	assert.Equal(t, 3, firstEntry.Rank)
+
+	secondEntry, secondFound := utils.Find(filteredEntries, func(e *Entry) bool {
+		return e.Validator.OperatorAddress == "secondaddr"
+	})
+	assert.True(t, secondFound)
+	assert.InDelta(t, 0.2, secondEntry.VotingPowerPercent, 0.001)
+	assert.Equal(t, 2, secondEntry.Rank)
 }

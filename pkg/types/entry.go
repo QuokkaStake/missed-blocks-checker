@@ -32,6 +32,7 @@ func (e Entries) ToSlice() []*Entry {
 }
 
 func (e Entries) ByValidatorAddresses(addresses []string) []*Entry {
+	e.SetVotingPowerPercent()
 	entries := make([]*Entry, 0)
 
 	for _, entry := range e {
