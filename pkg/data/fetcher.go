@@ -6,7 +6,6 @@ import (
 	"main/pkg/data/fetchers"
 	"main/pkg/metrics"
 
-	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	providerTypes "github.com/cosmos/interchain-security/v4/x/ccv/provider/types"
@@ -20,7 +19,6 @@ type Fetcher interface {
 		height int64,
 	) (*providerTypes.QueryAllPairsValConAddrByConsumerChainIDResponse, error)
 	GetSlashingParams(height int64) (*slashingTypes.QueryParamsResponse, error)
-	GetConsumerSoftOutOutThreshold(height int64) (*paramsTypes.QueryParamsResponse, error)
 }
 
 func GetFetcher(

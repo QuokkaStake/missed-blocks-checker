@@ -54,9 +54,8 @@ const (
 	FetcherTypeCosmosRPC string = "cosmos-rpc"
 	FetcherTypeCosmosLCD string = "cosmos-lcd"
 
-	PopulatorSlashingParams      = "slashing-params-populator"
-	PopulatorSoftOptOutThreshold = "soft-opt-out-threshold-populator"
-	PopulatorTrimDatabase        = "trim-database-populator"
+	PopulatorSlashingParams = "slashing-params-populator"
+	PopulatorTrimDatabase   = "trim-database-populator"
 )
 
 func GetEventNames() []EventName {

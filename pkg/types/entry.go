@@ -66,34 +66,6 @@ func (e Entries) GetTotalVotingPower() *big.Float {
 	return sum
 }
 
-func (e Entries) GetSoftOutOutThreshold(softOptOut float64) (*big.Float, int) {
-	sortedEntries := e.GetActive()
-
-	if len(sortedEntries) == 0 {
-		return big.NewFloat(0), 0
-	}
-
-	// sorting validators by voting power ascending
-	sort.Slice(sortedEntries, func(first, second int) bool {
-		return sortedEntries[first].Validator.VotingPower.Cmp(sortedEntries[second].Validator.VotingPower) < 0
-	})
-
-	totalVP := e.GetTotalVotingPower()
-	threshold := big.NewFloat(0)
-
-	for index, validator := range sortedEntries {
-		threshold = big.NewFloat(0).Add(threshold, validator.Validator.VotingPower)
-		thresholdPercent := big.NewFloat(0).Quo(threshold, totalVP)
-
-		if thresholdPercent.Cmp(big.NewFloat(softOptOut)) > 0 {
-			return validator.Validator.VotingPower, index + 1
-		}
-	}
-
-	// should've never reached here
-	return sortedEntries[0].Validator.VotingPower, len(sortedEntries)
-}
-
 func (e Entries) SetVotingPowerPercent() {
 	totalVP := e.GetTotalVotingPower()
 

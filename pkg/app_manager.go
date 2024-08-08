@@ -67,11 +67,6 @@ func NewAppManager(
 			config.Intervals.SlashingParams*time.Second,
 			managerLogger,
 		),
-		constants.PopulatorSoftOptOutThreshold: populatorsPkg.NewWrapper(
-			populatorsPkg.NewSoftOptOutThresholdPopulator(config, dataManager, stateManager, metricsManager, managerLogger),
-			config.Intervals.SoftOptOutThreshold*time.Second,
-			managerLogger,
-		),
 		constants.PopulatorTrimDatabase: populatorsPkg.NewWrapper(
 			populatorsPkg.NewTrimDatabasePopulator(stateManager),
 			config.Intervals.Trim*time.Second,
@@ -103,10 +98,6 @@ func (a *AppManager) Start() {
 		a.Config.MinSignedPerWindow,
 		a.Config.StoreBlocks,
 	)
-
-	if a.Config.IsConsumer.Bool {
-		a.MetricsManager.LogConsumerSoftOutThreshold(a.Config.Name, a.Config.ConsumerSoftOptOut)
-	}
 
 	a.MetricsManager.LogChainInfo(a.Config.Name, a.Config.GetName())
 

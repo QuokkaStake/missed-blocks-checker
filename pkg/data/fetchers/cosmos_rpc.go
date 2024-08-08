@@ -16,7 +16,6 @@ import (
 
 	queryTypes "github.com/cosmos/cosmos-sdk/types/query"
 
-	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	providerTypes "github.com/cosmos/interchain-security/v4/x/ccv/provider/types"
@@ -189,27 +188,6 @@ func (f *CosmosRPCFetcher) GetSlashingParams(height int64) (*slashingTypes.Query
 		&slashingTypes.QueryParamsRequest{},
 		height,
 		constants.QueryTypeSlashingParams,
-		&response,
-		f.clients,
-	); err != nil {
-		return nil, err
-	}
-
-	return &response, nil
-}
-
-func (f *CosmosRPCFetcher) GetConsumerSoftOutOutThreshold(height int64) (*paramsTypes.QueryParamsResponse, error) {
-	query := paramsTypes.QueryParamsRequest{
-		Subspace: "ccvconsumer",
-		Key:      "SoftOptOutThreshold",
-	}
-
-	var response paramsTypes.QueryParamsResponse
-	if err := f.AbciQuery(
-		"/cosmos.params.v1beta1.Query/Params",
-		&query,
-		height,
-		constants.QueryTypeSubspaceParams,
 		&response,
 		f.clients,
 	); err != nil {
