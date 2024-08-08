@@ -1,7 +1,6 @@
 package types
 
 import (
-	"main/pkg/utils"
 	"math/big"
 	"testing"
 
@@ -96,37 +95,23 @@ func TestEntriesSetTotalVotingPower(t *testing.T) {
 
 	entries.SetVotingPowerPercent()
 	assert.Len(t, entries, 3)
-	assert.InDelta(t, 0.25, entries["firstaddr"].VotingPowerPercent, 0.001)
-	assert.InDelta(t, 0.75, entries["secondaddr"].VotingPowerPercent, 0.001)
-	assert.Equal(t, 2, entries["firstaddr"].Rank)
-	assert.Equal(t, 1, entries["secondaddr"].Rank)
-	assert.InDelta(t, float64(1), entries["firstaddr"].CumulativeVotingPowerPercent, 0.001)
-	assert.InDelta(t, 0.75, entries["secondaddr"].CumulativeVotingPowerPercent, 0.001)
+	assert.InDelta(t, 0.25, entries["firstaddr"].Validator.VotingPowerPercent, 0.001)
+	assert.InDelta(t, 0.75, entries["secondaddr"].Validator.VotingPowerPercent, 0.001)
+	assert.Equal(t, 2, entries["firstaddr"].Validator.Rank)
+	assert.Equal(t, 1, entries["secondaddr"].Validator.Rank)
+	assert.InDelta(t, float64(1), entries["firstaddr"].Validator.CumulativeVotingPowerPercent, 0.001)
+	assert.InDelta(t, 0.75, entries["secondaddr"].Validator.CumulativeVotingPowerPercent, 0.001)
 }
 
 func TestEntriesGetByValidatorAddresses(t *testing.T) {
 	t.Parallel()
 
 	entries := Entries{
-		"firstaddr":  {IsActive: true, Validator: &Validator{OperatorAddress: "firstaddr", VotingPower: big.NewFloat(1)}},
-		"secondaddr": {IsActive: true, Validator: &Validator{OperatorAddress: "secondaddr", VotingPower: big.NewFloat(2)}},
-		"thirdaddr":  {IsActive: true, Validator: &Validator{OperatorAddress: "thirdaddr", VotingPower: big.NewFloat(7)}},
+		"firstaddr":  {Validator: &Validator{OperatorAddress: "firstaddr"}},
+		"secondaddr": {Validator: &Validator{OperatorAddress: "secondaddr"}},
+		"thirdaddr":  {Validator: &Validator{OperatorAddress: "thirdaddr"}},
 	}
 
 	filteredEntries := entries.ByValidatorAddresses([]string{"firstaddr", "secondaddr"})
 	assert.Len(t, filteredEntries, 2)
-
-	firstEntry, firstFound := utils.Find(filteredEntries, func(e *Entry) bool {
-		return e.Validator.OperatorAddress == "firstaddr"
-	})
-	assert.True(t, firstFound)
-	assert.InDelta(t, 0.1, firstEntry.VotingPowerPercent, 0.001)
-	assert.Equal(t, 3, firstEntry.Rank)
-
-	secondEntry, secondFound := utils.Find(filteredEntries, func(e *Entry) bool {
-		return e.Validator.OperatorAddress == "secondaddr"
-	})
-	assert.True(t, secondFound)
-	assert.InDelta(t, 0.2, secondEntry.VotingPowerPercent, 0.001)
-	assert.Equal(t, 2, secondEntry.Rank)
 }

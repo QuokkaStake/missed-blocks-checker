@@ -11,10 +11,6 @@ type Entry struct {
 	NeedsToSign   bool
 	Validator     *Validator
 	SignatureInfo SignatureInto
-
-	VotingPowerPercent           float64
-	CumulativeVotingPowerPercent float64
-	Rank                         int
 }
 
 type Entries map[string]*Entry
@@ -32,7 +28,6 @@ func (e Entries) ToSlice() []*Entry {
 }
 
 func (e Entries) ByValidatorAddresses(addresses []string) []*Entry {
-	e.SetVotingPowerPercent()
 	entries := make([]*Entry, 0)
 
 	for _, entry := range e {
@@ -83,10 +78,10 @@ func (e Entries) SetVotingPowerPercent() {
 
 		entry := e[sortedEntry.Validator.OperatorAddress]
 
-		entry.VotingPowerPercent = percent
-		entry.Rank = index + 1
+		entry.Validator.VotingPowerPercent = percent
+		entry.Validator.Rank = index + 1
 
 		cumulativeVotingPowerPercent += percent
-		entry.CumulativeVotingPowerPercent = cumulativeVotingPowerPercent
+		entry.Validator.CumulativeVotingPowerPercent = cumulativeVotingPowerPercent
 	}
 }
