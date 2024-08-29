@@ -28,3 +28,8 @@ func GetLogger(config config.LogConfig) *zerolog.Logger {
 	zerolog.SetGlobalLevel(logLevel)
 	return &log
 }
+
+func GetNopLogger() *zerolog.Logger {
+	log := zerolog.Nop()
+	return &log
+}

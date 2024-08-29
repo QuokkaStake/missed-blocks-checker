@@ -14,6 +14,7 @@ require (
 	github.com/creasty/defaults v1.7.0
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/uuid v1.6.0
+	github.com/jarcoal/httpmock v1.3.1
 	github.com/lib/pq v1.10.7
 	github.com/mattn/go-sqlite3 v1.14.9
 	github.com/prometheus/client_golang v1.14.0

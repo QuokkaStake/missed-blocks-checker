@@ -1,0 +1,17 @@
+{
+  "jsonrpc": "2.0",
+  "id": -1,
+  "result": {
+    "response": {
+      "code": 18,
+      "log": "unexpected EOF: invalid request",
+      "info": "",
+      "index": "0",
+      "key": null,
+      "value": null,
+      "proofOps": null,
+      "height": "21950648",
+      "codespace": "sdk"
+    }
+  }
+}

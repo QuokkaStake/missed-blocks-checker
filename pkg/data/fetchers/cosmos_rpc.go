@@ -71,11 +71,7 @@ func (f *CosmosRPCFetcher) AbciQuery(
 	output codec.ProtoMarshaler,
 	clients []*http.Client,
 ) error {
-	dataBytes, err := message.Marshal()
-	if err != nil {
-		return err
-	}
-
+	dataBytes, _ := message.Marshal()
 	methodName := fmt.Sprintf("\"%s\"", method)
 	queryURL := fmt.Sprintf(
 		"/abci_query?path=%s&data=0x%x",
@@ -88,22 +84,12 @@ func (f *CosmosRPCFetcher) AbciQuery(
 	}
 
 	var response responses.AbciQueryResponse
-	if err := f.Get(queryURL, constants.QueryType("abci_"+string(queryType)), &response, clients, func(v interface{}) error {
-		response, ok := v.(*responses.AbciQueryResponse)
-		if !ok {
-			return errors.New("error converting ABCI response")
-		}
-
-		// code = NotFound desc = SigningInfo not found for validator xxx: key not found
-		if queryType == constants.QueryTypeSigningInfo && response.Result.Response.Code == 22 {
-			return nil
-		}
-
-		if response.Result.Response.Code != 0 {
+	if err := f.Get(queryURL, constants.QueryType("abci_"+string(queryType)), &response, clients, func(v *responses.AbciQueryResponse) error {
+		if v.Result.Response.Code != 0 {
 			return fmt.Errorf(
 				"error in Tendermint response: expected code 0, but got %d, error: %s",
-				response.Result.Response.Code,
-				response.Result.Response.Log,
+				v.Result.Response.Code,
+				v.Result.Response.Log,
 			)
 		}
 
@@ -200,9 +186,9 @@ func (f *CosmosRPCFetcher) GetSlashingParams(height int64) (*slashingTypes.Query
 func (f *CosmosRPCFetcher) Get(
 	url string,
 	queryType constants.QueryType,
-	target interface{},
+	target *responses.AbciQueryResponse,
 	clients []*http.Client,
-	predicate func(interface{}) error,
+	predicate func(response *responses.AbciQueryResponse) error,
 ) error {
 	errorsArray := make([]error, len(clients))
 

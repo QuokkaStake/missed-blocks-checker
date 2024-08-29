@@ -82,12 +82,8 @@ func (f *CosmosLCDFetcher) GetValidators(height int64) (*stakingTypes.QueryValid
 		&validatorsResponse,
 		f.GetConsumerOrProviderClients(),
 		height,
-		func(v interface{}) error {
-			response, ok := v.(*stakingTypes.QueryValidatorsResponse)
-			if !ok {
-				return errors.New("error converting validators response")
-			}
-
+		func(v proto.Message) error {
+			response, _ := v.(*stakingTypes.QueryValidatorsResponse)
 			if len(response.Validators) == 0 {
 				return errors.New("malformed response: got 0 validators")
 			}
@@ -110,13 +106,9 @@ func (f *CosmosLCDFetcher) GetSigningInfos(height int64) (*slashingTypes.QuerySi
 		&response,
 		f.clients,
 		height,
-		func(v interface{}) error {
-			response, ok := v.(*slashingTypes.QuerySigningInfosResponse)
-			if !ok {
-				return errors.New("error converting signing infos response")
-			}
-
-			if len(response.Info) == 0 {
+		func(v proto.Message) error {
+			responseInternal, _ := v.(*slashingTypes.QuerySigningInfosResponse)
+			if len(responseInternal.Info) == 0 {
 				return errors.New("malformed response: got 0 signing infos")
 			}
 
@@ -135,18 +127,12 @@ func (f *CosmosLCDFetcher) GetValidatorsAssignedConsumerKeys(
 	var response providerTypes.QueryAllPairsValConAddrByConsumerChainIDResponse
 
 	if err := f.Get(
-
-		"interchain_security/ccv/provider/consumer_chain_id?chain_id="+f.config.ConsumerChainID,
+		"/interchain_security/ccv/provider/consumer_chain_id?chain_id="+f.config.ConsumerChainID,
 		constants.QueryTypeConsumerAddrs,
 		&response,
 		f.providerClients,
 		height,
-		func(v interface{}) error {
-			_, ok := v.(*providerTypes.QueryAllPairsValConAddrByConsumerChainIDResponse)
-			if !ok {
-				return errors.New("error converting assigned consumer keys response")
-			}
-
+		func(v proto.Message) error {
 			return nil
 		},
 	); err != nil {
@@ -157,31 +143,22 @@ func (f *CosmosLCDFetcher) GetValidatorsAssignedConsumerKeys(
 }
 
 func (f *CosmosLCDFetcher) GetSlashingParams(height int64) (*slashingTypes.QueryParamsResponse, error) {
-	var response slashingTypes.QueryParamsResponse
+	var slashingParamsResponse slashingTypes.QueryParamsResponse
 
 	if err := f.Get(
 		"/cosmos/slashing/v1beta1/params",
 		constants.QueryTypeSlashingParams,
-		&response,
+		&slashingParamsResponse,
 		f.clients,
 		height,
-		func(v interface{}) error {
-			response, ok := v.(*slashingTypes.QueryParamsResponse)
-			if !ok {
-				return errors.New("error converting slashing params response")
-			}
-
-			if response.Params.SignedBlocksWindow == 0 {
-				return errors.New("malformed response: got 0 as signed blocks window")
-			}
-
+		func(v proto.Message) error {
 			return nil
 		},
 	); err != nil {
 		return nil, err
 	}
 
-	return &response, nil
+	return &slashingParamsResponse, nil
 }
 
 func (f *CosmosLCDFetcher) Get(
@@ -190,7 +167,7 @@ func (f *CosmosLCDFetcher) Get(
 	target proto.Message,
 	clients []*http.Client,
 	height int64,
-	predicate func(interface{}) error,
+	predicate func(proto.Message) error,
 ) error {
 	errorsArray := make([]error, len(clients))
 
@@ -229,11 +206,6 @@ func (f *CosmosLCDFetcher) Get(
 			// if we successfully unmarshalled it into LCDError, so err == nil,
 			// that means the response is indeed an error.
 			if errorResponse.Code != 0 {
-				// code = NotFound desc = SigningInfo not found for validator xxx: key not found
-				if queryType == constants.QueryTypeSigningInfo && errorResponse.Code == 5 {
-					return nil
-				}
-
 				f.logger.Warn().Str("url", fullURL).
 					Err(err).
 					Int("code", errorResponse.Code).
