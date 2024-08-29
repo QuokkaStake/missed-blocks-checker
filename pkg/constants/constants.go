@@ -35,11 +35,9 @@ const (
 
 	QueryTypeValidators    QueryType = "validators"
 	QueryTypeSigningInfos  QueryType = "signing_infos"
-	QueryTypeSigningInfo   QueryType = "signing_info"
 	QueryTypeConsumerAddrs QueryType = "consumer_addrs"
 
 	QueryTypeSlashingParams QueryType = "slashing_params"
-	QueryTypeSubspaceParams QueryType = "subspace_params"
 
 	QueryTypeHistoricalValidators QueryType = "historical_validators"
 	QueryTypeBlock                QueryType = "block"

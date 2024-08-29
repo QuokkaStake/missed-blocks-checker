@@ -94,11 +94,6 @@ func (f *CosmosRPCFetcher) AbciQuery(
 			return errors.New("error converting ABCI response")
 		}
 
-		// code = NotFound desc = SigningInfo not found for validator xxx: key not found
-		if queryType == constants.QueryTypeSigningInfo && response.Result.Response.Code == 22 {
-			return nil
-		}
-
 		if response.Result.Response.Code != 0 {
 			return fmt.Errorf(
 				"error in Tendermint response: expected code 0, but got %d, error: %s",
