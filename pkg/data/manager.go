@@ -148,7 +148,7 @@ func (manager *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64
 
 	assignedKeysByAddr := make(map[string]*providerTypes.PairValConAddrProviderAndConsumer)
 	for _, assignedKey := range assignedKeysResponse.PairValConAddr {
-		assignedKeysByAddr[utils.MustDecodeBech32(assignedKey.ProviderAddress)] = assignedKey 
+		assignedKeysByAddr[utils.MustDecodeBech32(assignedKey.ProviderAddress)] = assignedKey
 	}
 
 	validators := make(types.Validators, len(validatorsResponse.Validators))
