@@ -43,13 +43,9 @@ func (rpc *RPC) GetBlock(height int64) (*responses.SingleBlockResponse, error) {
 		queryURL = fmt.Sprintf("/block?height=%d", height)
 	}
 
-	var response responses.SingleBlockResponse
-	if err := rpc.Get(queryURL, constants.QueryTypeBlock, &response, rpc.clients, func(v interface{}) error {
-		response, ok := v.(*responses.SingleBlockResponse)
-		if !ok {
-			return errors.New("error converting block")
-		}
-
+	var blockResponse responses.SingleBlockResponse
+	if err := rpc.Get(queryURL, constants.QueryTypeBlock, &blockResponse, rpc.clients, func(v interface{}) error {
+		response, _ := v.(*responses.SingleBlockResponse)
 		if response.Error != nil {
 			return fmt.Errorf("error in Tendermint response: %s", response.Error.Data)
 		}
@@ -63,7 +59,7 @@ func (rpc *RPC) GetBlock(height int64) (*responses.SingleBlockResponse, error) {
 		return nil, err
 	}
 
-	return &response, nil
+	return &blockResponse, nil
 }
 
 func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
@@ -78,12 +74,9 @@ func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 			page,
 		)
 
-		var response responses.ValidatorsResponse
-		if err := rpc.Get(queryURL, constants.QueryTypeHistoricalValidators, &response, rpc.clients, func(v interface{}) error {
-			response, ok := v.(*responses.ValidatorsResponse)
-			if !ok {
-				return errors.New("error converting validators")
-			}
+		var validatorsResponse responses.ValidatorsResponse
+		if err := rpc.Get(queryURL, constants.QueryTypeHistoricalValidators, &validatorsResponse, rpc.clients, func(v interface{}) error {
+			response, _ := v.(*responses.ValidatorsResponse)
 
 			if response.Error != nil {
 				return fmt.Errorf("error in Tendermint response: %s", response.Error.Data)
@@ -98,7 +91,7 @@ func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 			return nil, err
 		}
 
-		validatorsCount, err := strconv.Atoi(response.Result.Total)
+		validatorsCount, err := strconv.Atoi(validatorsResponse.Result.Total)
 		if err != nil {
 			rpc.logger.Warn().
 				Err(err).
@@ -106,7 +99,7 @@ func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 			return nil, err
 		}
 
-		for _, validator := range response.Result.Validators {
+		for _, validator := range validatorsResponse.Result.Validators {
 			activeSetMap[validator.Address] = true
 		}
 
