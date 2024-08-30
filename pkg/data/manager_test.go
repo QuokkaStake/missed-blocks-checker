@@ -4,8 +4,11 @@ import (
 	"errors"
 	"main/assets"
 	configPkg "main/pkg/config"
+	"main/pkg/constants"
 	loggerPkg "main/pkg/logger"
 	"main/pkg/metrics"
+	"main/pkg/types"
+	"main/pkg/utils"
 	"testing"
 
 	"github.com/jarcoal/httpmock"
@@ -194,4 +197,105 @@ func TestGetBlocksAndValidatorsOk(t *testing.T) {
 	require.Empty(t, errs)
 	require.NotEmpty(t, blocks)
 	require.NotEmpty(t, validators)
+}
+
+//nolint:paralleltest // disabled due to httpmock usage
+func TestGetValidatorsValidatorsFail(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	config := &configPkg.ChainConfig{
+		Name:         "chain",
+		FetcherType:  constants.FetcherTypeCosmosLCD,
+		LCDEndpoints: []string{"https://example.com"},
+	}
+	logger := loggerPkg.GetNopLogger()
+
+	metricsManager := metrics.NewManager(*logger, configPkg.MetricsConfig{Enabled: null.BoolFrom(false)})
+	dataManager := NewManager(*logger, config, metricsManager)
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://example.com/cosmos/staking/v1beta1/validators?pagination.limit=1000",
+		httpmock.NewErrorResponder(errors.New("validators custom error")),
+	)
+
+	validators, err := dataManager.GetValidators(123)
+
+	require.Error(t, err)
+	require.ErrorContains(t, err, "validators custom error")
+	require.Nil(t, validators)
+}
+
+//nolint:paralleltest // disabled due to httpmock usage
+func TestGetValidatorsSigningInfosFail(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	config := &configPkg.ChainConfig{
+		Name:         "chain",
+		FetcherType:  constants.FetcherTypeCosmosLCD,
+		LCDEndpoints: []string{"https://example.com"},
+	}
+	logger := loggerPkg.GetNopLogger()
+
+	metricsManager := metrics.NewManager(*logger, configPkg.MetricsConfig{Enabled: null.BoolFrom(false)})
+	dataManager := NewManager(*logger, config, metricsManager)
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://example.com/cosmos/staking/v1beta1/validators?pagination.limit=1000",
+		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("lcd-validators-sentinel.json")),
+	)
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://example.com/cosmos/slashing/v1beta1/signing_infos?pagination.limit=1000",
+		httpmock.NewErrorResponder(errors.New("signing infos custom error")),
+	)
+
+	validators, err := dataManager.GetValidators(123)
+
+	require.Error(t, err)
+	require.ErrorContains(t, err, "signing infos custom error")
+	require.Nil(t, validators)
+}
+
+//nolint:paralleltest // disabled due to httpmock usage
+func TestGetValidatorsSigningInfosOk(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	config := &configPkg.ChainConfig{
+		Name:         "chain",
+		FetcherType:  constants.FetcherTypeCosmosLCD,
+		LCDEndpoints: []string{"https://example.com"},
+	}
+	logger := loggerPkg.GetNopLogger()
+
+	metricsManager := metrics.NewManager(*logger, configPkg.MetricsConfig{Enabled: null.BoolFrom(false)})
+	dataManager := NewManager(*logger, config, metricsManager)
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://example.com/cosmos/staking/v1beta1/validators?pagination.limit=1000",
+		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("lcd-validators-sentinel.json")),
+	)
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://example.com/cosmos/slashing/v1beta1/signing_infos?pagination.limit=1000",
+		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("lcd-signing-infos-sentinel.json")),
+	)
+
+	validators, err := dataManager.GetValidators(123)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, validators)
+	require.Len(t, validators, 178)
+
+	withoutSigningInfo := utils.Filter(validators, func(v *types.Validator) bool {
+		return v.SigningInfo == nil
+	})
+	require.Len(t, withoutSigningInfo, 4)
 }

@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"math"
 	"math/rand"
@@ -171,6 +172,15 @@ func CompareTwoBech32(first, second string) (bool, error) {
 	}
 
 	return bytes.Equal(firstBytes, secondBytes), nil
+}
+
+func MustDecodeBech32(addr string) string {
+	_, bech32Bytes, err := bech32.Decode(addr)
+	if err != nil {
+		panic(err)
+	}
+
+	return hex.EncodeToString(bech32Bytes)
 }
 
 func ConvertBech32Prefix(address, newPrefix string) (string, error) {

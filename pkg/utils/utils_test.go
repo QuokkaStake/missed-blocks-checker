@@ -290,3 +290,22 @@ func TestMapToArray(t *testing.T) {
 	assert.Contains(t, result, "2")
 	assert.Contains(t, result, "3")
 }
+
+func TestMustDecodeBech32Fail(t *testing.T) {
+	t.Parallel()
+
+	defer func() {
+		if r := recover(); r == nil {
+			require.Fail(t, "Expected to have a panic here!")
+		}
+	}()
+
+	MustDecodeBech32("invalid")
+}
+
+func TestMustDecodeBech32Ok(t *testing.T) {
+	t.Parallel()
+
+	value := MustDecodeBech32("cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e")
+	require.Equal(t, "0600020501191b021419140204181d1d0705160410141d0e1a1b07031708100c", value)
+}

@@ -42,7 +42,7 @@ func NewManager(
 	}
 }
 
-func (manager *Manager) GetValidators(height int64) (types.Validators, []error) {
+func (manager *Manager) GetValidators(height int64) (types.Validators, error) {
 	if manager.config.IsConsumer.Bool {
 		return manager.GetValidatorsAndSigningInfoForConsumerChain(height)
 	}
@@ -69,46 +69,37 @@ func (manager *Manager) GetValidators(height int64) (types.Validators, []error) 
 	wg.Wait()
 
 	if validatorsError != nil {
-		return nil, []error{validatorsError}
+		return nil, validatorsError
 	}
 
 	if signingInfoErr != nil {
-		return nil, []error{signingInfoErr}
+		return nil, signingInfoErr
+	}
+
+	signingInfosByAddr := make(map[string]*slashingTypes.ValidatorSigningInfo)
+	for _, info := range signingInfoResponse.Info {
+		signingInfosByAddr[utils.MustDecodeBech32(info.Address)] = &info //nolint:exportloopref
 	}
 
 	validators := make(types.Validators, len(validatorsResponse.Validators))
 	for index, validatorRaw := range validatorsResponse.Validators {
 		consensusAddr := manager.converter.GetConsensusAddress(validatorRaw)
 
-		signingInfo, ok := utils.Find(signingInfoResponse.Info, func(i slashingTypes.ValidatorSigningInfo) bool {
-			equal, compareErr := utils.CompareTwoBech32(i.Address, consensusAddr)
-			if compareErr != nil {
-				manager.logger.Error().
-					Str("operator_address", validatorRaw.OperatorAddress).
-					Str("first", i.Address).
-					Str("second", consensusAddr).
-					Msg("Error converting bech32 address")
-				return false
-			}
-
-			return equal
-		})
-
+		signingInfo, ok := signingInfosByAddr[utils.MustDecodeBech32(consensusAddr)]
 		if !ok {
 			manager.logger.Debug().
 				Str("operator_address", validatorRaw.OperatorAddress).
 				Msg("Could not find signing info for validator")
 		}
 
-		validator := manager.converter.ValidatorFromCosmosValidator(validatorRaw, &signingInfo)
-
+		validator := manager.converter.ValidatorFromCosmosValidator(validatorRaw, signingInfo)
 		validators[index] = validator
 	}
 
 	return validators, nil
 }
 
-func (manager *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64) (types.Validators, []error) {
+func (manager *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64) (types.Validators, error) {
 	var (
 		wg                   sync.WaitGroup
 		validatorsResponse   *stakingTypes.QueryValidatorsResponse
@@ -139,19 +130,18 @@ func (manager *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64
 	wg.Wait()
 
 	if validatorsError != nil {
-		return nil, []error{validatorsError}
+		return nil, validatorsError
 	}
 
 	if signingInfoErr != nil {
-		return nil, []error{signingInfoErr}
+		return nil, signingInfoErr
 	}
 
 	if assignedKeysError != nil {
-		return nil, []error{assignedKeysError}
+		return nil, assignedKeysError
 	}
 
 	validators := make(types.Validators, len(validatorsResponse.Validators))
-	errs := make([]error, 0)
 
 	for index, validatorRaw := range validatorsResponse.Validators {
 		if manager.config.ConsumerValidatorPrefix != "" {
@@ -221,7 +211,7 @@ func (manager *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64
 		mutex.Unlock()
 	}
 
-	return validators, errs
+	return validators, nil
 }
 
 func (manager *Manager) GetBlock(height int64) (*responses.SingleBlockResponse, error) {
