@@ -188,24 +188,28 @@ func TestSplitStringIntoChunksMoreChunks(t *testing.T) {
 	assert.Len(t, chunks, 3, "There should be 3 chunks!")
 }
 
-func TestConvertBech32PrefixInvalid(t *testing.T) {
+func TestConvertBech32PrefixInvalidSource(t *testing.T) {
 	t.Parallel()
 
-	_, err := ConvertBech32Prefix(
+	defer func() {
+		if r := recover(); r == nil {
+			require.Fail(t, "Expected to have a panic here!")
+		}
+	}()
+
+	MustConvertBech32Prefix(
 		"test",
 		"cosmosvaloper",
 	)
-	require.Error(t, err, "Error should be present!")
 }
 
 func TestConvertBech32PrefixValid(t *testing.T) {
 	t.Parallel()
 
-	address, err := ConvertBech32Prefix(
+	address := MustConvertBech32Prefix(
 		"cosmos1xqz9pemz5e5zycaa89kys5aw6m8rhgsvtp9lt2",
 		"cosmosvaloper",
 	)
-	require.NoError(t, err, "Error should not be present!")
 	assert.Equal(
 		t,
 		"cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e",

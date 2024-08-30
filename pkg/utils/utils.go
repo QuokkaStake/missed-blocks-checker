@@ -183,13 +183,14 @@ func MustDecodeBech32(addr string) string {
 	return hex.EncodeToString(bech32Bytes)
 }
 
-func ConvertBech32Prefix(address, newPrefix string) (string, error) {
+func MustConvertBech32Prefix(address, newPrefix string) string {
 	_, addressRaw, err := bech32.Decode(address)
 	if err != nil {
-		return "", err
+		panic(err)
 	}
 
-	return bech32.Encode(newPrefix, addressRaw)
+	encoded, _ := bech32.Encode(newPrefix, addressRaw)
+	return encoded
 }
 
 func FormatDuration(duration time.Duration) string {

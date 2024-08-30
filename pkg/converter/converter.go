@@ -84,16 +84,14 @@ func (c *Converter) ValidatorFromCosmosValidator(
 	}
 }
 
-func (c *Converter) SetValidatorConsumerConsensusAddr(validator *types.Validator, consumerKey string) error {
+func (c *Converter) MustSetValidatorConsumerConsensusAddr(validator *types.Validator, consumerKey string) {
 	consAddress, err := sdkTypes.ConsAddressFromBech32(consumerKey)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	validator.ConsensusAddressValcons = consAddress.String()
 	validator.ConsensusAddressHex = fmt.Sprintf("%x", consAddress)
-
-	return nil
 }
 
 func (c *Converter) GetConsKeyFromBech32(addr string) (string, error) {

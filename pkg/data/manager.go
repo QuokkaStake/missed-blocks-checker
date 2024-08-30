@@ -141,70 +141,44 @@ func (manager *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64
 		return nil, assignedKeysError
 	}
 
+	signingInfosByAddr := make(map[string]*slashingTypes.ValidatorSigningInfo)
+	for _, info := range signingInfoResponse.Info {
+		signingInfosByAddr[utils.MustDecodeBech32(info.Address)] = &info //nolint:exportloopref
+	}
+
+	assignedKeysByAddr := make(map[string]*providerTypes.PairValConAddrProviderAndConsumer)
+	for _, assignedKey := range assignedKeysResponse.PairValConAddr {
+		assignedKeysByAddr[utils.MustDecodeBech32(assignedKey.ProviderAddress)] = assignedKey 
+	}
+
 	validators := make(types.Validators, len(validatorsResponse.Validators))
 
 	for index, validatorRaw := range validatorsResponse.Validators {
 		if manager.config.ConsumerValidatorPrefix != "" {
-			if newOperatorAddress, convertErr := utils.ConvertBech32Prefix(
+			newOperatorAddress := utils.MustConvertBech32Prefix(
 				validatorRaw.OperatorAddress,
 				manager.config.ConsumerValidatorPrefix,
-			); convertErr != nil {
-				manager.logger.Error().
-					Str("operator_address", validatorRaw.OperatorAddress).
-					Msg("Error converting operator address to a new prefix")
-			} else {
-				validatorRaw.OperatorAddress = newOperatorAddress
-			}
+			)
+			validatorRaw.OperatorAddress = newOperatorAddress
 		}
 
 		consensusAddrProvider := manager.converter.GetConsensusAddress(validatorRaw)
 		consensusAddr := consensusAddrProvider
 
-		assignedConsensusAddr, ok := utils.Find(
-			assignedKeysResponse.PairValConAddr,
-			func(i *providerTypes.PairValConAddrProviderAndConsumer) bool {
-				equal, compareErr := utils.CompareTwoBech32(i.ProviderAddress, consensusAddr)
-				if compareErr != nil {
-					manager.logger.Error().
-						Str("operator_address", validatorRaw.OperatorAddress).
-						Str("first", i.ProviderAddress).
-						Str("second", consensusAddr).
-						Msg("Error converting bech32 address")
-					return false
-				}
-
-				return equal
-			},
-		)
-
+		assignedConsensusAddr, ok := assignedKeysByAddr[utils.MustDecodeBech32(consensusAddr)]
 		if ok {
 			consensusAddr = assignedConsensusAddr.ConsumerAddress
 		}
 
-		signingInfo, ok := utils.Find(signingInfoResponse.Info, func(i slashingTypes.ValidatorSigningInfo) bool {
-			equal, compareErr := utils.CompareTwoBech32(i.Address, consensusAddr)
-			if compareErr != nil {
-				manager.logger.Error().
-					Str("operator_address", validatorRaw.OperatorAddress).
-					Str("first", i.Address).
-					Str("second", consensusAddr).
-					Msg("Error converting bech32 address")
-				return false
-			}
-
-			return equal
-		})
-
+		signingInfo, ok := signingInfosByAddr[utils.MustDecodeBech32(consensusAddr)]
 		if !ok {
 			manager.logger.Debug().
 				Str("operator_address", validatorRaw.OperatorAddress).
 				Msg("Could not find signing info for validator")
 		}
 
-		validator := manager.converter.ValidatorFromCosmosValidator(validatorRaw, &signingInfo)
-		if err := manager.converter.SetValidatorConsumerConsensusAddr(validator, consensusAddr); err != nil {
-			manager.logger.Warn().Err(err).Msg("Could not set validator consumer consensus address")
-		}
+		validator := manager.converter.ValidatorFromCosmosValidator(validatorRaw, signingInfo)
+		manager.converter.MustSetValidatorConsumerConsensusAddr(validator, consensusAddr)
 
 		mutex.Lock()
 		validators[index] = validator

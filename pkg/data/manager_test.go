@@ -299,3 +299,211 @@ func TestGetValidatorsSigningInfosOk(t *testing.T) {
 	})
 	require.Len(t, withoutSigningInfo, 4)
 }
+
+//nolint:paralleltest // disabled due to httpmock usage
+func TestGetValidatorsConsumerValidatorsFail(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	config := &configPkg.ChainConfig{
+		Name:                 "chain",
+		FetcherType:          constants.FetcherTypeCosmosLCD,
+		IsConsumer:           null.BoolFrom(true),
+		ConsumerChainID:      "consumer",
+		LCDEndpoints:         []string{"https://consumer.com"},
+		ProviderLCDEndpoints: []string{"https://provider.com"},
+	}
+	logger := loggerPkg.GetNopLogger()
+
+	metricsManager := metrics.NewManager(*logger, configPkg.MetricsConfig{Enabled: null.BoolFrom(false)})
+	dataManager := NewManager(*logger, config, metricsManager)
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://provider.com/cosmos/staking/v1beta1/validators?pagination.limit=1000",
+		httpmock.NewErrorResponder(errors.New("validators custom error")),
+	)
+
+	validators, err := dataManager.GetValidators(123)
+
+	require.Error(t, err)
+	require.ErrorContains(t, err, "validators custom error")
+	require.Nil(t, validators)
+}
+
+//nolint:paralleltest // disabled due to httpmock usage
+func TestGetValidatorsConsumerSigningInfosFail(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	config := &configPkg.ChainConfig{
+		Name:                 "chain",
+		FetcherType:          constants.FetcherTypeCosmosLCD,
+		IsConsumer:           null.BoolFrom(true),
+		ConsumerChainID:      "consumer",
+		LCDEndpoints:         []string{"https://consumer.com"},
+		ProviderLCDEndpoints: []string{"https://provider.com"},
+	}
+	logger := loggerPkg.GetNopLogger()
+
+	metricsManager := metrics.NewManager(*logger, configPkg.MetricsConfig{Enabled: null.BoolFrom(false)})
+	dataManager := NewManager(*logger, config, metricsManager)
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://provider.com/cosmos/staking/v1beta1/validators?pagination.limit=1000",
+		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("lcd-validators-cosmos.json")),
+	)
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://consumer.com/cosmos/slashing/v1beta1/signing_infos?pagination.limit=1000",
+		httpmock.NewErrorResponder(errors.New("signing infos error")),
+	)
+
+	validators, err := dataManager.GetValidators(123)
+
+	require.Error(t, err)
+	require.ErrorContains(t, err, "signing infos error")
+	require.Nil(t, validators)
+}
+
+//nolint:paralleltest // disabled due to httpmock usage
+func TestGetValidatorsConsumerAssignedKeysFail(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	config := &configPkg.ChainConfig{
+		Name:                 "chain",
+		FetcherType:          constants.FetcherTypeCosmosLCD,
+		IsConsumer:           null.BoolFrom(true),
+		ConsumerChainID:      "consumer",
+		LCDEndpoints:         []string{"https://consumer.com"},
+		ProviderLCDEndpoints: []string{"https://provider.com"},
+	}
+	logger := loggerPkg.GetNopLogger()
+
+	metricsManager := metrics.NewManager(*logger, configPkg.MetricsConfig{Enabled: null.BoolFrom(false)})
+	dataManager := NewManager(*logger, config, metricsManager)
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://provider.com/cosmos/staking/v1beta1/validators?pagination.limit=1000",
+		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("lcd-validators-cosmos.json")),
+	)
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://consumer.com/cosmos/slashing/v1beta1/signing_infos?pagination.limit=1000",
+		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("lcd-signing-infos-neutron.json")),
+	)
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://provider.com/interchain_security/ccv/provider/consumer_chain_id?chain_id=consumer",
+		httpmock.NewErrorResponder(errors.New("assigned keys error")),
+	)
+
+	validators, err := dataManager.GetValidators(123)
+
+	require.Error(t, err)
+	require.ErrorContains(t, err, "assigned keys error")
+	require.Nil(t, validators)
+}
+
+//nolint:paralleltest // disabled due to httpmock usage
+func TestGetValidatorsConsumerAssignedKeysOk(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	config := &configPkg.ChainConfig{
+		Name:                 "chain",
+		FetcherType:          constants.FetcherTypeCosmosLCD,
+		IsConsumer:           null.BoolFrom(true),
+		ConsumerChainID:      "consumer",
+		LCDEndpoints:         []string{"https://consumer.com"},
+		ProviderLCDEndpoints: []string{"https://provider.com"},
+	}
+	logger := loggerPkg.GetDefaultLogger()
+
+	metricsManager := metrics.NewManager(*logger, configPkg.MetricsConfig{Enabled: null.BoolFrom(false)})
+	dataManager := NewManager(*logger, config, metricsManager)
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://provider.com/cosmos/staking/v1beta1/validators?pagination.limit=1000",
+		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("lcd-validators-cosmos.json")),
+	)
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://consumer.com/cosmos/slashing/v1beta1/signing_infos?pagination.limit=1000",
+		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("lcd-signing-infos-neutron.json")),
+	)
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://provider.com/interchain_security/ccv/provider/consumer_chain_id?chain_id=consumer",
+		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("lcd-assigned-keys-neutron.json")),
+	)
+
+	validators, err := dataManager.GetValidators(123)
+
+	require.NoError(t, err)
+	require.NotNil(t, validators)
+	require.Len(t, validators, 547)
+
+	withoutSigningInfo := utils.Filter(validators, func(v *types.Validator) bool {
+		return v.SigningInfo == nil
+	})
+	require.Len(t, withoutSigningInfo, 326)
+}
+
+//nolint:paralleltest // disabled due to httpmock usage
+func TestGetValidatorsConsumerAssignedKeysOkAnotherPrefix(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	config := &configPkg.ChainConfig{
+		Name:                    "chain",
+		FetcherType:             constants.FetcherTypeCosmosLCD,
+		IsConsumer:              null.BoolFrom(true),
+		ConsumerChainID:         "consumer",
+		ConsumerValidatorPrefix: "consumervaloper",
+		LCDEndpoints:            []string{"https://consumer.com"},
+		ProviderLCDEndpoints:    []string{"https://provider.com"},
+	}
+	logger := loggerPkg.GetDefaultLogger()
+
+	metricsManager := metrics.NewManager(*logger, configPkg.MetricsConfig{Enabled: null.BoolFrom(false)})
+	dataManager := NewManager(*logger, config, metricsManager)
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://provider.com/cosmos/staking/v1beta1/validators?pagination.limit=1000",
+		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("lcd-validators-cosmos.json")),
+	)
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://consumer.com/cosmos/slashing/v1beta1/signing_infos?pagination.limit=1000",
+		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("lcd-signing-infos-neutron.json")),
+	)
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://provider.com/interchain_security/ccv/provider/consumer_chain_id?chain_id=consumer",
+		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("lcd-assigned-keys-neutron.json")),
+	)
+
+	validators, err := dataManager.GetValidators(123)
+
+	require.NoError(t, err)
+	require.NotNil(t, validators)
+	require.Len(t, validators, 547)
+
+	withoutSigningInfo := utils.Filter(validators, func(v *types.Validator) bool {
+		return v.SigningInfo == nil
+	})
+	require.Len(t, withoutSigningInfo, 326)
+}
