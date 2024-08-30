@@ -424,7 +424,7 @@ func TestGetValidatorsConsumerAssignedKeysOk(t *testing.T) {
 		LCDEndpoints:         []string{"https://consumer.com"},
 		ProviderLCDEndpoints: []string{"https://provider.com"},
 	}
-	logger := loggerPkg.GetDefaultLogger()
+	logger := loggerPkg.GetNopLogger()
 
 	metricsManager := metrics.NewManager(*logger, configPkg.MetricsConfig{Enabled: null.BoolFrom(false)})
 	dataManager := NewManager(*logger, config, metricsManager)
@@ -473,7 +473,7 @@ func TestGetValidatorsConsumerAssignedKeysOkAnotherPrefix(t *testing.T) {
 		LCDEndpoints:            []string{"https://consumer.com"},
 		ProviderLCDEndpoints:    []string{"https://provider.com"},
 	}
-	logger := loggerPkg.GetDefaultLogger()
+	logger := loggerPkg.GetNopLogger()
 
 	metricsManager := metrics.NewManager(*logger, configPkg.MetricsConfig{Enabled: null.BoolFrom(false)})
 	dataManager := NewManager(*logger, config, metricsManager)
