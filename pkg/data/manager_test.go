@@ -2,14 +2,15 @@ package data
 
 import (
 	"errors"
-	"github.com/jarcoal/httpmock"
-	"github.com/stretchr/testify/require"
-	"gopkg.in/guregu/null.v4"
 	"main/assets"
 	configPkg "main/pkg/config"
 	loggerPkg "main/pkg/logger"
 	"main/pkg/metrics"
 	"testing"
+
+	"github.com/jarcoal/httpmock"
+	"github.com/stretchr/testify/require"
+	"gopkg.in/guregu/null.v4"
 )
 
 //nolint:paralleltest // disabled due to httpmock usage

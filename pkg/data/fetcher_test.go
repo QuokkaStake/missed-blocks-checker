@@ -1,14 +1,15 @@
 package data
 
 import (
-	"github.com/stretchr/testify/require"
-	"gopkg.in/guregu/null.v4"
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/data/fetchers"
 	loggerPkg "main/pkg/logger"
 	"main/pkg/metrics"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+	"gopkg.in/guregu/null.v4"
 )
 
 func TestFetcherManager(t *testing.T) {
@@ -18,8 +19,8 @@ func TestFetcherManager(t *testing.T) {
 	metricsManager := metrics.NewManager(*logger, configPkg.MetricsConfig{Enabled: null.BoolFrom(false)})
 
 	fetcher1 := GetFetcher(&configPkg.ChainConfig{FetcherType: constants.FetcherTypeCosmosLCD}, *logger, metricsManager)
-	require.IsType(t, fetcher1, &fetchers.CosmosLCDFetcher{})
+	require.IsType(t, &fetchers.CosmosLCDFetcher{}, fetcher1)
 
 	fetcher2 := GetFetcher(&configPkg.ChainConfig{}, *logger, metricsManager)
-	require.IsType(t, fetcher2, &fetchers.CosmosRPCFetcher{})
+	require.IsType(t, &fetchers.CosmosRPCFetcher{}, fetcher2)
 }
