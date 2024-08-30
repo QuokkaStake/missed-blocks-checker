@@ -1,6 +1,8 @@
 package metrics
 
 import (
+	"context"
+	"errors"
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/types"
@@ -19,6 +21,7 @@ type Manager struct {
 	config configPkg.MetricsConfig
 
 	registry *prometheus.Registry
+	server   *http.Server
 
 	lastBlockHeightCollector   *prometheus.GaugeVec
 	lastBlockTimeCollector     *prometheus.GaugeVec
@@ -38,7 +41,6 @@ type Manager struct {
 
 	missingBlocksGauge         *prometheus.GaugeVec
 	activeBlocksGauge          *prometheus.GaugeVec
-	needsToSignGauge           *prometheus.GaugeVec
 	votingPowerGauge           *prometheus.GaugeVec
 	cumulativeVotingPowerGauge *prometheus.GaugeVec
 	validatorRankGauge         *prometheus.GaugeVec
@@ -124,10 +126,6 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 		Name: constants.PrometheusMetricsPrefix + "active_blocks",
 		Help: "Count of each validator's blocks during which they were active",
 	}, []string{"chain", "moniker", "address"})
-	needsToSignGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: constants.PrometheusMetricsPrefix + "needs_to_sign",
-		Help: "Whether the validator needs to sign blocks (for consumer chains)",
-	}, []string{"chain", "moniker", "address"})
 	votingPowerGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: constants.PrometheusMetricsPrefix + "voting_power",
 		Help: "Voting power % of the validator",
@@ -190,7 +188,6 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 	registry.MustRegister(validatorRankGauge)
 	registry.MustRegister(isActiveGauge)
 	registry.MustRegister(isJailedGauge)
-	registry.MustRegister(needsToSignGauge)
 	registry.MustRegister(isTombstonedGauge)
 	registry.MustRegister(signedBlocksWindowGauge)
 	registry.MustRegister(storeBlocksGauge)
@@ -200,6 +197,8 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 	startTimeGauge.
 		With(prometheus.Labels{}).
 		Set(float64(time.Now().Unix()))
+
+	server := &http.Server{Addr: config.ListenAddr, Handler: nil}
 
 	return &Manager{
 		logger:                     logger.With().Str("component", "metrics").Logger(),
@@ -226,25 +225,18 @@ func NewManager(logger zerolog.Logger, config configPkg.MetricsConfig) *Manager 
 		validatorRankGauge:         validatorRankGauge,
 		isActiveGauge:              isActiveGauge,
 		isJailedGauge:              isJailedGauge,
-		needsToSignGauge:           needsToSignGauge,
 		isTombstonedGauge:          isTombstonedGauge,
 		signedBlocksWindowGauge:    signedBlocksWindowGauge,
 		storeBlocksGauge:           storeBlocksGauge,
 		minSignedPerWindowGauge:    minSignedPerWindowGauge,
 		chainInfoGauge:             chainInfoGauge,
+		server:                     server,
 	}
 }
 
 func (m *Manager) SetDefaultMetrics(chain *configPkg.ChainConfig) {
 	m.reportsCounter.
 		With(prometheus.Labels{"chain": chain.Name}).
-		Add(0)
-
-	m.reportEntriesCounter.
-		With(prometheus.Labels{
-			"chain": chain.Name,
-			"type":  string(constants.EventValidatorActive),
-		}).
 		Add(0)
 
 	for _, eventName := range constants.GetEventNames() {
@@ -277,13 +269,30 @@ func (m *Manager) Start() {
 		Str("addr", m.config.ListenAddr).
 		Msg("Metrics handler listening")
 
-	http.Handle("/metrics", promhttp.HandlerFor(m.registry, promhttp.HandlerOpts{Registry: m.registry}))
-	if err := http.ListenAndServe(m.config.ListenAddr, nil); err != nil {
-		m.logger.Fatal().
+	handler := http.NewServeMux()
+	handler.Handle("/metrics", promhttp.HandlerFor(m.registry, promhttp.HandlerOpts{
+		EnableOpenMetrics: true,
+	}))
+	handler.HandleFunc("/healthcheck", m.Healthcheck)
+	m.server.Handler = handler
+
+	if err := m.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		m.logger.Panic().
 			Err(err).
 			Str("addr", m.config.ListenAddr).
 			Msg("Cannot start metrics handler")
 	}
+}
+
+func (m *Manager) Healthcheck(w http.ResponseWriter, r *http.Request) {
+	_, _ = w.Write([]byte("ok"))
+}
+
+func (m *Manager) Stop() {
+	m.logger.Info().Str("addr", m.config.ListenAddr).Msg("Shutting down server...")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_ = m.server.Shutdown(ctx)
 }
 
 func (m *Manager) LogLastHeight(chain string, height int64, blockTime time.Time) {
@@ -366,12 +375,12 @@ func (m *Manager) LogNodeReconnect(chain string, node string) {
 }
 
 func (m *Manager) LogValidatorStats(
-	chain *configPkg.ChainConfig,
+	chain string,
 	entry *types.Entry,
 ) {
 	m.missingBlocksGauge.
 		With(prometheus.Labels{
-			"chain":   chain.Name,
+			"chain":   chain,
 			"moniker": entry.Validator.Moniker,
 			"address": entry.Validator.OperatorAddress,
 		}).
@@ -379,7 +388,7 @@ func (m *Manager) LogValidatorStats(
 
 	m.activeBlocksGauge.
 		With(prometheus.Labels{
-			"chain":   chain.Name,
+			"chain":   chain,
 			"moniker": entry.Validator.Moniker,
 			"address": entry.Validator.OperatorAddress,
 		}).
@@ -387,7 +396,7 @@ func (m *Manager) LogValidatorStats(
 
 	m.isActiveGauge.
 		With(prometheus.Labels{
-			"chain":   chain.Name,
+			"chain":   chain,
 			"moniker": entry.Validator.Moniker,
 			"address": entry.Validator.OperatorAddress,
 		}).
@@ -395,7 +404,7 @@ func (m *Manager) LogValidatorStats(
 
 	m.isJailedGauge.
 		With(prometheus.Labels{
-			"chain":   chain.Name,
+			"chain":   chain,
 			"moniker": entry.Validator.Moniker,
 			"address": entry.Validator.OperatorAddress,
 		}).
@@ -403,7 +412,7 @@ func (m *Manager) LogValidatorStats(
 
 	m.missingBlocksGauge.
 		With(prometheus.Labels{
-			"chain":   chain.Name,
+			"chain":   chain,
 			"moniker": entry.Validator.Moniker,
 			"address": entry.Validator.OperatorAddress,
 		}).
@@ -412,7 +421,7 @@ func (m *Manager) LogValidatorStats(
 	if entry.Validator.SigningInfo != nil {
 		m.isTombstonedGauge.
 			With(prometheus.Labels{
-				"chain":   chain.Name,
+				"chain":   chain,
 				"moniker": entry.Validator.Moniker,
 				"address": entry.Validator.OperatorAddress,
 			}).
@@ -420,19 +429,9 @@ func (m *Manager) LogValidatorStats(
 	}
 
 	if entry.IsActive {
-		if chain.IsConsumer.Bool {
-			m.needsToSignGauge.
-				With(prometheus.Labels{
-					"chain":   chain.Name,
-					"moniker": entry.Validator.Moniker,
-					"address": entry.Validator.OperatorAddress,
-				}).
-				Set(utils.BoolToFloat64(entry.NeedsToSign))
-		}
-
 		m.votingPowerGauge.
 			With(prometheus.Labels{
-				"chain":   chain.Name,
+				"chain":   chain,
 				"moniker": entry.Validator.Moniker,
 				"address": entry.Validator.OperatorAddress,
 			}).
@@ -440,7 +439,7 @@ func (m *Manager) LogValidatorStats(
 
 		m.cumulativeVotingPowerGauge.
 			With(prometheus.Labels{
-				"chain":   chain.Name,
+				"chain":   chain,
 				"moniker": entry.Validator.Moniker,
 				"address": entry.Validator.OperatorAddress,
 			}).
@@ -448,7 +447,7 @@ func (m *Manager) LogValidatorStats(
 
 		m.validatorRankGauge.
 			With(prometheus.Labels{
-				"chain":   chain.Name,
+				"chain":   chain,
 				"moniker": entry.Validator.Moniker,
 				"address": entry.Validator.OperatorAddress,
 			}).

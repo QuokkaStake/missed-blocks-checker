@@ -38,7 +38,7 @@ func (m *Manager) CommitNewSnapshot(height int64, snapshot Snapshot) {
 	}
 
 	for _, entry := range snapshot.Entries {
-		m.metricsManager.LogValidatorStats(m.config, entry)
+		m.metricsManager.LogValidatorStats(m.config.Name, entry)
 	}
 }
 
