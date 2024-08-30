@@ -45,13 +45,7 @@ func (p *SlashingParamsPopulator) Populate() error {
 		return err
 	}
 
-	minSignedPerWindow, err := params.Params.MinSignedPerWindow.Float64()
-	if err != nil {
-		p.Logger.Warn().
-			Err(err).
-			Msg("Got malformed slashing params from node")
-		return err
-	}
+	minSignedPerWindow := params.Params.MinSignedPerWindow.MustFloat64()
 
 	p.Config.BlocksWindow = params.Params.SignedBlocksWindow
 	p.Config.MinSignedPerWindow = minSignedPerWindow

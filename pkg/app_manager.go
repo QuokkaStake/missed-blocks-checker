@@ -154,9 +154,9 @@ func (a *AppManager) ProcessEvent(emittable types.WebsocketEmittable) {
 		return
 	}
 
-	if errs := a.UpdateValidators(block.Height - 1); len(errs) > 0 {
+	if err := a.UpdateValidators(block.Height - 1); err != nil {
 		a.Logger.Error().
-			Errs("errors", errs).
+			Err(err).
 			Msg("Error updating validators")
 		return
 	}
@@ -297,14 +297,14 @@ func (a *AppManager) ProcessSnapshot(block *types.Block) {
 	}
 }
 
-func (a *AppManager) UpdateValidators(height int64) []error {
-	validators, errs := a.DataManager.GetValidators(height)
-	if len(errs) > 0 {
-		return errs
+func (a *AppManager) UpdateValidators(height int64) error {
+	validators, err := a.DataManager.GetValidators(height)
+	if err != nil {
+		return err
 	}
 
 	a.StateManager.SetValidators(validators.ToMap())
-	return []error{}
+	return nil
 }
 
 func (a *AppManager) PopulateInBackground() {
@@ -479,9 +479,9 @@ func (a *AppManager) PopulateBlocks() {
 		return
 	}
 
-	if errs := a.UpdateValidators(latestHeight - 1); len(errs) > 0 {
+	if err := a.UpdateValidators(latestHeight - 1); err != nil {
 		a.Logger.Error().
-			Errs("errors", errs).
+			Err(err).
 			Msg("Error updating validators")
 		return
 	}

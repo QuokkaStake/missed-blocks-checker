@@ -188,24 +188,28 @@ func TestSplitStringIntoChunksMoreChunks(t *testing.T) {
 	assert.Len(t, chunks, 3, "There should be 3 chunks!")
 }
 
-func TestConvertBech32PrefixInvalid(t *testing.T) {
+func TestConvertBech32PrefixInvalidSource(t *testing.T) {
 	t.Parallel()
 
-	_, err := ConvertBech32Prefix(
+	defer func() {
+		if r := recover(); r == nil {
+			require.Fail(t, "Expected to have a panic here!")
+		}
+	}()
+
+	MustConvertBech32Prefix(
 		"test",
 		"cosmosvaloper",
 	)
-	require.Error(t, err, "Error should be present!")
 }
 
 func TestConvertBech32PrefixValid(t *testing.T) {
 	t.Parallel()
 
-	address, err := ConvertBech32Prefix(
+	address := MustConvertBech32Prefix(
 		"cosmos1xqz9pemz5e5zycaa89kys5aw6m8rhgsvtp9lt2",
 		"cosmosvaloper",
 	)
-	require.NoError(t, err, "Error should not be present!")
 	assert.Equal(
 		t,
 		"cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e",
@@ -289,4 +293,23 @@ func TestMapToArray(t *testing.T) {
 	assert.Contains(t, result, "1")
 	assert.Contains(t, result, "2")
 	assert.Contains(t, result, "3")
+}
+
+func TestMustDecodeBech32Fail(t *testing.T) {
+	t.Parallel()
+
+	defer func() {
+		if r := recover(); r == nil {
+			require.Fail(t, "Expected to have a panic here!")
+		}
+	}()
+
+	MustDecodeBech32("invalid")
+}
+
+func TestMustDecodeBech32Ok(t *testing.T) {
+	t.Parallel()
+
+	value := MustDecodeBech32("cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e")
+	require.Equal(t, "0600020501191b021419140204181d1d0705160410141d0e1a1b07031708100c", value)
 }

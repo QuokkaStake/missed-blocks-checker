@@ -1,0 +1,991 @@
+{
+  "pair_val_con_addr": [
+    {
+      "provider_address": "cosmosvalcons1qq92t2l4jz5pt67tmts8ptl4p0jhr6utx5xa8y",
+      "consumer_address": "cosmosvalcons1hq9c8qew8tfpl25msvgklmpfe2w4lwhxatslrl",
+      "consumer_key": {
+        "ed25519": "jnLmC1azkhw42JUkjMuxqdnt2NWE/KBifubh+BXinXY="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1qxdeeg55f57vxmruwv5rau743etv3fw530uf8x",
+      "consumer_address": "cosmosvalcons1kpqq7wemqm6ny0xnlg8v4qgsdde60vsy3zg5z5",
+      "consumer_key": {
+        "ed25519": "pMNHMW0FDjmxPuY4vC3nnLrZ2I285YT7sHkPnYI5iWk="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1pqr96s9e6jk4zf4v7zavsqesjjp4wg8axrqrzs",
+      "consumer_address": "cosmosvalcons1xl3fxah8adwe9ezek6kfjhvxfqucr7xz9r9y7l",
+      "consumer_key": {
+        "ed25519": "aDTU4Fqi9de6+S1FovDAU7X35nX4ctEUtKuziJjwAeE="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1prcacwwfjesnpwtq36uvyd86y96rv8azq63ken",
+      "consumer_address": "cosmosvalcons18ylwx4eqvy3v7tp3eg53d3l6wk4rqlvyvq4ed4",
+      "consumer_key": {
+        "ed25519": "EUAiIFsryeRG12/SohRWkO/ZGvKjKR0bHvtnqUjJ9k4="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1px0zkz2cxvc6lh34uhafveea9jnaagckmrlsye",
+      "consumer_address": "cosmosvalcons1h5k2svnh5drd9hcyxh5nq7vu9vfthyk6v5k3d3",
+      "consumer_key": {
+        "ed25519": "sYrao3iUMzioaREn/hsOEbwfGba5FDfHM39Z75rNXZU="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1p2a6xmz5m5x2dfus4muk5qw58yhrvdzltw4q4u",
+      "consumer_address": "cosmosvalcons1nhqlqp8ludmcuyyrgqkacleh637m67lgul7ys8",
+      "consumer_key": {
+        "ed25519": "Lczd+X79ty5wlt2s87qlGLh+KWzLe1vVMdWjWQl9pvQ="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1pdpwglc4fcjdzqvyhvfwxg684trpc6uqck5sxk",
+      "consumer_address": "cosmosvalcons1k9cc8c40uvl0qw6drtkexekpn75mnaetvut4mx",
+      "consumer_key": {
+        "ed25519": "hD/gQ46tWvu30az/3nuI3SmbTWjrR2GhvHczrrcwGt4="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1ztp25r0xd73ln4ny6q746mmdsgttdk5p8yupga",
+      "consumer_address": "cosmosvalcons1srmz7lez6ts3dsscerk9yx7yuadapf5cl0hfaz",
+      "consumer_key": {
+        "ed25519": "W6yWTvAaYYG5iR6iVkm1aS0jpPtclCI3Woe1858dCLY="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1zh6gz89dxfnqtz4pstf7ljxemg4y54l832cclm",
+      "consumer_address": "cosmosvalcons10hctls7d2fzk6wgs7wc222yvmr49cnzl8lws9v",
+      "consumer_key": {
+        "ed25519": "yRYRuw6cvw00zILG1kLNTxnX9nLcHGT6tN1hTSTM+CM="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1zcu7xjr06a09g3ll6f3r92q0rt88dnv29cly94",
+      "consumer_address": "cosmosvalcons1ug2x54qjvhd749ly5fsjy03zart5ldmluhw3jh",
+      "consumer_key": {
+        "ed25519": "0nqOqPeIBbZKMdrGwGljsX4f75Iq/QOd8HN+BWX5lD0="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1zu87l4kh7jnf4tns5fzptlzw9jfgmch9q25f5v",
+      "consumer_address": "cosmosvalcons1k6cx8yd2v0we4fncd9d2gk0r7qzj58q3k0x8zy",
+      "consumer_key": {
+        "ed25519": "wn1SKxmmRI4TchXUuQPOsirpAwQ9izhcjFLrRoZ/DA8="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1rtst6se0nfgjy362v33jt5d05crgdyhfvvvvay",
+      "consumer_address": "cosmosvalcons1lcfap6u7j4yg2mc9yvv049sr3a3j6tzaf24m54",
+      "consumer_key": {
+        "ed25519": "ki3hAxBz/OlLr40eDnNScpiD26r5aX3gp/qKJOYCh0Y="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1rt4g447zhv6jcqwdl447y88guwm0eevnrelgzc",
+      "consumer_address": "cosmosvalcons1w426hkttrwrve9mj77ld67lzgx5u9m8pyplqg2",
+      "consumer_key": {
+        "ed25519": "11RXjc8fKHijVvMj+7nBnp7VdS6unbZc9fHwRHpe19I="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1rnknqueazcju3x4knpnhvpksudanva4f08558z",
+      "consumer_address": "cosmosvalcons1d2776rnemrv27jgpee9utgdkmgctn394dt7v3z",
+      "consumer_key": {
+        "ed25519": "Rfkigqlss4au6QPUzoA+ZK1S3mxmF9K0Z+xXWGrykqw="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1yy3rgawwsmeu0n27npd23r7zfg5uj7qnk6xvj2",
+      "consumer_address": "cosmosvalcons1p237ln999slc842q77lgn847rum82cemkqq9d9",
+      "consumer_key": {
+        "ed25519": "0+DL81YA21/gVxn2ULaJWvozdd0PGf4GMo+7ytjLvn8="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1yxv746y5egu3l2p0q8pvv99lavgr6ptvdhx306",
+      "consumer_address": "cosmosvalcons1rzsajgasgvx57wtpw0hf3tsarpaachzg8pu4hj",
+      "consumer_key": {
+        "ed25519": "mIY8X2ymq9/vqeSuEfD4M1OcEeXGZac8/mfHgRBlbXA="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1yjf46k064988jdjje068zmrqg8xh4fqqe2wwnl",
+      "consumer_address": "cosmosvalcons1fhx8ahsa0df330y0vcx5mmpnwmu6uywccugj6p",
+      "consumer_key": {
+        "ed25519": "KmimSNU5FZa3/xlhf8VjaK7ci/aYNr8pO74s3FmP7GM="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1yk5ag5kntufq2zk7u6e3jd9mshpgzltk7knpja",
+      "consumer_address": "cosmosvalcons1gmygpn7z2u89228d87zygn9t5axxzjk7quldtf",
+      "consumer_key": {
+        "ed25519": "cgv5xUg+nevsMRQsWwhNCpstrDmV74+uPqQ1q4XypFc="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons19qj454eqner3yn5p5w808vxwr9ylwjhwjpyq30",
+      "consumer_address": "cosmosvalcons1an3djt04r0gvecpykf3df53nxt8aqp640kqyn5",
+      "consumer_key": {
+        "ed25519": "OjUOEs4uB+BQmgM0SSC9y4xHIMrBluaVwpRnXk3tKR0="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons19yr8ml3n22jqfqwm05g7u393pgg0cs5smqryuy",
+      "consumer_address": "cosmosvalcons1urxhz8y2kzn24s0fcnnjffcxnwa8dje042amju",
+      "consumer_key": {
+        "ed25519": "vj2TQybEkPtpdWWAb6BiLZfdhEk2GmnB1GE5SVu+nHE="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons19wd9t5alj0tnwhwjq7m4chk562u3my2xwt72qg",
+      "consumer_address": "cosmosvalcons1qcealazlf0rsq62k499szqq77x3j4396vrvaxk",
+      "consumer_key": {
+        "ed25519": "41azC47B8htQ1dDy9JyY008TkLeRjyVynI1YCdHe9q8="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons19s49axu7lyp3vnazh5l3gpt3mhcz5qxvucqyks",
+      "consumer_address": "cosmosvalcons1ex7gut9kf0drq30nj8y0fjcmq8psmk4ws352yd",
+      "consumer_key": {
+        "ed25519": "iq6eBF5istdxDRjsS/t67nTnnBkU6mT9tevnhWGzudc="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons19jwvcvtlk2pa2jk8fzpc5e8jjyrq88j3h8y9v2",
+      "consumer_address": "cosmosvalcons1zm29ktmlgjyf47ddu2gwd6lxqetz4g9f622zaa",
+      "consumer_key": {
+        "ed25519": "kY9eYMcSr99QTKzbtWYCcIxM68qmi+M+VwUs8S2ISXg="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1xxfqlx7r5wdkdpmvcltdtevfuype80cwmrrtae",
+      "consumer_address": "cosmosvalcons1vmqeysgnke5qsg9g0z3crjaz0zxjprj96rs3hh",
+      "consumer_key": {
+        "ed25519": "KUB/75XtxDhQzy36CV8DsW1sD4CGnHDN9RmtrHEVBYA="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1xly2n8wp2gudg57ql0h8c2ktah7j0s0yjr7nsn",
+      "consumer_address": "cosmosvalcons13gl20uas557760xtma2dremsdy44nd5nhcgu4k",
+      "consumer_key": {
+        "ed25519": "GgpLexZllCZswdaYK95GyVbHdbY0hfoeWblbOigv5kI="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons18fntfdwyx2dpf4z3j4w5qwahv0dvmp72x69edj",
+      "consumer_address": "cosmosvalcons1rjylx55pucvsqfy4pn4vxadmtsfjmxkyuqm9vk",
+      "consumer_key": {
+        "ed25519": "R6hJoI2bOkhzDmo37DcOlB9vZHkuyhMzGePDCqlVbn0="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons18dyu497yj6grx936sus49pcy38k7huyq3cflu7",
+      "consumer_address": "cosmosvalcons1fcjxntd20qwqygwl3jkav65ec6w8wjddr6t86r",
+      "consumer_key": {
+        "ed25519": "QSj57esNvaReFnb16NGNNunogjwn1cxxnUEaaiBuyPI="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons18wz9exh3660flwmzpd56kgnt9zavj7v9uum0aw",
+      "consumer_address": "cosmosvalcons1r572f92dmf2vxry63q4483v5tqflwhr4v45scn",
+      "consumer_key": {
+        "ed25519": "UeK+67pvN90YuZs2nOiUKtXLDmDDZjxJiAlUDQlSmKo="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons184xnl2jk8055m6cguaruage082m07tkjaqut6h",
+      "consumer_address": "cosmosvalcons1q522wpvrv0ecxr9406h64p6upm8ghzm7qksvk8",
+      "consumer_key": {
+        "ed25519": "QIdSN2OzskPwSpKpxSp23oVLKMsdVtYXq7oVFCgS2V4="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons18hzd6cggzasx449gl8tk9grg4q0gws0z52nvvy",
+      "consumer_address": "cosmosvalcons16tr40qshhgavaejpyrau40gmgl49r7wwqxx858",
+      "consumer_key": {
+        "ed25519": "sRStKKW8VxpfhrMeWEjFAq1qeZ1R5OMpo/O8ZcQ+fF4="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1gpl3gngunh4yae4ge0pdfspz5et4q6ury3yyvp",
+      "consumer_address": "cosmosvalcons19jv6hrdjvec6n8lk6rs27pyxaex3cfzaqragd5",
+      "consumer_key": {
+        "ed25519": "ITvpTM/X7KUw7HesOsMpRKDvyWcuPezBDMFR8M6fVCk="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1g2yl08tdkvcfdwkuxe5crdnrhg7t87zma4y669",
+      "consumer_address": "cosmosvalcons1c583t7q5yqmfefxkv7ra7544s5fnc6e4vjkp8x",
+      "consumer_key": {
+        "ed25519": "miSsZ3xHtA9qJWYPsniAR1476e6xWeaeuGLvbgjk7Aw="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1gtt8qhn3vcttff2y90d2q59hcm5lmhjrr5menw",
+      "consumer_address": "cosmosvalcons1ytdpd6v9eyrpdh2wc9jxu79jdvx2k6x9r3uv8v",
+      "consumer_key": {
+        "ed25519": "ELfUkTz27VpUdLmWvHUdF6RzjIL8yNOpGTOM7vtue9A="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1g63l3wpe8w4p20zqu4ezat5zagx53vedf849wa",
+      "consumer_address": "cosmosvalcons1v0srsy79sfl4q9rqkxg4sa3xt2r7eepla3g0ef",
+      "consumer_key": {
+        "ed25519": "nvZ6TS+zDMdYJuS2iN4uUV33Tm3X565VsIAwpRNQyYg="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1gaekwgvvn7fv8tvekhtnfg6xealg5v58tm39uc",
+      "consumer_address": "cosmosvalcons17rs26lpkll0vj3jedzpl2fsrchgy9wtjjdv7ar",
+      "consumer_key": {
+        "ed25519": "xtmzqj1WXVaevWmnMMapdP7UGtx9Vs2EnfzrCoizAlI="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1fr74vrfukz649yjvhs8ec2ax3zpl5yf4z0g669",
+      "consumer_address": "cosmosvalcons17tvfw5ukwpf5526434e2aztq9emf2ly4uqcfn6",
+      "consumer_key": {
+        "ed25519": "csUajTeDB3gfbJvvM50Iok9dwO39EjExSVihy+tAzic="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1fxalkxap5ag99cezd68purh7kvu33w9jhtryqq",
+      "consumer_address": "cosmosvalcons1qd6ul8z49skllnzdly0aq7d02d6l82qtwynv7f",
+      "consumer_key": {
+        "ed25519": "y4d7dpiILWwWNJC+2bOWzmk6TNqYEvJVSOrBHjMEBZ0="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1f6cjsfn47ujttypx7gtncglsmjvndugc2zelqx",
+      "consumer_address": "cosmosvalcons14z8ugghhxmfr4q8sl3uavhj5983re2ak9urnzc",
+      "consumer_key": {
+        "ed25519": "aQdzM4hF6ZPHhzr4xML6T56qHdmfqhWHGPyyhkJEV4s="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons12tskgcf5gv4lj5etfzqudmfjus9wtgka8znl6y",
+      "consumer_address": "cosmosvalcons1u4ddxkpfuavek3f749ar7zekaxdhq5hlmqdgrv",
+      "consumer_key": {
+        "ed25519": "XLodfRghCVOuf+67t5QD7UIq77p9v+q4Ybtt8hlVTDI="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons12acnhd6zr3l7kwqmsclusl0dt6pf42tpw50hqz",
+      "consumer_address": "cosmosvalcons1euzaxy623gm27w0c76m8h9myluxznclgvw8fs5",
+      "consumer_key": {
+        "ed25519": "Rt8yqB06kYoJy/vIzwArA7xikGg1jyK7d8XIAWgDLf8="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1trff6w7vahhwfdu02czcf46e9nlsj37fcywsf4",
+      "consumer_address": "cosmosvalcons1wrzk9gcjgz4wve4zy4uxpqparnm7kgqph78f5y",
+      "consumer_key": {
+        "ed25519": "wF9FefHq3jcqq00wi7GJTP+rgBiIKNN61FpJB7r04BE="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1tyh30wuv7d42xkr8vk0ckr57wms3hna6valwtm",
+      "consumer_address": "cosmosvalcons1ylyx4zszwyaypful6kxj9rehhkmf9u2a9vyh3e",
+      "consumer_key": {
+        "ed25519": "NLy888NHpIjSzKFhtTFsXl6BXnX5YnuwrZ6xX1qD4A8="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1txkxwgrg77h8tmv02vq0cvnpey4epxs2qq3s3d",
+      "consumer_address": "cosmosvalcons1gel0x9aqfq82hveplgv4ed92aahrnx65ufylup",
+      "consumer_key": {
+        "ed25519": "KwMg788XgazXjTj4Wtzg4C/yIMeSUzTlgBPNEsRVRSE="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1t8p8pdmq6jdzsm3dsurv8877vsvjtdwwkxq2cu",
+      "consumer_address": "cosmosvalcons1hljy4y72zjp2erxjlwdtxveuc0gu9ejhl0tcsk",
+      "consumer_key": {
+        "ed25519": "wzYM14hbNsl6+R5AFIhcvbiBgtg1OSakdxOcxo8+oe4="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1t46pjekpy7m0vmqfejrde8j2ct3gyc78sgr66f",
+      "consumer_address": "cosmosvalcons13zn43x6a84k7txqamw0v27njt607zux352z3q0",
+      "consumer_key": {
+        "ed25519": "cavKFXBju9UQEbzYeE58EapMfP9BcHH31r4ieIHyOow="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1vp9yf9uq7zgtcm9mk82ejd9zpgfyly7pvluafc",
+      "consumer_address": "cosmosvalcons17u3w08u6y87ujuxnqjdyq2k9ynzdwrxjlap696",
+      "consumer_key": {
+        "ed25519": "iw22CdO2Jj2HP+uEJOsUIGvfJ4QFWpLn3K2Neyf/ZBs="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1vz42ewp04wwepjed7z4qenj925gpakgvap4q2u",
+      "consumer_address": "cosmosvalcons16gzvr8tux806u022rkmr85r2tzwmvx7uked55q",
+      "consumer_key": {
+        "ed25519": "DC26rcY4AHVp79kmx2yROInmGlj5ROseXGr+rObXVFU="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1vrj9ryfsxsgdx2xn6r399a0tc3zkyez2ps6e4t",
+      "consumer_address": "cosmosvalcons1l0s5h20qn27tdmdpfx5darxne8x5dl97cayv7s",
+      "consumer_key": {
+        "ed25519": "3ACZ36Mdm7m74h5c2o+EY1agnwMrjQIuvbuexF1rTTQ="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1vu2xpycvehymqmzaq40y64gwhrd0y2g77ec8vl",
+      "consumer_address": "cosmosvalcons1rtea7l0nd96gmt27t9kfcccxp472gh636kxxa5",
+      "consumer_key": {
+        "ed25519": "Od7LR9APLCshDylcZEtx+T8i5dlV7/W19ZQ04AK2D5A="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1v7dcj7zewwlff48alzmxlp9f9xfjayw9qznplh",
+      "consumer_address": "cosmosvalcons1htpdu4uf8hu7g0kuqw8h4ldzr8wjctqsq5y7v4",
+      "consumer_key": {
+        "ed25519": "qTeY2r8yBW97xOt9+mjI4qldRIKPduc476168a9KAhg="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1dr6mh6kw7y2vwg82njvtlghlmcqu2n730pfk8a",
+      "consumer_address": "cosmosvalcons1peeff9p4npp0sasw503stsggsueyyahgpxf7pq",
+      "consumer_key": {
+        "ed25519": "6Wf+rZ4iZLLnxXJC7kOaSFIjEQ4knDJXgIM8pU3HBD8="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1dfx3ffavnd8hclegmjgydegzn5dlp86p7wgc75",
+      "consumer_address": "cosmosvalcons1yjyd67a5lm2hkwlcct22epd27swznwng4vmdqw",
+      "consumer_key": {
+        "ed25519": "e/N2H+pR+HgRN+ahNHpR9X5fJf+rV1Ae0HKaOUpxJTk="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1dfg42n5vpne3vkspce66nz3v8zmwk5fv8yl7z9",
+      "consumer_address": "cosmosvalcons15kd9pdll3043k7xs5qnxeen6zd2vlwzst5q80p",
+      "consumer_key": {
+        "ed25519": "AlGMH3UODItpSSADXbqrK2xqmjn4VRHr6mWvo7xmoz8="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1d028q5ppxv4fpwfrjlvdwt9rj5xtsk8t7qzwxh",
+      "consumer_address": "cosmosvalcons15whecd84gtt50v48puq5qhpa5qzc52g2xw53nz",
+      "consumer_key": {
+        "ed25519": "UaoDznUXTrYhC64K7Z4Eb1hckyzTVUh9uUPpZQ8VuxQ="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1d3gvc39578wr927jjuxc4nktyp9vemu9ukxq43",
+      "consumer_address": "cosmosvalcons18hmlkprxvg9v32jh72d55a3gspptnwldmwg76r",
+      "consumer_key": {
+        "ed25519": "IwoM+8XYByQIOQJJBxb0ob2BDeKdys0loBCDBJ44S/M="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1dj6867rt9u6scyaxpwmh6wv2eqhfqzv9favv9l",
+      "consumer_address": "cosmosvalcons1aujqjnpkwf67g95fv8svhcx9dyy8t39n7ttq90",
+      "consumer_key": {
+        "ed25519": "3rw5TXGL6rw1Z58e/bLPlXPnBChcEHWutYbAuLQJ1ik="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1d4cplfv4xf5gmutt472jzym73s2vhvckjadcn2",
+      "consumer_address": "cosmosvalcons1u2kpk89neppht54xfjpg0mlty0hyva96hpz034",
+      "consumer_key": {
+        "ed25519": "kA0v1rENkxShCXjecaMPusNrgYu9is/0uS+OwZ9JiBU="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1dc3rf7yps9a8mwvh6k2qq5v9j8mf9g2vk82hp9",
+      "consumer_address": "cosmosvalcons1mrnp2axjhqdpcg748exnm4ae3d9lt05rru9q5k",
+      "consumer_key": {
+        "ed25519": "orMhea7EphMZ8NON37MQuYNBq4loa4XuJ5zIVz5CN4s="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1d65x8dzt5d5lww0x2k2hwrdtjtyf4ysjdyv245",
+      "consumer_address": "cosmosvalcons19gf8mg0qj8wf9sh9gmurxne87cj8fu2s9u6whl",
+      "consumer_key": {
+        "ed25519": "ehLpAXe48rUP2FmG7GrcVEHvnGfVP+FMw2hXavmQW0Q="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1wrzmfenhn3v6yn8aj9r9s838qgwz4mpx3dsgl3",
+      "consumer_address": "cosmosvalcons1rc99pchtdg4ky5cexmt8cd9hv0wwrrt5q7fg2f",
+      "consumer_key": {
+        "ed25519": "//N6VVkizeFwH3mrW7wA7/F9ZwdkOX2tbf/9NmdFGu4="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1wdx5ghv9gkfua7uw7rzy86fr3ur7waa2dtyegj",
+      "consumer_address": "cosmosvalcons1mps2dwtywf3ast7m57kcpvxuq9np9xud0ff5r5",
+      "consumer_key": {
+        "ed25519": "RQHlzpNBBr9446tfOohAt67Ppd5ihe04pp5/vWVgRqI="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons10q3r3twa4vs2n9xl9fn9q6n0m9cxewv0rgtrs6",
+      "consumer_address": "cosmosvalcons1d93agpw99l9jc7ex6fp6gdw6rjyhgf5z3xrtfr",
+      "consumer_key": {
+        "ed25519": "U84U3w6rm2SF4Mr5PJS2AurNLtJQlJ8v5OXw++cbYF4="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons10zstm2nfykapjsmvmu4p3l8rxlyv23fqjjlcy6",
+      "consumer_address": "cosmosvalcons1l64m6npeceag3rrl6el345e8fmllj74qdc4vxq",
+      "consumer_key": {
+        "ed25519": "cqFoI/j41DMmaw4qGEwwQ5JJcXwwQSt5RcgMT8i1yEA="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons10rca02th8lyjyuu7pgmstf72q6l2xzyru7zluq",
+      "consumer_address": "cosmosvalcons1k58j8amhhj0ynshdrpfg9ykxgulf8cwzhlfpln",
+      "consumer_key": {
+        "ed25519": "s2LxQLuWMJoQlT8dm8/hiHvTXhMs/tVeedZyEif0lT0="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1096g38neusftktyv9ur8c7nt9qk6vel6z623qf",
+      "consumer_address": "cosmosvalcons1j2885md7x0yfggcmeza9r592fdedy5mdcegrsg",
+      "consumer_key": {
+        "ed25519": "U5jGliSQqy2guIrxTnkt6Sfnsh4soT6nt11DdGhz7cI="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons10vazaljm8lxlsx0u75nqwv2valj82jak592py8",
+      "consumer_address": "cosmosvalcons1zwuc4se5nky9tc2ss68r3n5pffpfdwchsqyw78",
+      "consumer_key": {
+        "ed25519": "/siF8Mj8lSmgyMuuy6AuJnJ/jIQ3AO1alYEOmYTVDoc="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons10v7sra65mluywnksudvgzt75xlsf8zwuzsq8r3",
+      "consumer_address": "cosmosvalcons1trpej0dwgzw9azllatmf6xzxtahcclvvgamd2y",
+      "consumer_key": {
+        "ed25519": "eH9DyM+VlAW8OFEuOiaTJNHg9uR+mJ4UpFYA7BMxLG8="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1sqghwtkhmheve8xh5jxgcz4zfphf7n5huz7kah",
+      "consumer_address": "cosmosvalcons1htx3zc3namf3xxy3hym7af88yezulgsqf7yg0n",
+      "consumer_key": {
+        "ed25519": "EoL9IqRpJppywFeA5PjyceECF+vlGTcIRSiwD0noWdc="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1szxkkp22pdknla04atc2vh8uvnz587pnwa9sj9",
+      "consumer_address": "cosmosvalcons1hm2twyhga9gqkp46td2vkhy5ac27x3pkzm2puy",
+      "consumer_key": {
+        "ed25519": "PUILJyJJQ1z6KkBLDPP6h8t12/986mPdZ8GZAQVaU2I="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1sxykfd8mxmfgzzwrapfh0zenyvdj030ud35k24",
+      "consumer_address": "cosmosvalcons1xe9zqg0gp6df8lluz2j29r07g46raaa29gjg8z",
+      "consumer_key": {
+        "ed25519": "umiF/ppX7Ry6mW0vI19ycShTlA8/xj1efvHwlaUMejM="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1s347fuu7xy3d9gknle29fcjkzpe7j4fc2dk40r",
+      "consumer_address": "cosmosvalcons1xfn80afak4u6yq0xhks4tef33w28gf8mprvrm3",
+      "consumer_key": {
+        "ed25519": "6GvbNXh8e0lnTpsnk812rM1S1xOnn3gVRAsaXIZBvHA="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1sjea3y3t5tey5w280mq5j4uer0s6uam9nthe0r",
+      "consumer_address": "cosmosvalcons1fjwvx0l6372aqchewk7ff5t0qra38m5s0p42ma",
+      "consumer_key": {
+        "ed25519": "xNOEHe0/UwPjqjvcEkJ4KvWzwvR9PinJTvPf5zsiOvs="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1s4fsuunlj5a2l83vg436x3yncth454wv333xse",
+      "consumer_address": "cosmosvalcons19tcn2s0zgsgupn87tzqe29hdf4ytt6juuy94tt",
+      "consumer_key": {
+        "ed25519": "0Y12aVqRASZBryeFcBQ65XbuDusAGsH+9s4RYcnmcMk="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1s73grk4jgnyk82v5az5uhfqqvgn8mvq99680xx",
+      "consumer_address": "cosmosvalcons1q3ecvk9jes3p92mr48gu3ggccf8ywl6skyrlh2",
+      "consumer_key": {
+        "ed25519": "Y2qKQlRzyg6JLi0poecZjmP1RaWtGI4IytAXaMxXPYw="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons13tgt47xw60a4p6q24czs8gnah559wet7gszhsx",
+      "consumer_address": "cosmosvalcons1v6wrncq23tpk09je7zk4538kptyycva5jkqaxh",
+      "consumer_key": {
+        "ed25519": "MrQyJUzPhsRjyLr2WSiYI8T2Hwujj7r3dLS9i78FMWU="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons13jyq92fpz9qkn5jcrn2xu09xs5lk72nltzjkt5",
+      "consumer_address": "cosmosvalcons1l4uv06sx0gjsmnn54qjz4dpy6dc6j2a0v520cs",
+      "consumer_key": {
+        "ed25519": "MnpzqBwOGkmRyjoGd3pMrwkQMOE4a4xJUha2SiiJmkE="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons13utglz4zhpwr9r08vtapx3w9s9fmvud8xprdne",
+      "consumer_address": "cosmosvalcons19wl4s4l6thrp679mz5lhdw9ndlya03kmjfpy6p",
+      "consumer_key": {
+        "ed25519": "2G5Is4uKG1vfAtRJRdnt3y2ugIq3zMQgTUuU4lPhgLI="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons13aq2g6rnz438r390zlrvpajffazkas8psmvj99",
+      "consumer_address": "cosmosvalcons1q79zhw90354u7j3e92zy5qtq02vvn3kk9ldw4v",
+      "consumer_key": {
+        "ed25519": "3+VcXXDf0hHQwYNfD62pH2Fx8O4GQ0BoQlHN8rp1eAE="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1jp4sw2hd5pfmr9jrg4hx8hkjxdjq6tv3qfq2wj",
+      "consumer_address": "cosmosvalcons15065pa8qptwrxumtdnate33tusnafjxr364lkr",
+      "consumer_key": {
+        "ed25519": "Fsp2S/waGMpel82XSc6svzgM6W0D0PaQUWS0ucFvbKg="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1j8yz8f6ymeg0j8qh534kynkl3ac4pf7a4xhrhr",
+      "consumer_address": "cosmosvalcons1wpl07xe2kdv36shl6g5f82md2n2dcr4x9gullg",
+      "consumer_key": {
+        "ed25519": "gG6psfVv9zreSR3z+mbxAa8hvoRYjNBQgufvGizZIP8="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1jhsxp5rhzvrsl6vz9ak9p0tkhn9lnut6ehz9ej",
+      "consumer_address": "cosmosvalcons1q9smaqtwnvkndrghzlfpv5xzzm0n7cnudyqmx0",
+      "consumer_key": {
+        "ed25519": "iOJ8Kqmlfh+w8+zgranCfJmX677PBopoM3kJd+ost4o="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1jufcrrd9gze26sxd82ppse03eg5g5xa2gplt6p",
+      "consumer_address": "cosmosvalcons1wkeetmyycjptrjut2ut3vvqpfa9k4w5n5j4tfu",
+      "consumer_key": {
+        "ed25519": "Wc+lNAaqtE5QANcp7M/hmVBqhAOt6Pi4GDwxayfB6fc="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1j7936y5vdvh6c55v07tt05hdmhuz5xu77qyga2",
+      "consumer_address": "cosmosvalcons1ucrwt969mnhfx2jtfy09yc8xszc7wzh47n2y4h",
+      "consumer_key": {
+        "ed25519": "eRTB8nnc2JPZ3dTPLjozZQr2meDVsZRm8BDb/WSIgag="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1ntg25x9f9gdyxazzdmvmsxfdr4kr6f53nhwys4",
+      "consumer_address": "cosmosvalcons1ukmk2na8xy5vz32a2gu82uql7dff72gma32w2w",
+      "consumer_key": {
+        "ed25519": "3/xMFe0MgqA2egEWtbZ0Z2nA8K8HCvWRHi23S0JXGto="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1ns2u9ech60wedtcfynfrgsz6ax9390nlfywkk4",
+      "consumer_address": "cosmosvalcons1xwj2k9zzt5wh7p230ypqm8chhyghvkq2jkgv8z",
+      "consumer_key": {
+        "ed25519": "dwQyy1Pm8DeUR9u7qZOPPBUHXolTwbHMh6K+X9OV88Q="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1nnecnhxz9uq8pfjpuah5sdtxkgacxj6fajk8kn",
+      "consumer_address": "cosmosvalcons1mh0vqrw2xwy8zk6x643d6gvmld8z4dsj7ncrz3",
+      "consumer_key": {
+        "ed25519": "ETgueAauZJcjULD7gmv7ICfru0bnE0bP63YttIREff8="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1nhzqzgyehe6rrzg8fwz7fxy34canlm5m6dm4wg",
+      "consumer_address": "cosmosvalcons10y68g7wm7ltgv8l7w8z85v49cuzpdvnats2t6x",
+      "consumer_key": {
+        "ed25519": "qxXtcdhAXyDy+N3eIOKOrDAFfIvPGmtNXxownEpWrxw="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1nhuwxwxgt6rehjztp24z3gytgvdatd2g7kndfm",
+      "consumer_address": "cosmosvalcons16vkw5vtmh7fpzcqwlz9f8d7x5ll63kh0t29r2t",
+      "consumer_key": {
+        "ed25519": "bOIWHpr0RsOpIy0OitipzG6f1bxoUbSYIVoyTynFkSg="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons153c3tsyls3h5daye7wqmxk69yujjqjv85ty9x3",
+      "consumer_address": "cosmosvalcons15vjj0k73yzasapp0v5ydveq2vxl6ypdvamjzm7",
+      "consumer_key": {
+        "ed25519": "6qoTBExVZWLviJCYx0cHvgiLNUCRE7zTmpgO3AVCPGY="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons156f4mpmmjamvgkuka6h9y62e5wu6t2c6ld3frz",
+      "consumer_address": "cosmosvalcons1syez84d7czszu58gzxprru6z3zq93ygt26xa9j",
+      "consumer_key": {
+        "ed25519": "8inigZd2q926iMa5X9M8vvwAtX/IsUYjQbpxnabHkNE="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons14g64mm93hjmtdvjwmpajfyvv7vllry2f9s0t07",
+      "consumer_address": "cosmosvalcons1jjh3t3ddm9pn4psccwhehnnn0hzec2qr904fa0",
+      "consumer_key": {
+        "ed25519": "hjZjAhBbJEYs9VPkkmz6q59oN3E5dDWZGzoQkguePsg="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons14sk4vptumprktehmuvvf0yynarjy4gv08t64t4",
+      "consumer_address": "cosmosvalcons1xv2map5qjuhykwp02ygqmd5ff2ttfj2upzhavf",
+      "consumer_key": {
+        "ed25519": "mqNaNjXZN7sCeOqZ+luYjDzQm4QOFoL6VHZQN02WgDY="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons14nmc5p7skgrprxmz27j42vmxn33wzejerfkgqn",
+      "consumer_address": "cosmosvalcons1veypwlxdgxca7sc2n2we3l9uz3ssygncuxjvs3",
+      "consumer_key": {
+        "ed25519": "i0n+XI4pNRhi6p32Dcf7Pgz71KmVDtfIYgON4V4D/Ms="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons14ezk4pd9cm2xlg6sc0kzmjcq6esnt83q8k8rp6",
+      "consumer_address": "cosmosvalcons16h2y79w4tssen5axusax868qlsdq3wa26x0rs7",
+      "consumer_key": {
+        "ed25519": "rL2gGQSPrZ6VhnSJyZQAtMPwKI+N2ZY1+q7BTbdLTcs="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1kq24y5kh8dlwkaxj4rxgzsuhue5hp2petveuva",
+      "consumer_address": "cosmosvalcons1yczqnu5up4nf0ce8c97crdsx3t7gtdm437zhqf",
+      "consumer_key": {
+        "ed25519": "F88l5GhwRCQ5gC20kJR1Uwzz83Vc1ZlzwyPgR+NDjoE="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1kpm95tm0esga3tzxya06cpkaxh65y97pmqgmng",
+      "consumer_address": "cosmosvalcons12s32dmguzg0m00t8zj68m8dnlrxwuc85hqss7a",
+      "consumer_key": {
+        "ed25519": "gei+a5sLmsY2sToAmG9YeVJYmXcirmQNEua0M3a9rAA="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1kyt86pphmwwlp4fnac4vmeypqufehhfw8zucrv",
+      "consumer_address": "cosmosvalcons19fnv826ftt0gr6c9gdtfwzmerw4jwcqv8wp7j4",
+      "consumer_key": {
+        "ed25519": "+SceNIKwDUkDjmkd7hc53CN6IstFPwsjRZfNL06SltY="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1kgekmjr2wjn0s4fd0a5x4syc8m6wpvxwp9kvln",
+      "consumer_address": "cosmosvalcons1rgkl5vftsmy0n9hn6vd2y486qhpzgm2p6qzzg5",
+      "consumer_key": {
+        "ed25519": "NCjhaMR2l9WNdiCQEUWzHWHksTGeHgLWtt22ACjEACA="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1kgmt9g366ut2nkxc26svhfmz7v34zhzl73rgp2",
+      "consumer_address": "cosmosvalcons19x8k8jc3mkfyz5cq0alxnze9pge7fzkzgmhex8",
+      "consumer_key": {
+        "ed25519": "6SMqEsto3vqkrSUoEnce7uv37dhI97PZyO0C9YfqqpE="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1kv2cr60l2ugy25cnwr3dfz2694h7mm8muyensh",
+      "consumer_address": "cosmosvalcons19e6uzhtyzaph7wsaknpewxhzfv0538tn9vuj9k",
+      "consumer_key": {
+        "ed25519": "/kEhtPzLE+90eoHTUkuSnggLHdII4Dpg9yXf3kcZE0k="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1kwvu4kaarawlh9t762gdypx9k8pn08jwej804k",
+      "consumer_address": "cosmosvalcons1mfykqvtqks2jst42ykpahv34f7hfjwzjdfxtxa",
+      "consumer_key": {
+        "ed25519": "hVW9xrtK8udOPiSXF+QHhlD2gG3URODS/oGbgM2e/yw="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1k3q6dh8eqxfwjwdx2ct7a6kns07eytzl5qnxm6",
+      "consumer_address": "cosmosvalcons13hydwy6zzqat0de8a0t85ygp5hypzf94h4ze60",
+      "consumer_key": {
+        "ed25519": "5lidsaZZhh/uk/WF0nBiwauE36fNUFlpSTyY9oV87Hc="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1k3pqx4yg67gp6awclxh07p8kfhmmu9swja85ws",
+      "consumer_address": "cosmosvalcons1h3vsdnpr4jjpyqadvtelpv7a0qgg6n4z9h23ug",
+      "consumer_key": {
+        "ed25519": "256sY6vL0XxkUez5D6fynXxuMdWAYm3K2O+l3Ay7Rp0="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1kkejqy0vqu2du2492rsgt29jqqm2zr5r2hlv3z",
+      "consumer_address": "cosmosvalcons1jph67e7x2tw760etsqa897n8x0g8pk2xda8k6z",
+      "consumer_key": {
+        "ed25519": "iah7ZDU9BRmE1/f/c3UTxu0ymxzhbWDBA1c/ao4PsKY="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1hdwafrnxyx3pq0alktaf5h0gv83725edy3e6ak",
+      "consumer_address": "cosmosvalcons1etld5yq6jtuy4ckt4ldxhtn9qkhzn05npuxkln",
+      "consumer_key": {
+        "ed25519": "cEeK9USbgeRkQ3yF01QiPynlf9ioArlTnUWfXJOkEeQ="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1hs92z8ndlt3y9k09f2pma0dn5y3vtcyc0pw69p",
+      "consumer_address": "cosmosvalcons1ra7lvyn3hs4wnasmyktsmfe6h7yz6gsvvf8qw6",
+      "consumer_key": {
+        "ed25519": "Ux+BWOv0uvaTv0YYJtHsngHOi6PGfWplxNHXBiItz+A="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1hkcyvfv7klahfg5qzh33uexwa8cgqgvekug2dy",
+      "consumer_address": "cosmosvalcons1z5ug9atgyeyz6r7vssey9xh3gzt0fynmnulxth",
+      "consumer_key": {
+        "ed25519": "9ZZJ9leGczBksg62mraXxYA9W7ggDLC7d0GRAQ1lrj4="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1cpd299h2lkksgmmjkyzr3mzn75dsm3g2asvfgn",
+      "consumer_address": "cosmosvalcons1rsjnxvg9cyq03fsc2w6mggaj9egk4xu32j33nd",
+      "consumer_key": {
+        "ed25519": "hv4FQsejWa+jFfeFWV1QmA3K4oekvHB187B9Rwodbmk="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1ctwajuqv7h0vq3tacs3c9xe3a28af7w5cpvj7z",
+      "consumer_address": "cosmosvalcons13rxzsc7s6xepljmlregl7pkg2gycexmf5p4hrx",
+      "consumer_key": {
+        "ed25519": "Uz2D+BaLcc3FcS1LciwOYjADe+8Wx4IejUHaVLJzlxA="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1cnmzzr9hwtqtxllc2gz50mpxhm7mzxfme53nnx",
+      "consumer_address": "cosmosvalcons1rzzet73hupq3r59p7r8la2zmyqtgrvp95krsxy",
+      "consumer_key": {
+        "ed25519": "s2zCLgbGHBLO9Ip4yZsDA5pQcKgEwmqLm+XtPhE+DEM="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1c54vmveq2l6uwvdmm4yyvzuncdgqm5eylrg0af",
+      "consumer_address": "cosmosvalcons1mwk0vyz5fc5ywshj0hzx96s98tkxkcyd9u6wkq",
+      "consumer_key": {
+        "ed25519": "E6u5k3750DYbbw0BsT08iSu7SHn1ZQV561l3QWyMGxs="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1c5e86exd7jsyhcfqdejltdsagjfrvv8xv22368",
+      "consumer_address": "cosmosvalcons1d0yeatnt5teumstsm7nnc8dc078xc4094ljtl5",
+      "consumer_key": {
+        "ed25519": "C+lBAKHcJb7y6SpQai7XuIhwhTVZ1keX5EicyLO+zNw="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1evelsgtuq72jajsc757pl6hez053gvfhu2mjty",
+      "consumer_address": "cosmosvalcons1swxae3gsnd828v296ywyk4nrt4egaewa7m6kml",
+      "consumer_key": {
+        "ed25519": "6ZSaeZMRdbUQKFIITfjcSWDJ7lIJNUZycn54zWOYKac="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1eszcs2tcl30a66nhy958u9xq9xdwqp9c65dnm6",
+      "consumer_address": "cosmosvalcons14r47rczvzz8d095a0nehuqld2wm39wngkgrmqe",
+      "consumer_key": {
+        "ed25519": "FyTDaL2hGRS8kkqrsXfq40nuv5lqWcAbzmf/o1cg+2o="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1e3wwysvd4pw834lcnlk24vydmn33fsxvwnffjp",
+      "consumer_address": "cosmosvalcons1au6443f628azw8qtv8qd7fn5p8rkszsh85ztae",
+      "consumer_key": {
+        "ed25519": "z7LuxdvqrEuiGHMbm2RteROp3nzKrn6YjY41hLkipR4="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1ejrl266cvgvprc4453ln33skdc54ecmwjdyr4d",
+      "consumer_address": "cosmosvalcons1ch44dk4z6q9yp340dj72hafq959an2ad8mf5l9",
+      "consumer_key": {
+        "ed25519": "QRleyectZf5bbPp6YyWfLeEgPbiLwhiSz6ZRV9+O+pY="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons16zkvwgzdwy70l8a5f8ed2tq9ghw8cylftd5wlr",
+      "consumer_address": "cosmosvalcons1ykef95nkw4y042wssjt7d49e4vqpa8yee4avq6",
+      "consumer_key": {
+        "ed25519": "S+WPJre5mbg13O+WPl3DA52FVbpfpLq+QIxuGW1R/6k="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons16f56s8rhg8693scakla3f3vpwepplvhc6uc0qs",
+      "consumer_address": "cosmosvalcons12fjev5ccd27yzl2hhxaxg54ph23u0lp4mx0wkn",
+      "consumer_key": {
+        "ed25519": "PFbhG8ErALnSFHWHqMdi8Uwr9KD1kXgiXmIVvmuK/ig="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons16t2937fqnm9ceg42k8veupnprwqj4puhwm6yyv",
+      "consumer_address": "cosmosvalcons1gzx06rg6jaz72q6p03urqy2zc4fukux9g459cg",
+      "consumer_key": {
+        "ed25519": "qn8kyf9WhuzTReMHK80e2jd0duEix07DBMuUYA4IEss="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons16tnak7apushwznnd3wtku8gm0rt3xytz6ut006",
+      "consumer_address": "cosmosvalcons1a0gg6qxysknurecpgdnzh7qhlfjkkkyznsfhc8",
+      "consumer_key": {
+        "ed25519": "ulpYRVRdkrd1Jgtd+nuPR4tlgBZrgAOj0mylv764NCQ="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons16w7zdvdfmmyd26c28w8v6gc3pmzv63d823y70l",
+      "consumer_address": "cosmosvalcons1qck2445dk9xvsmvejde0w5q7yekvsyt5440ruf",
+      "consumer_key": {
+        "ed25519": "WU4c7O6boz7V1ZILHGaph22dCdShJffzlph1L4JGqrE="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons164q2kq3q3psj436t9p7swmdlh39rw73wpy6qx6",
+      "consumer_address": "cosmosvalcons1wzfalajgpd02qk06dvxk4ce7qrazxq0nd9vpld",
+      "consumer_key": {
+        "ed25519": "2ThchFrZtttb83oTcEw1you9csU0pbZklnBMuIo+nbg="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1668wcrfwsfy0rmryek6ctmdkrm9yx27c7grulf",
+      "consumer_address": "cosmosvalcons1rxnkcn0s2g4w4trg44mheyt6725pt72t48ma9c",
+      "consumer_key": {
+        "ed25519": "boMUZ+UEYWjYgr+NbibFgyODo04XcUncbJf0GIGEQ8A="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons16lmu09y8cy99eudtavwmmq0g6jt403pz97zaxp",
+      "consumer_address": "cosmosvalcons1yzcu5h863lxe8c7f8n083eyumgxcv688ta5e3e",
+      "consumer_key": {
+        "ed25519": "HjIcJb16FovZUt2EADefPRuzH1xwMt8qL9Q7/TwO3XQ="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1m8u2gxmc92n2v6kus8u48y3u0h88kcqp69cr3a",
+      "consumer_address": "cosmosvalcons17hqaffp3pxcej8nx3xd9vg7yrkpps3has7507w",
+      "consumer_key": {
+        "ed25519": "8gsEDGtPHqgpVRMypYQKZjn/n97c0DZZF8eYcCU9dMs="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1mf42422ee8hc3gltx7clzp7tyen7hw4t3vnmw0",
+      "consumer_address": "cosmosvalcons1redx5m29354sqynkk7u4vk0adw7e2qal6l8alf",
+      "consumer_key": {
+        "ed25519": "4hRc05ztIJIgGB1/IFlE1JaidFbpE8HEvlOG8eXAV94="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1m6j8xpml3jl5cz685cayejkj2nmt46wjqjp0su",
+      "consumer_address": "cosmosvalcons139cwjur588nhnhxhhvx235rg562jxy05f5k7sr",
+      "consumer_key": {
+        "ed25519": "YrfZOKu3eH4I8xeKjiLCqgr2VkU4Xhcl4YvBUAhmHsY="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1m7fg8k39k2tyym5hgwrpf5wx9hqsr8vywuyrtm",
+      "consumer_address": "cosmosvalcons132s07pnpt5rd74vkfsjr4uecsmuv9lav2jrk85",
+      "consumer_key": {
+        "ed25519": "LwF7IN7YFooTAmQqXyhjfbjjI3szsWu/LduYn5jPhXs="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1upc05nc9pwhhagnkr3f2dft327qxsxfeyvajsu",
+      "consumer_address": "cosmosvalcons1k0ld37tyv2ut03skz48mqhtc02vehuet0rtn9d",
+      "consumer_key": {
+        "ed25519": "uFGNgYFKIHlkwC8OuDa+QBAcaLEVD5saiA0dF6dngAU="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1uv2n8wp2cea2z7ytwz7haxzma78py54p5akk8j",
+      "consumer_address": "cosmosvalcons1jdr0sdmynjpgx6dnwye0pp6lmkwucwstde6ahr",
+      "consumer_key": {
+        "ed25519": "94j8uvL2CxrxxqZfksALpmA/ep1hrGMjVfIxaDGBOSg="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1aqq8grrgeqdnqdzu8t3t5cu054hlvlh062nhqx",
+      "consumer_address": "cosmosvalcons1p3w8csktmp5j4pajahrrsqxv7eakdpht0nx388",
+      "consumer_key": {
+        "ed25519": "PYxXFtT+4gIWWZ+gzMHf14Glfptvgi3YIXVYhofMO1A="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1aqalcsmd9n5dej0vqkym9edhxh3hlwzujn0tn7",
+      "consumer_address": "cosmosvalcons1yz9k9kp80400gp2h0df6r9uqsrnjp85694tq3j",
+      "consumer_key": {
+        "ed25519": "ALwJSavQlgwC/5AfnN65PF9IqqQ28wXdWQf99z+oPoU="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1a0kkjnnvuy3ylv0g5twcae368ptgk83tyalw6t",
+      "consumer_address": "cosmosvalcons1a4e7mv7yn05vm6x0afsjw7dt6fue9nvn5eua8q",
+      "consumer_key": {
+        "ed25519": "GEVNLV2IjEH7xNH3IdyDC+UMTw5hT2X9mDREJdsqJ90="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1a4gfu7qf0cfsd2glah5wskm46p4amahrjvtw2p",
+      "consumer_address": "cosmosvalcons16fe9qnjc6a8vqzczy9eud7vnzy7g5teh3g79zx",
+      "consumer_key": {
+        "ed25519": "GseT8M09GPLtV0fm6pSc4SiBJgeWUUpjHJwkxeqjYGw="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1aee6r9636kx9aszycy0rldawdpdpp5kpdm0yux",
+      "consumer_address": "cosmosvalcons1zycs7cnwsddf2f6nuzac6vxpuc0ju8j4a7pfmj",
+      "consumer_key": {
+        "ed25519": "n7S7mtnuiNMiYUcoLmYTwShFvtpiapko5H4A6FICBo8="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons17ktnf2yk5a5fgd4uxs3zgn7cv2hp38zuw8j35e",
+      "consumer_address": "cosmosvalcons13uzswpw09m7e4p4pxqu3zau95ha4derhccugjn",
+      "consumer_key": {
+        "ed25519": "ZGRLBh2Ptc3io6teAFHcy10CyBPSERloxB3WNC8WhcM="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1lrjsx2uc6hfjgshrykmfwz6rfa6juyf7gszn2c",
+      "consumer_address": "cosmosvalcons1pgcj8m0nwuy3k6zceuswfh873w7flrnncdf7uj",
+      "consumer_key": {
+        "ed25519": "qSO+/VI0J4dRptC0EKHMC1g1lDR5t5dxGQjrufeppS4="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1l9zfdya7fq55anllgl66lv7rrswl4vcnmz5h74",
+      "consumer_address": "cosmosvalcons1vl4xcwfk686hxz37qme37anlmq4ksdpppxtj33",
+      "consumer_key": {
+        "ed25519": "hqVi0tpN0HdQziOeDu474aDfmKIlf04gxABjwbjMPT8="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1lxqz3934hapkqf7m8fdwq6stnemh3qvuljn49z",
+      "consumer_address": "cosmosvalcons1gszy8a6jfar74ehfs8k0m9j6vgmlc2ewqytnc5",
+      "consumer_key": {
+        "ed25519": "sDq+7Hin9tCoqY4ZZKsN7EzkS2vpYPFgSOSA5UU3vdc="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1ld8myknpkjf6t0uw8n2tt684kszd4r3rwy98d2",
+      "consumer_address": "cosmosvalcons1jdfkw6etvms0mgwv3duku3a4wc2lck7z0v90rd",
+      "consumer_key": {
+        "ed25519": "9UvMYJd/Xv2pwA7n+v8oBzbcmHvnRrgqc15Zi9uC2EM="
+      }
+    },
+    {
+      "provider_address": "cosmosvalcons1l4w4fcxeu3mgl6jvphlaez06j6mx2lej9yhszt",
+      "consumer_address": "cosmosvalcons1v3rxwektpfmlffununtmr93n0r7yquedkxg7ra",
+      "consumer_key": {
+        "ed25519": "HyosC0KPwtOAo68tefLBm7t0mzjz2NhaoV/PUxmNUhc="
+      }
+    }
+  ]
+}
