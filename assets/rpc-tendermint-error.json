@@ -1,0 +1,9 @@
+{
+  "jsonrpc": "2.0",
+  "id": -1,
+  "error": {
+    "code": -32603,
+    "message": "Internal error",
+    "data": "height 1 is not available, lowest height is 17966501"
+  }
+}

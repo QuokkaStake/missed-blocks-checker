@@ -1,0 +1,20 @@
+{
+  "jsonrpc": "2.0",
+  "id": -1,
+  "result": {
+    "block_height": "21955392",
+    "validators": [
+      {
+        "address": "D68EEC0D2E8248F1EC64CDB585EDB61ECA432BD8",
+        "pub_key": {
+          "type": "tendermint/PubKeyEd25519",
+          "value": "LtiHVLCcE+oFII0vpIl9mfkGDmk9BpPg1eUkvKnO4xw="
+        },
+        "voting_power": "24631503",
+        "proposer_priority": "78144233"
+      }
+    ],
+    "count": "xxx",
+    "total": "yyy"
+  }
+}
