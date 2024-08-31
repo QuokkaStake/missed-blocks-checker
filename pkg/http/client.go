@@ -121,9 +121,5 @@ func (c *Client) Get(
 		return jsonErr
 	}
 
-	if err := body.Close(); err != nil {
-		return err
-	}
-
-	return nil
+	return body.Close()
 }
