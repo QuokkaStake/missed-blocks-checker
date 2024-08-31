@@ -29,3 +29,36 @@ func TestValidatorsResponseUnmarshalJson(t *testing.T) {
 	assert.NotNil(t, validatorsResponse.Error, "Unmarshall mismatch!")
 	assert.Nil(t, validatorsResponse.Result, "Unmarshall mismatch!")
 }
+
+func TestValidatorsResponseUnmarshalJsonInvalidJson(t *testing.T) {
+	t.Parallel()
+
+	jsonString := "\"string\""
+
+	var validatorsResponse ValidatorsResponse
+	err := json.Unmarshal([]byte(jsonString), &validatorsResponse)
+
+	require.Error(t, err)
+}
+
+func TestValidatorsResponseUnmarshalJsonInvalidError(t *testing.T) {
+	t.Parallel()
+
+	jsonString := "{\"jsonrpc\":\"2.0\",\"id\":-1,\"error\":123}"
+
+	var validatorsResponse ValidatorsResponse
+	err := json.Unmarshal([]byte(jsonString), &validatorsResponse)
+
+	require.Error(t, err)
+}
+
+func TestValidatorsResponseUnmarshalJsonInvalidResult(t *testing.T) {
+	t.Parallel()
+
+	jsonString := "{\"jsonrpc\":\"2.0\",\"id\":-1,\"result\":123}"
+
+	var validatorsResponse ValidatorsResponse
+	err := json.Unmarshal([]byte(jsonString), &validatorsResponse)
+
+	require.Error(t, err)
+}
