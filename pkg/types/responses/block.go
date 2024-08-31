@@ -16,10 +16,7 @@ func (s *SingleBlockResponse) UnmarshalJSON(data []byte) error {
 	if result, ok := v["result"]; !ok {
 		s.Result = nil
 	} else {
-		rawBytes, err := json.Marshal(result)
-		if err != nil {
-			return err
-		}
+		rawBytes, _ := json.Marshal(result) //nolint:errchkjson
 
 		var resultParsed SingleBlockResult
 		if err := json.Unmarshal(rawBytes, &resultParsed); err != nil {
@@ -32,10 +29,7 @@ func (s *SingleBlockResponse) UnmarshalJSON(data []byte) error {
 	if responseError, ok := v["error"]; !ok {
 		s.Error = nil
 	} else {
-		rawBytes, err := json.Marshal(responseError)
-		if err != nil {
-			return err
-		}
+		rawBytes, _ := json.Marshal(responseError) //nolint:errchkjson
 
 		var errorParsed ResponseError
 		if err := json.Unmarshal(rawBytes, &errorParsed); err != nil {

@@ -51,6 +51,28 @@ func TestBlockResponseUnmarshalJsonInvalidJson(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestBlockResponseUnmarshalJsonInvalidResult(t *testing.T) {
+	t.Parallel()
+
+	jsonString := "{\"jsonrpc\":\"2.0\",\"id\":-1,\"result\":\"123\"}"
+
+	var blockResponse SingleBlockResponse
+	err := json.Unmarshal([]byte(jsonString), &blockResponse)
+
+	require.Error(t, err)
+}
+
+func TestBlockResponseUnmarshalJsonInvalidError(t *testing.T) {
+	t.Parallel()
+
+	jsonString := "{\"jsonrpc\":\"2.0\",\"id\":-1,\"error\":123}"
+
+	var blockResponse SingleBlockResponse
+	err := json.Unmarshal([]byte(jsonString), &blockResponse)
+
+	require.Error(t, err)
+}
+
 func TestBlockResponseUnmarshalJsonValid(t *testing.T) {
 	t.Parallel()
 
