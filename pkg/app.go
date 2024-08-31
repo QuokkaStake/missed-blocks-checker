@@ -23,11 +23,11 @@ type App struct {
 func NewApp(configPath string, filesystem fs.FS, version string) *App {
 	config, err := configPkg.GetConfig(configPath, filesystem)
 	if err != nil {
-		loggerPkg.GetDefaultLogger().Fatal().Err(err).Msg("Could not load config")
+		loggerPkg.GetDefaultLogger().Panic().Err(err).Msg("Could not load config")
 	}
 
 	if err = config.Validate(); err != nil {
-		loggerPkg.GetDefaultLogger().Fatal().Err(err).Msg("Provided config is invalid!")
+		loggerPkg.GetDefaultLogger().Panic().Err(err).Msg("Provided config is invalid!")
 	}
 
 	for _, chainConfig := range config.ChainConfigs {
