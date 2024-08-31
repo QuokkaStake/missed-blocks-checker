@@ -105,43 +105,7 @@ func TestMakeShuffledArray(t *testing.T) {
 	assert.Len(t, array, 10, "Array should have 10 entries!")
 }
 
-func TestCompareTwoBech32FirstInvalid(t *testing.T) {
-	t.Parallel()
-
-	_, err := CompareTwoBech32("test", "cosmos1xqz9pemz5e5zycaa89kys5aw6m8rhgsvtp9lt2")
-	require.Error(t, err, "Error should be present!")
-}
-
-func TestCompareTwoBech32SecondInvalid(t *testing.T) {
-	t.Parallel()
-
-	_, err := CompareTwoBech32("cosmos1xqz9pemz5e5zycaa89kys5aw6m8rhgsvtp9lt2", "test")
-	require.Error(t, err, "Error should be present!")
-}
-
-func TestCompareTwoBech32SecondEqual(t *testing.T) {
-	t.Parallel()
-
-	equal, err := CompareTwoBech32(
-		"cosmos1xqz9pemz5e5zycaa89kys5aw6m8rhgsvtp9lt2",
-		"cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e",
-	)
-	require.NoError(t, err, "Error should not be present!")
-	assert.True(t, equal, "Bech addresses should be equal!")
-}
-
-func TestCompareTwoBech32SecondNotEqual(t *testing.T) {
-	t.Parallel()
-
-	equal, err := CompareTwoBech32(
-		"cosmos1xqz9pemz5e5zycaa89kys5aw6m8rhgsvtp9lt2",
-		"cosmos1c4k24jzduc365kywrsvf5ujz4ya6mwymy8vq4q",
-	)
-	require.NoError(t, err, "Error should not be present!")
-	assert.False(t, equal, "Bech addresses should not be equal!")
-}
-
-func TestCompareBoolToFloat64(t *testing.T) {
+func TestBoolToFloat64(t *testing.T) {
 	t.Parallel()
 	assert.InDelta(t, float64(1), BoolToFloat64(true), 0.001, "Value mismatch!")
 	assert.InDelta(t, float64(0), BoolToFloat64(false), 0.001, "Value mismatch!")

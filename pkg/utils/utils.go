@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"bytes"
 	"encoding/hex"
 	"fmt"
 	"math"
@@ -158,20 +157,6 @@ func MakeShuffledArray(length int) []int {
 	})
 
 	return array
-}
-
-func CompareTwoBech32(first, second string) (bool, error) {
-	_, firstBytes, err := bech32.Decode(first)
-	if err != nil {
-		return false, err
-	}
-
-	_, secondBytes, err := bech32.Decode(second)
-	if err != nil {
-		return false, err
-	}
-
-	return bytes.Equal(firstBytes, secondBytes), nil
 }
 
 func MustDecodeBech32(addr string) string {
