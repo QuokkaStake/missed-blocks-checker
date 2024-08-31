@@ -93,12 +93,3 @@ func (c *Converter) MustSetValidatorConsumerConsensusAddr(validator *types.Valid
 	validator.ConsensusAddressValcons = consAddress.String()
 	validator.ConsensusAddressHex = fmt.Sprintf("%x", consAddress)
 }
-
-func (c *Converter) GetConsKeyFromBech32(addr string) (string, error) {
-	consAddress, err := sdkTypes.ConsAddressFromBech32(addr)
-	if err != nil {
-		return "", err
-	}
-
-	return consAddress.String(), nil
-}
