@@ -42,7 +42,20 @@ func (c *Client) GetInternal(
 	queryType constants.QueryType,
 	headers map[string]string,
 ) (io.ReadCloser, error) {
-	client := &http.Client{Timeout: 10 * time.Second}
+	var transport http.RoundTripper
+
+	transportRaw, ok := http.DefaultTransport.(*http.Transport)
+	if ok {
+		transport = transportRaw.Clone()
+	} else {
+		transport = http.DefaultTransport
+	}
+
+	client := &http.Client{
+		Timeout:   10 * time.Second,
+		Transport: transport,
+	}
+
 	start := time.Now()
 
 	fullURL := c.Host + url
