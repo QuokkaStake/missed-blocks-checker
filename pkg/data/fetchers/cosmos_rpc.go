@@ -65,10 +65,10 @@ func (f *CosmosRPCFetcher) GetConsumerOrProviderClients() []*http.Client {
 
 func (f *CosmosRPCFetcher) AbciQuery(
 	method string,
-	message codec.ProtoMarshaler,
+	message codec.ProtoMarshaler, //nolint:staticcheck
 	height int64,
 	queryType constants.QueryType,
-	output codec.ProtoMarshaler,
+	output codec.ProtoMarshaler, //nolint:staticcheck
 	clients []*http.Client,
 ) error {
 	dataBytes, _ := message.Marshal()
