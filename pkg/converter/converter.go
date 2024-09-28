@@ -38,7 +38,7 @@ func (c *Converter) GetConsensusAddress(validator stakingTypes.Validator) string
 		panic(err)
 	}
 
-	return addr.String()
+	return sdkTypes.ConsAddress(addr).String()
 }
 
 func (c *Converter) ValidatorFromCosmosValidator(
@@ -76,7 +76,7 @@ func (c *Converter) ValidatorFromCosmosValidator(
 		Website:                 validator.Description.Website,
 		Commission:              commission,
 		ConsensusAddressHex:     fmt.Sprintf("%x", addr),
-		ConsensusAddressValcons: addr.String(),
+		ConsensusAddressValcons: sdkTypes.ConsAddress(addr).String(),
 		OperatorAddress:         validator.OperatorAddress,
 		Jailed:                  validator.Jailed,
 		SigningInfo:             valSigningInfo,

@@ -30,7 +30,7 @@ type ChainConfig struct {
 	IsConsumer              null.Bool `default:"false"                  toml:"consumer"`
 	ProviderRPCEndpoints    []string  `toml:"provider-rpc-endpoints"`
 	ConsumerValidatorPrefix string    `toml:"consumer-validator-prefix"`
-	ConsumerChainID         string    `toml:"consumer-chain-id"`
+	ConsumerID              string    `toml:"consumer-id"`
 
 	FetcherType          string   `default:"cosmos-rpc"          toml:"fetcher-type"`
 	LCDEndpoints         []string `toml:"lcd-endpoints"`
@@ -128,8 +128,8 @@ func (c *ChainConfig) Validate() error {
 			return errors.New("chain is a consumer, but has 0 provider LCD endpoints")
 		}
 
-		if c.ConsumerChainID == "" {
-			return errors.New("chain is a consumer, but consumer chain id is not provided")
+		if c.ConsumerID == "" {
+			return errors.New("chain is a consumer, but consumer id is not provided")
 		}
 	}
 

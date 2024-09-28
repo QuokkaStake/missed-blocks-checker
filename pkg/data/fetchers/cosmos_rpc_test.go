@@ -234,7 +234,7 @@ func TestNewCosmosRPCFetcherGetAssignedKeysFail(t *testing.T) {
 	config := &configPkg.ChainConfig{
 		Name:                 "chain",
 		ProviderRPCEndpoints: []string{"https://example.com"},
-		ConsumerChainID:      "neutron-1",
+		ConsumerID:           "neutron-1",
 		IsConsumer:           null.BoolFrom(true),
 	}
 	logger := loggerPkg.GetNopLogger()
@@ -244,7 +244,7 @@ func TestNewCosmosRPCFetcherGetAssignedKeysFail(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://example.com/abci_query?path=%22%2Finterchain_security.ccv.provider.v1.Query%2FQueryAllPairsValConAddrByConsumerChainID%22&data=0x0a096e657574726f6e2d31",
+		"https://example.com/abci_query?path=%22%2Finterchain_security.ccv.provider.v1.Query%2FQueryAllPairsValConsAddrByConsumer%22&data=0x0a096e657574726f6e2d31",
 		httpmock.NewErrorResponder(errors.New("custom error")),
 	)
 
@@ -263,7 +263,7 @@ func TestNewCosmosRPCFetcherGetAssignedKeysOk(t *testing.T) {
 	config := &configPkg.ChainConfig{
 		Name:                 "chain",
 		ProviderRPCEndpoints: []string{"https://example.com"},
-		ConsumerChainID:      "neutron-1",
+		ConsumerID:           "neutron-1",
 		IsConsumer:           null.BoolFrom(true),
 	}
 	logger := loggerPkg.GetNopLogger()
@@ -273,7 +273,7 @@ func TestNewCosmosRPCFetcherGetAssignedKeysOk(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://example.com/abci_query?path=%22%2Finterchain_security.ccv.provider.v1.Query%2FQueryAllPairsValConAddrByConsumerChainID%22&data=0x0a096e657574726f6e2d31",
+		"https://example.com/abci_query?path=%22%2Finterchain_security.ccv.provider.v1.Query%2FQueryAllPairsValConsAddrByConsumer%22&data=0x0a096e657574726f6e2d31",
 		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("rpc-assigned-keys.json")),
 	)
 

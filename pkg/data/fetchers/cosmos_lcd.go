@@ -21,7 +21,7 @@ import (
 
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	providerTypes "github.com/cosmos/interchain-security/v4/x/ccv/provider/types"
+	providerTypes "github.com/cosmos/interchain-security/v6/x/ccv/provider/types"
 	"github.com/rs/zerolog"
 )
 
@@ -123,11 +123,11 @@ func (f *CosmosLCDFetcher) GetSigningInfos(height int64) (*slashingTypes.QuerySi
 
 func (f *CosmosLCDFetcher) GetValidatorsAssignedConsumerKeys(
 	height int64,
-) (*providerTypes.QueryAllPairsValConAddrByConsumerChainIDResponse, error) {
-	var response providerTypes.QueryAllPairsValConAddrByConsumerChainIDResponse
+) (*providerTypes.QueryAllPairsValConsAddrByConsumerResponse, error) {
+	var response providerTypes.QueryAllPairsValConsAddrByConsumerResponse
 
 	if err := f.Get(
-		"/interchain_security/ccv/provider/consumer_chain_id?chain_id="+f.config.ConsumerChainID,
+		"/interchain_security/ccv/provider/address_pairs/"+f.config.ConsumerID,
 		constants.QueryTypeConsumerAddrs,
 		&response,
 		f.providerClients,

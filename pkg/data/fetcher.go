@@ -8,7 +8,7 @@ import (
 
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	providerTypes "github.com/cosmos/interchain-security/v4/x/ccv/provider/types"
+	providerTypes "github.com/cosmos/interchain-security/v6/x/ccv/provider/types"
 	"github.com/rs/zerolog"
 )
 
@@ -17,7 +17,7 @@ type Fetcher interface {
 	GetSigningInfos(height int64) (*slashingTypes.QuerySigningInfosResponse, error)
 	GetValidatorsAssignedConsumerKeys(
 		height int64,
-	) (*providerTypes.QueryAllPairsValConAddrByConsumerChainIDResponse, error)
+	) (*providerTypes.QueryAllPairsValConsAddrByConsumerResponse, error)
 	GetSlashingParams(height int64) (*slashingTypes.QueryParamsResponse, error)
 }
 
