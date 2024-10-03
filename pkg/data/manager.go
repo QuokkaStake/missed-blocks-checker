@@ -10,7 +10,7 @@ import (
 	"main/pkg/utils"
 	"sync"
 
-	providerTypes "github.com/cosmos/interchain-security/v4/x/ccv/provider/types"
+	providerTypes "github.com/cosmos/interchain-security/v6/x/ccv/provider/types"
 
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -106,7 +106,7 @@ func (manager *Manager) GetValidatorsAndSigningInfoForConsumerChain(height int64
 		validatorsError      error
 		signingInfoResponse  *slashingTypes.QuerySigningInfosResponse
 		signingInfoErr       error
-		assignedKeysResponse *providerTypes.QueryAllPairsValConAddrByConsumerChainIDResponse
+		assignedKeysResponse *providerTypes.QueryAllPairsValConsAddrByConsumerResponse
 		assignedKeysError    error
 		mutex                sync.Mutex
 	)

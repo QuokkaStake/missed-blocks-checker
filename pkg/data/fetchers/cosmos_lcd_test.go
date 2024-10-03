@@ -318,7 +318,7 @@ func TestLcdGetAssignedKeysFail(t *testing.T) {
 
 	config := &configPkg.ChainConfig{
 		Name:                 "chain",
-		ConsumerChainID:      "consumer",
+		ConsumerID:           "consumer",
 		LCDEndpoints:         []string{"https://consumer-example.com"},
 		ProviderLCDEndpoints: []string{"https://provider-example.com"},
 	}
@@ -329,7 +329,7 @@ func TestLcdGetAssignedKeysFail(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://provider-example.com/interchain_security/ccv/provider/consumer_chain_id?chain_id=consumer",
+		"https://provider-example.com/interchain_security/ccv/provider/address_pairs/consumer",
 		httpmock.NewErrorResponder(errors.New("custom error")),
 	)
 
@@ -347,7 +347,7 @@ func TestLcdGetAssignedKeysOk(t *testing.T) {
 
 	config := &configPkg.ChainConfig{
 		Name:                 "chain",
-		ConsumerChainID:      "consumer",
+		ConsumerID:           "consumer",
 		LCDEndpoints:         []string{"https://consumer-example.com"},
 		ProviderLCDEndpoints: []string{"https://provider-example.com"},
 	}
@@ -358,7 +358,7 @@ func TestLcdGetAssignedKeysOk(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://provider-example.com/interchain_security/ccv/provider/consumer_chain_id?chain_id=consumer",
+		"https://provider-example.com/interchain_security/ccv/provider/address_pairs/consumer",
 		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("lcd-assigned-keys.json")),
 	)
 

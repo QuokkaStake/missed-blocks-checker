@@ -45,3 +45,4 @@ linters:
     - gocyclo
     - exhaustive
     - mnd
+    - intrange

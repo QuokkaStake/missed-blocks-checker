@@ -309,7 +309,7 @@ func TestGetValidatorsConsumerValidatorsFail(t *testing.T) {
 		Name:                 "chain",
 		FetcherType:          constants.FetcherTypeCosmosLCD,
 		IsConsumer:           null.BoolFrom(true),
-		ConsumerChainID:      "consumer",
+		ConsumerID:           "consumer",
 		LCDEndpoints:         []string{"https://consumer.com"},
 		ProviderLCDEndpoints: []string{"https://provider.com"},
 	}
@@ -340,7 +340,7 @@ func TestGetValidatorsConsumerSigningInfosFail(t *testing.T) {
 		Name:                 "chain",
 		FetcherType:          constants.FetcherTypeCosmosLCD,
 		IsConsumer:           null.BoolFrom(true),
-		ConsumerChainID:      "consumer",
+		ConsumerID:           "consumer",
 		LCDEndpoints:         []string{"https://consumer.com"},
 		ProviderLCDEndpoints: []string{"https://provider.com"},
 	}
@@ -377,7 +377,7 @@ func TestGetValidatorsConsumerAssignedKeysFail(t *testing.T) {
 		Name:                 "chain",
 		FetcherType:          constants.FetcherTypeCosmosLCD,
 		IsConsumer:           null.BoolFrom(true),
-		ConsumerChainID:      "consumer",
+		ConsumerID:           "consumer",
 		LCDEndpoints:         []string{"https://consumer.com"},
 		ProviderLCDEndpoints: []string{"https://provider.com"},
 	}
@@ -400,7 +400,7 @@ func TestGetValidatorsConsumerAssignedKeysFail(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://provider.com/interchain_security/ccv/provider/consumer_chain_id?chain_id=consumer",
+		"https://provider.com/interchain_security/ccv/provider/address_pairs/consumer",
 		httpmock.NewErrorResponder(errors.New("assigned keys error")),
 	)
 
@@ -420,7 +420,7 @@ func TestGetValidatorsConsumerAssignedKeysOk(t *testing.T) {
 		Name:                 "chain",
 		FetcherType:          constants.FetcherTypeCosmosLCD,
 		IsConsumer:           null.BoolFrom(true),
-		ConsumerChainID:      "consumer",
+		ConsumerID:           "consumer",
 		LCDEndpoints:         []string{"https://consumer.com"},
 		ProviderLCDEndpoints: []string{"https://provider.com"},
 	}
@@ -443,7 +443,7 @@ func TestGetValidatorsConsumerAssignedKeysOk(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://provider.com/interchain_security/ccv/provider/consumer_chain_id?chain_id=consumer",
+		"https://provider.com/interchain_security/ccv/provider/address_pairs/consumer",
 		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("lcd-assigned-keys-neutron.json")),
 	)
 
@@ -468,7 +468,7 @@ func TestGetValidatorsConsumerAssignedKeysOkAnotherPrefix(t *testing.T) {
 		Name:                    "chain",
 		FetcherType:             constants.FetcherTypeCosmosLCD,
 		IsConsumer:              null.BoolFrom(true),
-		ConsumerChainID:         "consumer",
+		ConsumerID:              "consumer",
 		ConsumerValidatorPrefix: "consumervaloper",
 		LCDEndpoints:            []string{"https://consumer.com"},
 		ProviderLCDEndpoints:    []string{"https://provider.com"},
@@ -492,7 +492,7 @@ func TestGetValidatorsConsumerAssignedKeysOkAnotherPrefix(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://provider.com/interchain_security/ccv/provider/consumer_chain_id?chain_id=consumer",
+		"https://provider.com/interchain_security/ccv/provider/address_pairs/consumer",
 		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("lcd-assigned-keys-neutron.json")),
 	)
 
