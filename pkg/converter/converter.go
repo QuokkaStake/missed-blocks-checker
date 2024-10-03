@@ -1,7 +1,6 @@
 package converter
 
 import (
-	"encoding/hex"
 	"fmt"
 	"main/pkg/types"
 
@@ -76,7 +75,7 @@ func (c *Converter) ValidatorFromCosmosValidator(
 		Identity:                validator.Description.Identity,
 		Website:                 validator.Description.Website,
 		Commission:              commission,
-		ConsensusAddressHex:     hex.EncodeToString(addr),
+		ConsensusAddressHex:     fmt.Sprintf("%X", addr),
 		ConsensusAddressValcons: sdkTypes.ConsAddress(addr).String(),
 		OperatorAddress:         validator.OperatorAddress,
 		Jailed:                  validator.Jailed,
@@ -92,5 +91,5 @@ func (c *Converter) MustSetValidatorConsumerConsensusAddr(validator *types.Valid
 	}
 
 	validator.ConsensusAddressValcons = consAddress.String()
-	validator.ConsensusAddressHex = fmt.Sprintf("%x", consAddress)
+	validator.ConsensusAddressHex = fmt.Sprintf("%X", consAddress)
 }
