@@ -104,17 +104,25 @@ func (m *DiscordTemplateManager) SerializeDate(date time.Time) string {
 	return date.Format(time.RFC822)
 }
 
+func (m *DiscordTemplateManager) GetValidatorLink(validatorLink types.Link) htmlTemplate.HTML {
+	if validatorLink.Href == "" {
+		return htmlTemplate.HTML(validatorLink.Text)
+	}
+
+	return htmlTemplate.HTML(fmt.Sprintf(
+		"%s (%s)",
+		validatorLink.Text,
+		m.SerializeLink(types.Link{
+			Href: validatorLink.Href,
+			Text: "link",
+		}),
+	))
+}
+
 func (m *DiscordTemplateManager) SerializeEvent(event types.RenderEventItem) string {
 	renderData := types.ReportEventRenderData{
-		Notifiers: m.SerializeNotifiers(event.Notifiers),
-		ValidatorLink: fmt.Sprintf(
-			"%s (%s)",
-			event.ValidatorLink.Text,
-			m.SerializeLink(types.Link{
-				Href: event.ValidatorLink.Href,
-				Text: "link",
-			}),
-		),
+		Notifiers:     m.SerializeNotifiers(event.Notifiers),
+		ValidatorLink: m.GetValidatorLink(event.ValidatorLink),
 	}
 
 	switch entry := event.Event.(type) {

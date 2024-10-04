@@ -1,12 +1,13 @@
 package types
 
 import (
+	htmlTemplate "html/template"
 	"main/pkg/constants"
 )
 
 type ReportEventRenderData struct {
 	Notifiers     string
-	ValidatorLink any
+	ValidatorLink htmlTemplate.HTML
 	TimeToJail    string
 }
 
