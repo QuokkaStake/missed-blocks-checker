@@ -1,14 +1,15 @@
 package converter
 
 import (
+	"main/pkg/types"
+	"testing"
+	"time"
+
 	"cosmossdk.io/math"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/assert"
-	"main/pkg/types"
-	"testing"
-	"time"
 )
 
 func TestConverterFromCosmosValidator(t *testing.T) {
