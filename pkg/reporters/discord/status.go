@@ -50,10 +50,9 @@ func (reporter *Reporter) GetStatusCommand() *Command {
 
 			for index, entry := range userEntries {
 				entries[index] = statusEntry{
-					IsActive:    entry.IsActive,
-					NeedsToSign: entry.NeedsToSign,
-					Validator:   entry.Validator,
-					Link:        reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator),
+					IsActive:  entry.IsActive,
+					Validator: entry.Validator,
+					Link:      reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator),
 				}
 
 				if entry.IsActive && !entry.Validator.Jailed {
