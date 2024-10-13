@@ -1,13 +1,11 @@
 package database
 
 import (
-	"database/sql"
 	"encoding/json"
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	snapshotPkg "main/pkg/snapshot"
 	"main/pkg/types"
-	migrationsPkg "main/sql"
 	"sync"
 	"time"
 
@@ -18,7 +16,7 @@ import (
 type Database struct {
 	logger zerolog.Logger
 	config configPkg.DatabaseConfig
-	client *sql.DB
+	client DatabaseClient
 	mutex  sync.Mutex
 }
 
@@ -33,48 +31,19 @@ func NewDatabase(
 }
 
 func (d *Database) Init() {
-	var db *sql.DB
-	var migrations []string
+	var db DatabaseClient
 
 	switch d.config.Type {
 	case constants.DatabaseTypeSqlite:
 		db = d.InitSqliteDatabase()
-		migrations = d.GetSqliteMigrations()
 	case constants.DatabaseTypePostgres:
 		db = d.InitPostgresDatabase()
-		migrations = d.GetPostgresMigrations()
 	default:
-		d.logger.Fatal().Str("type", d.config.Type).Msg("Unsupported database type")
+		d.logger.Panic().Str("type", d.config.Type).Msg("Unsupported database type")
 	}
 
-	for _, entry := range migrations {
-		d.logger.Info().
-			Str("name", entry).
-			Msg("Applying sqlite migration")
-
-		content, err := migrationsPkg.FS.ReadFile(entry)
-		if err != nil {
-			d.logger.Fatal().
-				Str("name", entry).
-				Err(err).
-				Msg("Could not read migration content")
-		}
-
-		statement, err := db.Prepare(string(content))
-		if err != nil {
-			d.logger.Fatal().
-				Str("name", entry).
-				Err(err).
-				Msg("Could not prepare migration")
-		}
-		if _, err := statement.Exec(); err != nil {
-			d.logger.Fatal().
-				Str("name", entry).
-				Err(err).
-				Msg("Could not execute migration")
-		}
-
-		statement.Close() //nolint:all
+	if err := db.Migrate(); err != nil {
+		d.logger.Panic().Err(err).Msg("Failed to migrate database")
 	}
 
 	d.client = db
