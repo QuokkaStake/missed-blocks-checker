@@ -1,7 +1,6 @@
 package database
 
 import (
-	"database/sql"
 	"encoding/json"
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
@@ -18,7 +17,7 @@ import (
 type Database struct {
 	logger zerolog.Logger
 	config configPkg.DatabaseConfig
-	client *sql.DB
+	client DatabaseClient
 	mutex  sync.Mutex
 }
 
@@ -33,7 +32,7 @@ func NewDatabase(
 }
 
 func (d *Database) Init() {
-	var db *sql.DB
+	var db DatabaseClient
 	var migrations []string
 
 	switch d.config.Type {

@@ -4,7 +4,11 @@ import (
 	"database/sql"
 )
 
-func (d *Database) InitSqliteDatabase() *sql.DB {
+type SqliteDatabaseClient struct {
+	db *sql.DB
+}
+
+func (d *Database) InitSqliteDatabase() DatabaseClient {
 	db, err := sql.Open("sqlite3", d.config.Path)
 
 	if err != nil {
@@ -23,7 +27,7 @@ func (d *Database) InitSqliteDatabase() *sql.DB {
 		Str("path", d.config.Path).
 		Msg("SQLite database connected")
 
-	return db
+	return &SqliteDatabaseClient{db: db}
 }
 
 func (d *Database) GetSqliteMigrations() []string {
@@ -33,4 +37,20 @@ func (d *Database) GetSqliteMigrations() []string {
 		"03-data.sql",
 		"04-events.sqlite.sql",
 	}
+}
+
+func (d *SqliteDatabaseClient) Exec(query string, args ...any) (sql.Result, error) {
+	return d.db.Exec(query, args...)
+}
+
+func (d *SqliteDatabaseClient) Query(query string, args ...any) (*sql.Rows, error) {
+	return d.db.Query(query, args...)
+}
+
+func (d *SqliteDatabaseClient) Prepare(query string) (*sql.Stmt, error) {
+	return d.db.Prepare(query)
+}
+
+func (d *SqliteDatabaseClient) QueryRow(query string, args ...any) *sql.Row {
+	return d.db.QueryRow(query, args...)
 }

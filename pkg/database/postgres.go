@@ -6,7 +6,11 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func (d *Database) InitPostgresDatabase() *sql.DB {
+type PostgresDatabaseClient struct {
+	db *sql.DB
+}
+
+func (d *Database) InitPostgresDatabase() DatabaseClient {
 	db, err := sql.Open("postgres", d.config.Path)
 
 	if err != nil {
@@ -25,7 +29,7 @@ func (d *Database) InitPostgresDatabase() *sql.DB {
 		Str("path", d.config.Path).
 		Msg("PostgreSQL database connected")
 
-	return db
+	return &PostgresDatabaseClient{db: db}
 }
 
 func (d *Database) GetPostgresMigrations() []string {
@@ -35,4 +39,20 @@ func (d *Database) GetPostgresMigrations() []string {
 		"03-data.sql",
 		"04-events.postgres.sql",
 	}
+}
+
+func (d *PostgresDatabaseClient) Exec(query string, args ...any) (sql.Result, error) {
+	return d.db.Exec(query, args...)
+}
+
+func (d *PostgresDatabaseClient) Query(query string, args ...any) (*sql.Rows, error) {
+	return d.db.Query(query, args...)
+}
+
+func (d *PostgresDatabaseClient) Prepare(query string) (*sql.Stmt, error) {
+	return d.db.Prepare(query)
+}
+
+func (d *PostgresDatabaseClient) QueryRow(query string, args ...any) *sql.Row {
+	return d.db.QueryRow(query, args...)
 }
