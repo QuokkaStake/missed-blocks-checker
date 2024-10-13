@@ -2,10 +2,14 @@ package database
 
 import (
 	"database/sql"
+	sqliteMigrations "main/migrations/sqlite"
+
+	"github.com/pressly/goose/v3"
 )
 
 type SqliteDatabaseClient struct {
-	db *sql.DB
+	db     *sql.DB
+	logger *DatabaseLogger
 }
 
 func (d *Database) InitSqliteDatabase() DatabaseClient {
@@ -27,16 +31,7 @@ func (d *Database) InitSqliteDatabase() DatabaseClient {
 		Str("path", d.config.Path).
 		Msg("SQLite database connected")
 
-	return &SqliteDatabaseClient{db: db}
-}
-
-func (d *Database) GetSqliteMigrations() []string {
-	return []string{
-		"01-blocks.sql",
-		"02-notifiers.sql",
-		"03-data.sql",
-		"04-events.sqlite.sql",
-	}
+	return &SqliteDatabaseClient{db: db, logger: NewDatabaseLogger(d.logger)}
 }
 
 func (d *SqliteDatabaseClient) Exec(query string, args ...any) (sql.Result, error) {
@@ -47,10 +42,15 @@ func (d *SqliteDatabaseClient) Query(query string, args ...any) (*sql.Rows, erro
 	return d.db.Query(query, args...)
 }
 
-func (d *SqliteDatabaseClient) Prepare(query string) (*sql.Stmt, error) {
-	return d.db.Prepare(query)
-}
-
 func (d *SqliteDatabaseClient) QueryRow(query string, args ...any) *sql.Row {
 	return d.db.QueryRow(query, args...)
+}
+
+func (d *SqliteDatabaseClient) Migrate() error {
+	goose.SetBaseFS(sqliteMigrations.EmbedFS)
+	goose.SetLogger(d.logger)
+
+	_ = goose.SetDialect("sqlite")
+
+	return goose.Up(d.db, ".")
 }

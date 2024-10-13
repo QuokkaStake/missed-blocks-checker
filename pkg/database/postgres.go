@@ -2,12 +2,15 @@ package database
 
 import (
 	"database/sql"
+	postgresMigrations "main/migrations/postgres"
 
 	_ "github.com/lib/pq"
+	"github.com/pressly/goose/v3"
 )
 
 type PostgresDatabaseClient struct {
-	db *sql.DB
+	db     *sql.DB
+	logger *DatabaseLogger
 }
 
 func (d *Database) InitPostgresDatabase() DatabaseClient {
@@ -29,16 +32,7 @@ func (d *Database) InitPostgresDatabase() DatabaseClient {
 		Str("path", d.config.Path).
 		Msg("PostgreSQL database connected")
 
-	return &PostgresDatabaseClient{db: db}
-}
-
-func (d *Database) GetPostgresMigrations() []string {
-	return []string{
-		"01-blocks.sql",
-		"02-notifiers.sql",
-		"03-data.sql",
-		"04-events.postgres.sql",
-	}
+	return &PostgresDatabaseClient{db: db, logger: NewDatabaseLogger(d.logger)}
 }
 
 func (d *PostgresDatabaseClient) Exec(query string, args ...any) (sql.Result, error) {
@@ -49,10 +43,15 @@ func (d *PostgresDatabaseClient) Query(query string, args ...any) (*sql.Rows, er
 	return d.db.Query(query, args...)
 }
 
-func (d *PostgresDatabaseClient) Prepare(query string) (*sql.Stmt, error) {
-	return d.db.Prepare(query)
-}
-
 func (d *PostgresDatabaseClient) QueryRow(query string, args ...any) *sql.Row {
 	return d.db.QueryRow(query, args...)
+}
+
+func (d *PostgresDatabaseClient) Migrate() error {
+	goose.SetBaseFS(postgresMigrations.EmbedFS)
+	goose.SetLogger(d.logger)
+
+	_ = goose.SetDialect("postgres")
+
+	return goose.Up(d.db, ".")
 }

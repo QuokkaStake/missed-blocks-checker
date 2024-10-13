@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE IF NOT EXISTS events (
     id SERIAL PRIMARY KEY,
     chain TEXT NOT NULL,
@@ -7,3 +8,6 @@ CREATE TABLE IF NOT EXISTS events (
     payload TEXT NOT NULL,
     time TIMESTAMP NOT NULL
 );
+
+-- +goose Down
+DROP TABLE events;

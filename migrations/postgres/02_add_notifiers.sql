@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE IF NOT EXISTS notifiers (
     chain TEXT NOT NULL,
     reporter TEXT NOT NULL,
@@ -6,3 +7,6 @@ CREATE TABLE IF NOT EXISTS notifiers (
     user_id TEXT NOT NULL,
     PRIMARY KEY (chain, reporter, operator_address, user_id)
 );
+
+-- +goose Down
+DROP TABLE notifiers;

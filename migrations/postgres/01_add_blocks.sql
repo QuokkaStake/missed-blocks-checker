@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE IF NOT EXISTS blocks (
     chain TEXT not null,
     height BIGINT NOT NULL,
@@ -7,3 +8,6 @@ CREATE TABLE IF NOT EXISTS blocks (
     validators TEXT NOT NULL,
     PRIMARY KEY (chain, height)
 );
+
+-- +goose Down
+DROP TABLE blocks;
