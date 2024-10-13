@@ -4,5 +4,5 @@ Nobody is subscribed to any notifications on {{ .Config.GetName }}!
 **Validators' notifiers on {{ .Config.GetName }}:**
 {{- end }}
 {{ range .Entries -}}
-- **{{ SerializeLink .Link }}**: {{ SerializeNotifiers .Notifiers }}
+- **{{ SerializeLink .Link }}**: {{ SerializeNotifiersNoLinks .Notifiers }}
 {{ end }}
