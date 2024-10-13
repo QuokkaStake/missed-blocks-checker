@@ -43,10 +43,11 @@ func (m *DiscordTemplateManager) GetTemplate(name string) (*template.Template, e
 	}
 
 	allSerializers := map[string]any{
-		"SerializeLink":      m.SerializeLink,
-		"SerializeDate":      m.SerializeDate,
-		"SerializeNotifier":  m.SerializeNotifier,
-		"SerializeNotifiers": m.SerializeNotifiers,
+		"SerializeLink":             m.SerializeLink,
+		"SerializeDate":             m.SerializeDate,
+		"SerializeNotifier":         m.SerializeNotifier,
+		"SerializeNotifiers":        m.SerializeNotifiers,
+		"SerializeNotifiersNoLinks": m.SerializeNotifiersNoLinks,
 	}
 
 	m.Logger.Trace().Str("type", name).Msg("Loading template")
@@ -92,6 +93,14 @@ func (m *DiscordTemplateManager) SerializeLink(link types.Link) htmlTemplate.HTM
 
 func (m *DiscordTemplateManager) SerializeNotifiers(notifiers types.Notifiers) string {
 	notifiersNormalized := utils.Map(notifiers, m.SerializeNotifier)
+
+	return strings.Join(notifiersNormalized, " ")
+}
+
+func (m *DiscordTemplateManager) SerializeNotifiersNoLinks(notifiers types.Notifiers) string {
+	notifiersNormalized := utils.Map(notifiers, func(n *types.Notifier) string {
+		return "`@" + n.UserName + "`"
+	})
 
 	return strings.Join(notifiersNormalized, " ")
 }
