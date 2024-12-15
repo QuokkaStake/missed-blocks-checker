@@ -25,8 +25,6 @@ func TestMetricsManagerStartDisabled(t *testing.T) {
 	logger := loggerPkg.GetNopLogger()
 	manager := NewManager(*logger, config)
 	manager.Start()
-
-	require.True(t, true)
 }
 
 func TestMetricsManagerStartFail(t *testing.T) {
