@@ -33,6 +33,8 @@ type Reporter struct {
 	SnapshotManager  *snapshotPkg.Manager
 	MetricsManager   *metrics.Manager
 	TemplatesManager templatesPkg.Manager
+
+	StopChannel chan bool
 }
 
 const (
@@ -58,6 +60,7 @@ func NewReporter(
 		SnapshotManager:  snapshotManager,
 		TemplatesManager: templatesPkg.NewManager(logger, constants.TelegramReporterName),
 		Version:          version,
+		StopChannel:      make(chan bool),
 	}
 }
 
@@ -108,7 +111,22 @@ func (reporter *Reporter) Init() {
 	bot.Handle("/config", reporter.HandleParams)
 
 	reporter.TelegramBot = bot
-	go reporter.TelegramBot.Start()
+}
+
+func (reporter *Reporter) Start() {
+	if reporter.TelegramBot == nil {
+		return
+	}
+
+	reporter.TelegramBot.Start()
+
+	<-reporter.StopChannel
+	reporter.Logger.Info().Msg("Shutting down...")
+	reporter.TelegramBot.Stop()
+}
+
+func (reporter *Reporter) Stop() {
+	reporter.StopChannel <- true
 }
 
 func (reporter *Reporter) Enabled() bool {

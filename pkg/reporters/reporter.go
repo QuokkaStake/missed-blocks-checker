@@ -7,6 +7,7 @@ import (
 
 type Reporter interface {
 	Init()
+	Start()
 	Name() constants.ReporterName
 	Enabled() bool
 	SerializeEvent(event types.ReportEvent) types.RenderEventItem

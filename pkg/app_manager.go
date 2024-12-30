@@ -103,6 +103,7 @@ func (a *AppManager) Start() {
 
 	for _, reporter := range a.Reporters {
 		reporter.Init()
+		go reporter.Start()
 
 		a.MetricsManager.LogReporterEnabled(a.Config.Name, reporter.Name(), reporter.Enabled())
 

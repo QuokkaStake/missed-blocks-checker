@@ -198,6 +198,10 @@ func (reporter *Reporter) InitCommands() {
 	reporter.Logger.Info().Msg("All commands updated")
 }
 
+func (reporter *Reporter) Start() {
+
+}
+
 func (reporter *Reporter) Enabled() bool {
 	return reporter.Token != "" && reporter.Guild != "" && reporter.Channel != ""
 }
