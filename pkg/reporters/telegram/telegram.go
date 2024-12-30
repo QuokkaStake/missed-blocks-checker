@@ -118,7 +118,7 @@ func (reporter *Reporter) Start() {
 		return
 	}
 
-	reporter.TelegramBot.Start()
+	go reporter.TelegramBot.Start()
 
 	<-reporter.StopChannel
 	reporter.Logger.Info().Msg("Shutting down...")
@@ -184,9 +184,7 @@ func (reporter *Reporter) BotSend(msg string) error {
 
 	for _, message := range messages {
 		if _, err := reporter.TelegramBot.Send(
-			&tele.User{
-				ID: reporter.Chat,
-			},
+			&tele.User{ID: reporter.Chat},
 			message,
 			tele.ModeHTML,
 			tele.NoPreview,
@@ -208,8 +206,4 @@ func (reporter *Reporter) BotReply(c tele.Context, msg string) error {
 		}
 	}
 	return nil
-}
-
-func (reporter *Reporter) SerializeDate(date time.Time) string {
-	return date.Format(time.RFC822)
 }
