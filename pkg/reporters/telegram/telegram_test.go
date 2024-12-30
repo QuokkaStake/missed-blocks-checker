@@ -4,6 +4,7 @@ import (
 	"errors"
 	"main/assets"
 	configPkg "main/pkg/config"
+	"main/pkg/constants"
 	loggerPkg "main/pkg/logger"
 	"main/pkg/metrics"
 	statePkg "main/pkg/state"
@@ -29,6 +30,7 @@ func TestReporterInitNoCredentials(t *testing.T) {
 
 	require.False(t, reporter.Enabled())
 	require.NotEmpty(t, reporter.GetStateManager())
+	require.Equal(t, constants.TelegramReporterName, reporter.Name())
 }
 
 //nolint:paralleltest // disabled
