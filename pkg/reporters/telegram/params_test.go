@@ -91,7 +91,7 @@ func TestReporterParamsOkSovereign(t *testing.T) {
 	config := &configPkg.ChainConfig{
 		Name:               "chain",
 		BlocksWindow:       100,
-		SnapshotsInterval:  5,
+		SnapshotsInterval:  1,
 		MinSignedPerWindow: 0.02,
 		Thresholds:         []float64{0, 10, 100},
 		EmojisStart:        []string{"🟢", "🟡"},
