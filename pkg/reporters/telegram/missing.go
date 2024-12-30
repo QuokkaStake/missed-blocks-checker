@@ -24,7 +24,7 @@ func (reporter *Reporter) HandleMissingValidators(c tele.Context) error {
 			Str("sender", c.Sender().Username).
 			Str("text", c.Text()).
 			Msg("No older snapshot on telegram validators query!")
-		return reporter.BotReply(c, "Error getting validators list")
+		return reporter.BotReply(c, "Error getting validators list!")
 	}
 
 	validatorEntries := snapshot.Entries.ToSlice()
@@ -60,10 +60,5 @@ func (reporter *Reporter) HandleMissingValidators(c tele.Context) error {
 		}),
 	}
 
-	template, err := reporter.TemplatesManager.Render("Missing", render)
-	if err != nil {
-		return err
-	}
-
-	return reporter.BotReply(c, template)
+	return reporter.ReplyRender(c, "Missing", render)
 }
