@@ -3,8 +3,9 @@ package types
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/jarcoal/httpmock"
 	"net/http"
+
+	"github.com/jarcoal/httpmock"
 )
 
 type TelegramResponse struct {

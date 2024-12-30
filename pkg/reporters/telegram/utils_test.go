@@ -2,9 +2,6 @@ package telegram
 
 import (
 	"errors"
-	"github.com/jarcoal/httpmock"
-	"github.com/stretchr/testify/require"
-	tele "gopkg.in/telebot.v3"
 	"main/assets"
 	configPkg "main/pkg/config"
 	loggerPkg "main/pkg/logger"
@@ -12,6 +9,10 @@ import (
 	statePkg "main/pkg/state"
 	"main/pkg/types"
 	"testing"
+
+	"github.com/jarcoal/httpmock"
+	"github.com/stretchr/testify/require"
+	tele "gopkg.in/telebot.v3"
 )
 
 //nolint:paralleltest // disabled
@@ -27,7 +28,7 @@ func TestReplyRenderFailedToRender(t *testing.T) {
 	httpmock.RegisterMatcherResponder(
 		"POST",
 		"https://api.telegram.org/botxxx:yyy/sendMessage",
-		types.TelegramResponseHasText("Error rendering template: template: pattern matches no files: `telegram/not_found.html`"),
+		types.TelegramResponseHasText("Error rendering template: template: pattern matches no files: `telegram/not_found.html`"), //nolint:dupword
 		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("telegram-send-message-ok.json")),
 	)
 
