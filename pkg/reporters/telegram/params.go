@@ -23,19 +23,14 @@ func (reporter *Reporter) HandleParams(c tele.Context) error {
 			Str("sender", c.Sender().Username).
 			Str("text", c.Text()).
 			Msg("No older snapshot on telegram params query!")
-		return reporter.BotReply(c, "Error getting params")
+		return reporter.BotReply(c, "Error getting params!")
 	}
 
 	activeValidators := snapshot.Entries.GetActive()
-	template, err := reporter.TemplatesManager.Render("Params", paramsRender{
+	return reporter.ReplyRender(c, "Params", paramsRender{
 		Config:          reporter.Config,
 		BlockTime:       blockTime,
 		MaxTimeToJail:   maxTimeToJail,
 		ValidatorsCount: len(activeValidators),
 	})
-	if err != nil {
-		return err
-	}
-
-	return reporter.BotReply(c, template)
 }
