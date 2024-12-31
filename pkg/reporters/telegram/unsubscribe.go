@@ -31,7 +31,7 @@ func (reporter *Reporter) HandleUnsubscribe(c tele.Context) error {
 	validator, found := reporter.Manager.GetValidator(address)
 	if !found {
 		return reporter.BotReply(c, fmt.Sprintf(
-			"Could not find a validator with address <code>%s</code>",
+			"Could not find a validator with address <code>%s</code>!",
 			address,
 		))
 	}
@@ -39,7 +39,7 @@ func (reporter *Reporter) HandleUnsubscribe(c tele.Context) error {
 	removed := reporter.Manager.RemoveNotifier(address, reporter.Name(), strconv.FormatInt(c.Sender().ID, 10))
 
 	if !removed {
-		return reporter.BotReply(c, "You are not subscribed to this validator's notifications")
+		return reporter.BotReply(c, "You are not subscribed to this validator's notifications!")
 	}
 
 	validatorLink := reporter.Config.ExplorerConfig.GetValidatorLink(validator)
