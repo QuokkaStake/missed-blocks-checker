@@ -13,11 +13,5 @@ func (reporter *Reporter) HandleHelp(c tele.Context) error {
 		Msg("Got help query")
 
 	reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, "help")
-
-	template, err := reporter.TemplatesManager.Render("Help", reporter.Version)
-	if err != nil {
-		return err
-	}
-
-	return reporter.BotReply(c, template)
+	return reporter.ReplyRender(c, "Help", reporter.Version)
 }

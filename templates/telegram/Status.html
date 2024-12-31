@@ -5,8 +5,6 @@ You are subscribed to the following validators' updates on {{ .ChainConfig.GetNa
 <strong>{{ SerializeLink .Link }}:</strong> jailed
 {{- else if not .IsActive -}}
 <strong>{{ SerializeLink .Link }}:</strong> not in the active set
-{{- else if .Error -}}
-<strong>{{ SerializeLink .Link }}:</strong> error getting validators missed blocks: {{ .Error }}
 {{- else -}}
 <strong>{{ SerializeLink .Link }}</strong> ({{ $render.FormatVotingPower . }}): {{ .SigningInfo.GetNotSigned }} missed blocks ({{ $render.FormatNotSignedPercent . }}%)
 {{- end -}}

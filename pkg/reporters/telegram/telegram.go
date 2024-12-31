@@ -33,6 +33,8 @@ type Reporter struct {
 	SnapshotManager  *snapshotPkg.Manager
 	MetricsManager   *metrics.Manager
 	TemplatesManager templatesPkg.Manager
+
+	StopChannel chan bool
 }
 
 const (
@@ -58,6 +60,7 @@ func NewReporter(
 		SnapshotManager:  snapshotManager,
 		TemplatesManager: templatesPkg.NewManager(logger, constants.TelegramReporterName),
 		Version:          version,
+		StopChannel:      make(chan bool),
 	}
 }
 
@@ -108,7 +111,22 @@ func (reporter *Reporter) Init() {
 	bot.Handle("/config", reporter.HandleParams)
 
 	reporter.TelegramBot = bot
+}
+
+func (reporter *Reporter) Start() {
+	if reporter.TelegramBot == nil {
+		return
+	}
+
 	go reporter.TelegramBot.Start()
+
+	<-reporter.StopChannel
+	reporter.Logger.Info().Msg("Shutting down...")
+	reporter.TelegramBot.Stop()
+}
+
+func (reporter *Reporter) Stop() {
+	reporter.StopChannel <- true
 }
 
 func (reporter *Reporter) Enabled() bool {
@@ -166,10 +184,8 @@ func (reporter *Reporter) BotSend(msg string) error {
 
 	for _, message := range messages {
 		if _, err := reporter.TelegramBot.Send(
-			&tele.User{
-				ID: reporter.Chat,
-			},
-			message,
+			&tele.User{ID: reporter.Chat},
+			strings.TrimSpace(message),
 			tele.ModeHTML,
 			tele.NoPreview,
 		); err != nil {
@@ -184,14 +200,10 @@ func (reporter *Reporter) BotReply(c tele.Context, msg string) error {
 	messages := utils.SplitStringIntoChunks(msg, MaxMessageSize)
 
 	for _, message := range messages {
-		if err := c.Reply(message, tele.ModeHTML, tele.NoPreview); err != nil {
+		if err := c.Reply(strings.TrimSpace(message), tele.ModeHTML, tele.NoPreview); err != nil {
 			reporter.Logger.Error().Err(err).Msg("Could not send Telegram message")
 			return err
 		}
 	}
 	return nil
-}
-
-func (reporter *Reporter) SerializeDate(date time.Time) string {
-	return date.Format(time.RFC822)
 }

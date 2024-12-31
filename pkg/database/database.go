@@ -46,7 +46,11 @@ func (d *Database) Init() {
 		d.logger.Panic().Err(err).Msg("Failed to migrate database")
 	}
 
-	d.client = db
+	d.SetClient(db)
+}
+
+func (d *Database) SetClient(client DatabaseClient) {
+	d.client = client
 }
 
 func (d *Database) MaybeMutexLock() {

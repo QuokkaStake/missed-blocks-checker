@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"main/pkg/constants"
+	"sort"
 
 	tele "gopkg.in/telebot.v3"
 )
@@ -20,6 +21,7 @@ func (reporter *Reporter) HandleNotifiers(c tele.Context) error {
 	for _, validator := range validators {
 		link := reporter.Config.ExplorerConfig.GetValidatorLink(validator)
 		notifiers := reporter.Manager.GetNotifiersForReporter(validator.OperatorAddress, constants.TelegramReporterName)
+
 		if len(notifiers) == 0 {
 			continue
 		}
@@ -30,13 +32,12 @@ func (reporter *Reporter) HandleNotifiers(c tele.Context) error {
 		})
 	}
 
-	template, err := reporter.TemplatesManager.Render("Notifiers", notifierRender{
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].Link.Text < entries[j].Link.Text
+	})
+
+	return reporter.ReplyRender(c, "Notifiers", notifierRender{
 		Entries: entries,
 		Config:  reporter.Config,
 	})
-	if err != nil {
-		return err
-	}
-
-	return reporter.BotReply(c, template)
 }
