@@ -185,7 +185,7 @@ func (reporter *Reporter) BotSend(msg string) error {
 	for _, message := range messages {
 		if _, err := reporter.TelegramBot.Send(
 			&tele.User{ID: reporter.Chat},
-			message,
+			strings.TrimSpace(message),
 			tele.ModeHTML,
 			tele.NoPreview,
 		); err != nil {
