@@ -75,7 +75,6 @@ func (r paramsRender) FormatSnapshotInterval() string {
 type statusEntry struct {
 	IsActive    bool
 	Validator   *types.Validator
-	Error       error
 	SigningInfo types.SignatureInto
 	Link        types.Link
 }

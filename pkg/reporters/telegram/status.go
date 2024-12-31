@@ -32,7 +32,7 @@ func (reporter *Reporter) HandleStatus(c tele.Context) error {
 			Str("sender", c.Sender().Username).
 			Str("text", c.Text()).
 			Msg("No older snapshot on telegram status query!")
-		return reporter.BotReply(c, "Error getting your validators status")
+		return reporter.BotReply(c, "Error getting your validators status!")
 	}
 
 	userEntries := snapshot.Entries.ByValidatorAddresses(operatorAddresses)
@@ -41,15 +41,10 @@ func (reporter *Reporter) HandleStatus(c tele.Context) error {
 
 	for index, entry := range userEntries {
 		entries[index] = statusEntry{
-			Validator: entry.Validator,
-			Link:      reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator),
-			IsActive:  entry.IsActive,
-		}
-
-		if entry.IsActive && !entry.Validator.Jailed {
-			signatureInfo, err := reporter.Manager.GetValidatorMissedBlocks(entry.Validator)
-			entries[index].Error = err
-			entries[index].SigningInfo = signatureInfo
+			Validator:   entry.Validator,
+			Link:        reporter.Config.ExplorerConfig.GetValidatorLink(entry.Validator),
+			IsActive:    entry.IsActive,
+			SigningInfo: entry.SignatureInfo,
 		}
 	}
 
@@ -68,13 +63,8 @@ func (reporter *Reporter) HandleStatus(c tele.Context) error {
 		return second.Validator.VotingPowerPercent < first.Validator.VotingPowerPercent
 	})
 
-	template, err := reporter.TemplatesManager.Render("Status", statusRender{
+	return reporter.ReplyRender(c, "Status", statusRender{
 		ChainConfig: reporter.Config,
 		Entries:     entries,
 	})
-	if err != nil {
-		return err
-	}
-
-	return reporter.BotReply(c, template)
 }

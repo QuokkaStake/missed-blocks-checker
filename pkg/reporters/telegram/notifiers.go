@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"main/pkg/constants"
+	"sort"
 
 	tele "gopkg.in/telebot.v3"
 )
@@ -30,6 +31,10 @@ func (reporter *Reporter) HandleNotifiers(c tele.Context) error {
 			Notifiers: notifiers,
 		})
 	}
+
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].Link.Text < entries[j].Link.Text
+	})
 
 	return reporter.ReplyRender(c, "Notifiers", notifierRender{
 		Entries: entries,
