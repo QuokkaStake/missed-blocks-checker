@@ -20,6 +20,7 @@ func (reporter *Reporter) HandleNotifiers(c tele.Context) error {
 	for _, validator := range validators {
 		link := reporter.Config.ExplorerConfig.GetValidatorLink(validator)
 		notifiers := reporter.Manager.GetNotifiersForReporter(validator.OperatorAddress, constants.TelegramReporterName)
+
 		if len(notifiers) == 0 {
 			continue
 		}
@@ -30,13 +31,8 @@ func (reporter *Reporter) HandleNotifiers(c tele.Context) error {
 		})
 	}
 
-	template, err := reporter.TemplatesManager.Render("Notifiers", notifierRender{
+	return reporter.ReplyRender(c, "Notifiers", notifierRender{
 		Entries: entries,
 		Config:  reporter.Config,
 	})
-	if err != nil {
-		return err
-	}
-
-	return reporter.BotReply(c, template)
 }
