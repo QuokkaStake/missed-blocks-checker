@@ -9,7 +9,7 @@ import (
 	"math"
 	"sort"
 
-	"golang.org/x/exp/slices"
+	"slices"
 )
 
 type Snapshot struct {
