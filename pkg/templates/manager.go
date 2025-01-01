@@ -27,7 +27,7 @@ func NewManager(logger zerolog.Logger, reporterType constants.ReporterName) Mana
 	case constants.TestReporterName:
 		fallthrough
 	default:
-		logger.Fatal().Str("type", string(reporterType)).Msg("Unknown reporter type")
+		logger.Panic().Str("type", string(reporterType)).Msg("Unknown reporter type")
 		return nil
 	}
 }

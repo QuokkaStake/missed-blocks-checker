@@ -1,12 +1,13 @@
 package templates
 
 import (
-	"github.com/stretchr/testify/require"
 	"html/template"
 	loggerPkg "main/pkg/logger"
 	"main/pkg/types"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestTelegramTemplateRenderNotFound(t *testing.T) {

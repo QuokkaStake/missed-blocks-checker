@@ -45,3 +45,4 @@ linters:
     - exhaustive
     - mnd
     - intrange
+    - goconst
