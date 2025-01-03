@@ -277,3 +277,22 @@ func TestMustDecodeBech32Ok(t *testing.T) {
 	value := MustDecodeBech32("cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e")
 	require.Equal(t, "0600020501191b021419140204181d1d0705160410141d0e1a1b07031708100c", value)
 }
+
+func TestMustMarshallFail(t *testing.T) {
+	t.Parallel()
+
+	defer func() {
+		if r := recover(); r == nil {
+			require.Fail(t, "Expected to have a panic here!")
+		}
+	}()
+
+	MustJSONMarshall(make(chan bool))
+}
+
+func TestMustMarshallOk(t *testing.T) {
+	t.Parallel()
+
+	bytes := MustJSONMarshall(map[string]string{"key": "value"})
+	require.JSONEq(t, "{\"key\":\"value\"}", string(bytes))
+}
