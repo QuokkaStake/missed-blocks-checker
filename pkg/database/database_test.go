@@ -1,11 +1,12 @@
 package database
 
 import (
+	"encoding/json"
 	"errors"
 	configPkg "main/pkg/config"
 	"main/pkg/events"
 	loggerPkg "main/pkg/logger"
-	"main/pkg/snapshot"
+	snapshotPkg "main/pkg/snapshot"
 	"main/pkg/types"
 	"testing"
 	"time"
@@ -149,9 +150,9 @@ func TestDatabaseSetSnapshotFail(t *testing.T) {
 	database := NewDatabase(*logger, configPkg.DatabaseConfig{})
 	database.SetClient(&StubDatabaseClient{ExecError: errors.New("custom error")})
 
-	err := database.SetSnapshot("chain", &snapshot.Info{
+	err := database.SetSnapshot("chain", &snapshotPkg.Info{
 		Height:   123,
-		Snapshot: snapshot.Snapshot{},
+		Snapshot: snapshotPkg.Snapshot{},
 	})
 	require.Error(t, err)
 	require.ErrorContains(t, err, "custom error")
@@ -164,9 +165,9 @@ func TestDatabaseSetSnapshotOk(t *testing.T) {
 	database := NewDatabase(*logger, configPkg.DatabaseConfig{})
 	database.SetClient(&StubDatabaseClient{})
 
-	err := database.SetSnapshot("chain", &snapshot.Info{
+	err := database.SetSnapshot("chain", &snapshotPkg.Info{
 		Height:   123,
-		Snapshot: snapshot.Snapshot{},
+		Snapshot: snapshotPkg.Snapshot{},
 	})
 	require.NoError(t, err)
 }
@@ -230,4 +231,63 @@ func TestDatabaseGetValueByKeyOk(t *testing.T) {
 	result, err := database.GetValueByKey("chain", "key")
 	require.NoError(t, err)
 	require.Equal(t, []byte("value"), result)
+}
+
+func TestDatabaseGetSnapshotFail(t *testing.T) {
+	t.Parallel()
+
+	logger := loggerPkg.GetNopLogger()
+	client := NewStubDatabaseClient()
+	database := NewDatabase(*logger, configPkg.DatabaseConfig{})
+	database.SetClient(client)
+
+	client.Mock.
+		ExpectQuery("SELECT value FROM data").
+		WillReturnError(errors.New("custom error"))
+
+	_, err := database.GetLastSnapshot("chain")
+	require.Error(t, err)
+	require.ErrorContains(t, err, "custom error")
+}
+
+func TestDatabaseGetSnapshotInvalid(t *testing.T) {
+	t.Parallel()
+
+	logger := loggerPkg.GetNopLogger()
+	client := NewStubDatabaseClient()
+	database := NewDatabase(*logger, configPkg.DatabaseConfig{})
+	database.SetClient(client)
+
+	client.Mock.
+		ExpectQuery("SELECT value FROM data").
+		WillReturnRows(sqlmock.NewRows([]string{"value"}).FromCSVString("value"))
+
+	_, err := database.GetLastSnapshot("chain")
+	require.Error(t, err)
+	require.ErrorContains(t, err, "invalid character 'v' looking for beginning of value")
+}
+
+func TestDatabaseGetSnapshotOk(t *testing.T) {
+	t.Parallel()
+
+	logger := loggerPkg.GetNopLogger()
+	client := NewStubDatabaseClient()
+	database := NewDatabase(*logger, configPkg.DatabaseConfig{})
+	database.SetClient(client)
+
+	snapshot := &snapshotPkg.Info{
+		Height:   123,
+		Snapshot: snapshotPkg.Snapshot{},
+	}
+
+	snapshotBytes, err := json.Marshal(snapshot)
+	require.NoError(t, err)
+
+	client.Mock.
+		ExpectQuery("SELECT value FROM data").
+		WillReturnRows(sqlmock.NewRows([]string{"value"}).AddRow(string(snapshotBytes)))
+
+	result, err := database.GetLastSnapshot("chain")
+	require.NoError(t, err)
+	require.Equal(t, snapshot, result)
 }

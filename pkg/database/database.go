@@ -307,9 +307,9 @@ func (d *Database) GetLastSnapshot(chain string) (*snapshotPkg.Info, error) {
 	}
 
 	var snapshot snapshotPkg.Info
-	if err := json.Unmarshal(rawData, &snapshot); err != nil {
-		d.logger.Error().Err(err).Msg("Could not unmarshal snapshot")
-		return nil, err
+	if unmarshallErr := json.Unmarshal(rawData, &snapshot); unmarshallErr != nil {
+		d.logger.Error().Err(unmarshallErr).Msg("Could not unmarshal snapshot")
+		return nil, unmarshallErr
 	}
 
 	return &snapshot, nil
