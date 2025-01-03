@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/DATA-DOG/go-sqlmock"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -194,4 +196,38 @@ func TestDatabaseInsertEventOk(t *testing.T) {
 		Validator: &types.Validator{OperatorAddress: "validator"},
 	})
 	require.NoError(t, err)
+}
+
+func TestDatabaseGetValueByKeyFail(t *testing.T) {
+	t.Parallel()
+
+	logger := loggerPkg.GetNopLogger()
+	client := NewStubDatabaseClient()
+	database := NewDatabase(*logger, configPkg.DatabaseConfig{})
+	database.SetClient(client)
+
+	client.Mock.
+		ExpectQuery("SELECT value FROM data").
+		WillReturnError(errors.New("custom error"))
+
+	_, err := database.GetValueByKey("chain", "key")
+	require.Error(t, err)
+	require.ErrorContains(t, err, "custom error")
+}
+
+func TestDatabaseGetValueByKeyOk(t *testing.T) {
+	t.Parallel()
+
+	logger := loggerPkg.GetNopLogger()
+	client := NewStubDatabaseClient()
+	database := NewDatabase(*logger, configPkg.DatabaseConfig{})
+	database.SetClient(client)
+
+	client.Mock.
+		ExpectQuery("SELECT value FROM data").
+		WillReturnRows(sqlmock.NewRows([]string{"value"}).FromCSVString("value"))
+
+	result, err := database.GetValueByKey("chain", "key")
+	require.NoError(t, err)
+	require.Equal(t, []byte("value"), result)
 }

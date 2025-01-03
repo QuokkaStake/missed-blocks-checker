@@ -1,10 +1,21 @@
 package database
 
-import "database/sql"
+import (
+	"database/sql"
+
+	"github.com/DATA-DOG/go-sqlmock"
+)
 
 type StubDatabaseClient struct {
 	MigrateError error
 	ExecError    error
+	Client       *sql.DB
+	Mock         sqlmock.Sqlmock
+}
+
+func NewStubDatabaseClient() *StubDatabaseClient {
+	db, mock, _ := sqlmock.New()
+	return &StubDatabaseClient{Client: db, Mock: mock}
 }
 
 type StubSQLResult struct{}
@@ -26,7 +37,7 @@ func (d *StubDatabaseClient) Query(query string, args ...any) (*sql.Rows, error)
 }
 
 func (d *StubDatabaseClient) QueryRow(query string, args ...any) *sql.Row {
-	return nil
+	return d.Client.QueryRow(query, args...)
 }
 
 func (d *StubDatabaseClient) Migrate() error {
