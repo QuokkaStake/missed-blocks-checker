@@ -4,6 +4,7 @@ import "database/sql"
 
 type StubDatabaseClient struct {
 	MigrateError error
+	ExecError    error
 }
 
 type StubSQLResult struct{}
@@ -17,7 +18,7 @@ func (s *StubSQLResult) RowsAffected() (int64, error) {
 }
 
 func (d *StubDatabaseClient) Exec(query string, args ...any) (sql.Result, error) {
-	return &StubSQLResult{}, d.MigrateError
+	return &StubSQLResult{}, d.ExecError
 }
 
 func (d *StubDatabaseClient) Query(query string, args ...any) (*sql.Rows, error) {

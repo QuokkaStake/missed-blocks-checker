@@ -6,6 +6,7 @@ import (
 	"main/pkg/constants"
 	snapshotPkg "main/pkg/snapshot"
 	"main/pkg/types"
+	"main/pkg/utils"
 	"sync"
 	"time"
 
@@ -69,19 +70,10 @@ func (d *Database) InsertBlock(chain string, block *types.Block) error {
 	d.MaybeMutexLock()
 	defer d.MaybeMutexUnlock()
 
-	signaturesBytes, err := json.Marshal(block.Signatures)
-	if err != nil {
-		d.logger.Error().Err(err).Msg("Error marshaling signatures")
-		return err
-	}
+	signaturesBytes := utils.MustJSONMarshall(block.Signatures)
+	validatorsBytes := utils.MustJSONMarshall(block.Validators)
 
-	validatorsBytes, err := json.Marshal(block.Validators)
-	if err != nil {
-		d.logger.Error().Err(err).Msg("Error marshaling validators")
-		return err
-	}
-
-	_, err = d.client.Exec(
+	_, err := d.client.Exec(
 		"INSERT INTO blocks (chain, height, time, proposer, signatures, validators) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING",
 		chain,
 		block.Height,
@@ -324,11 +316,7 @@ func (d *Database) GetLastSnapshot(chain string) (*snapshotPkg.Info, error) {
 }
 
 func (d *Database) SetSnapshot(chain string, snapshot *snapshotPkg.Info) error {
-	rawData, err := json.Marshal(snapshot)
-	if err != nil {
-		d.logger.Error().Err(err).Msg("Could not marshal snapshot")
-		return err
-	}
+	rawData := utils.MustJSONMarshall(snapshot)
 
 	if err := d.SetValueByKey(chain, "snapshot", rawData); err != nil {
 		d.logger.Error().Err(err).Msg("Could not save snapshot")
@@ -342,13 +330,9 @@ func (d *Database) InsertEvent(chain string, height int64, entry types.ReportEve
 	d.MaybeMutexLock()
 	defer d.MaybeMutexUnlock()
 
-	payloadBytes, err := json.Marshal(entry)
-	if err != nil {
-		d.logger.Error().Err(err).Msg("Error marshaling payload for event")
-		return err
-	}
+	payloadBytes := utils.MustJSONMarshall(entry)
 
-	_, err = d.client.Exec(
+	_, err := d.client.Exec(
 		"INSERT INTO events (chain, event, height, validator, payload, time) VALUES ($1, $2, $3, $4, $5, NOW())",
 		chain,
 		entry.Type(),
