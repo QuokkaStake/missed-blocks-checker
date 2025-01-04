@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math"
 	"math/rand"
@@ -224,4 +225,13 @@ func MinInt64(a, b int64) int64 {
 	}
 
 	return a
+}
+
+func MustJSONMarshall(v any) []byte {
+	bytes, err := json.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+
+	return bytes
 }
