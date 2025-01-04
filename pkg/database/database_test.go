@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	configPkg "main/pkg/config"
+	"main/pkg/constants"
 	"main/pkg/events"
 	loggerPkg "main/pkg/logger"
 	snapshotPkg "main/pkg/snapshot"
 	"main/pkg/types"
+	"main/pkg/utils"
 	"testing"
 	"time"
 
@@ -290,4 +292,171 @@ func TestDatabaseGetSnapshotOk(t *testing.T) {
 	result, err := database.GetLastSnapshot("chain")
 	require.NoError(t, err)
 	require.Equal(t, snapshot, result)
+}
+
+func TestDatabaseGetNotifiersFail(t *testing.T) {
+	t.Parallel()
+
+	logger := loggerPkg.GetNopLogger()
+	client := NewStubDatabaseClient()
+	database := NewDatabase(*logger, configPkg.DatabaseConfig{})
+	database.SetClient(client)
+
+	client.Mock.
+		ExpectQuery("SELECT operator_address, reporter, user_id, user_name FROM notifiers").
+		WillReturnError(errors.New("custom error"))
+
+	_, err := database.GetAllNotifiers("chain")
+	require.Error(t, err)
+	require.ErrorContains(t, err, "custom error")
+}
+
+func TestDatabaseGetNotifiersOk(t *testing.T) {
+	t.Parallel()
+
+	logger := loggerPkg.GetNopLogger()
+	client := NewStubDatabaseClient()
+	database := NewDatabase(*logger, configPkg.DatabaseConfig{})
+	database.SetClient(client)
+
+	rows := sqlmock.NewRows([]string{"operator_address", "reporter", "user_id", "user_name"}).
+		AddRow("operator1", "telegram", "123", "username").
+		AddRow("operator2", "telegram", "123", "username")
+
+	client.Mock.
+		ExpectQuery("SELECT operator_address, reporter, user_id, user_name FROM notifiers").
+		WillReturnRows(rows)
+
+	result, err := database.GetAllNotifiers("chain")
+	require.NoError(t, err)
+	require.Equal(t, &types.Notifiers{
+		{OperatorAddress: "operator1", Reporter: "telegram", UserID: "123", UserName: "username"},
+		{OperatorAddress: "operator2", Reporter: "telegram", UserID: "123", UserName: "username"},
+	}, result)
+}
+
+func TestDatabaseGetAllBlocksFail(t *testing.T) {
+	t.Parallel()
+
+	logger := loggerPkg.GetNopLogger()
+	client := NewStubDatabaseClient()
+	database := NewDatabase(*logger, configPkg.DatabaseConfig{})
+	database.SetClient(client)
+
+	client.Mock.
+		ExpectQuery("SELECT height, time, proposer, signatures, validators FROM blocks").
+		WillReturnError(errors.New("custom error"))
+
+	_, err := database.GetAllBlocks("chain")
+	require.Error(t, err)
+	require.ErrorContains(t, err, "custom error")
+}
+
+func TestDatabaseGetBlocksFailToUnmarshal(t *testing.T) {
+	t.Parallel()
+
+	logger := loggerPkg.GetNopLogger()
+	client := NewStubDatabaseClient()
+	database := NewDatabase(*logger, configPkg.DatabaseConfig{})
+	database.SetClient(client)
+
+	rows := sqlmock.NewRows([]string{"height", "time", "proposer", "signatures", "validators"}).
+		AddRow("123", time.Now().Unix(), "proposer", "invalid", "invalid")
+
+	client.Mock.
+		ExpectQuery("SELECT height, time, proposer, signatures, validators FROM blocks").
+		WillReturnRows(rows)
+
+	result, err := database.GetAllBlocks("chain")
+	require.NoError(t, err)
+	require.Len(t, result, 1)
+
+	block, ok := result[123]
+	require.True(t, ok)
+	require.Empty(t, block.Validators)
+	require.Empty(t, block.Signatures)
+}
+
+func TestDatabaseGetBlocksOk(t *testing.T) {
+	t.Parallel()
+
+	logger := loggerPkg.GetNopLogger()
+	client := NewStubDatabaseClient()
+	database := NewDatabase(*logger, configPkg.DatabaseConfig{Type: constants.DatabaseTypeSqlite})
+	database.SetClient(client)
+
+	blockTime := time.Now().Round(time.Second)
+
+	rows := sqlmock.NewRows([]string{"height", "time", "proposer", "signatures", "validators"}).
+		AddRow(
+			"123", blockTime.Unix(),
+			"proposer",
+			utils.MustJSONMarshall(map[string]int32{"validator": 2}),
+			utils.MustJSONMarshall(map[string]bool{"validator": true}),
+		)
+
+	client.Mock.
+		ExpectQuery("SELECT height, time, proposer, signatures, validators FROM blocks").
+		WillReturnRows(rows)
+
+	result, err := database.GetAllBlocks("chain")
+	require.NoError(t, err)
+	require.Len(t, result, 1)
+
+	block, ok := result[123]
+	require.True(t, ok)
+	require.Equal(t, &types.Block{
+		Height:     123,
+		Time:       blockTime,
+		Proposer:   "proposer",
+		Signatures: map[string]int32{"validator": 2},
+		Validators: map[string]bool{"validator": true},
+	}, block)
+}
+
+func TestDatabaseInitSqlite(t *testing.T) {
+	t.Parallel()
+
+	logger := loggerPkg.GetNopLogger()
+	database := NewDatabase(*logger, configPkg.DatabaseConfig{
+		Type: constants.DatabaseTypeSqlite,
+		Path: "/tmp/missed-blocks-checker-database.sqlite",
+	})
+	database.Init()
+
+	require.NotNil(t, database.client)
+}
+
+func TestDatabaseInitPostgres(t *testing.T) {
+	t.Parallel()
+
+	// invalid db connection, won't connect and panic
+	defer func() {
+		if r := recover(); r == nil {
+			require.Fail(t, "Expected to have a panic here!")
+		}
+	}()
+
+	logger := loggerPkg.GetNopLogger()
+	database := NewDatabase(*logger, configPkg.DatabaseConfig{
+		Type: constants.DatabaseTypePostgres,
+		Path: "postgres://postgres@localhost:8765/missed_blocks_checker?sslmode=disable",
+	})
+	database.Init()
+}
+
+func TestDatabaseInitUnsupported(t *testing.T) {
+	t.Parallel()
+
+	defer func() {
+		if r := recover(); r == nil {
+			require.Fail(t, "Expected to have a panic here!")
+		}
+	}()
+
+	logger := loggerPkg.GetNopLogger()
+	database := NewDatabase(*logger, configPkg.DatabaseConfig{
+		Type: "invalid",
+	})
+	database.Init()
 }

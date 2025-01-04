@@ -33,7 +33,7 @@ func (d *StubDatabaseClient) Exec(query string, args ...any) (sql.Result, error)
 }
 
 func (d *StubDatabaseClient) Query(query string, args ...any) (*sql.Rows, error) {
-	return nil, d.MigrateError
+	return d.Client.Query(query, args...)
 }
 
 func (d *StubDatabaseClient) QueryRow(query string, args ...any) *sql.Row {

@@ -107,7 +107,7 @@ func (d *Database) GetAllBlocks(chain string) (map[int64]*types.Block, error) {
 	}
 	defer func() {
 		_ = blocksRows.Close()
-		_ = blocksRows.Err() // or modify return value
+		_ = blocksRows.Err()
 	}()
 
 	for blocksRows.Next() {
@@ -127,12 +127,12 @@ func (d *Database) GetAllBlocks(chain string) (map[int64]*types.Block, error) {
 			return blocks, err
 		}
 
-		if err := json.Unmarshal(signaturesRaw, &signatures); err != nil {
-			d.logger.Error().Err(err).Msg("Error unmarshalling signatures")
+		if unmarshalErr := json.Unmarshal(signaturesRaw, &signatures); unmarshalErr != nil {
+			d.logger.Error().Err(unmarshalErr).Msg("Error unmarshalling signatures")
 		}
 
-		if err := json.Unmarshal(validatorsRaw, &validators); err != nil {
-			d.logger.Error().Err(err).Msg("Error unmarshalling validators")
+		if unmarshalErr := json.Unmarshal(validatorsRaw, &validators); unmarshalErr != nil {
+			d.logger.Error().Err(unmarshalErr).Msg("Error unmarshalling validators")
 		}
 
 		block := &types.Block{
@@ -181,7 +181,7 @@ func (d *Database) GetAllNotifiers(chain string) (*types.Notifiers, error) {
 	}
 	defer func() {
 		_ = rows.Close()
-		_ = rows.Err() // or modify return value
+		_ = rows.Err()
 	}()
 
 	for rows.Next() {
