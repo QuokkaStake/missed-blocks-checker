@@ -43,7 +43,7 @@ func TestMetricsManagerStartFail(t *testing.T) {
 }
 
 //nolint:paralleltest // disabled
-func TestAppLoadConfigOk(t *testing.T) {
+func TestMetricsManagerOk(t *testing.T) {
 	config := configPkg.MetricsConfig{Enabled: null.BoolFrom(true), ListenAddr: ":9570"}
 	logger := loggerPkg.GetNopLogger()
 	metricsManager := NewManager(*logger, config)
@@ -52,7 +52,9 @@ func TestAppLoadConfigOk(t *testing.T) {
 
 	for {
 		request, err := http.Get("http://localhost:9570/healthcheck")
-		_ = request.Body.Close()
+		if request != nil && request.Body != nil {
+			_ = request.Body.Close()
+		}
 		if err == nil {
 			break
 		}

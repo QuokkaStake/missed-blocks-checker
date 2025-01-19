@@ -52,6 +52,8 @@ const (
 
 	PopulatorSlashingParams = "slashing-params-populator"
 	PopulatorTrimDatabase   = "trim-database-populator"
+
+	LastEventsCount = 30
 )
 
 func GetEventNames() []EventName {

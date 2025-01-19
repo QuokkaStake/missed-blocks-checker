@@ -93,12 +93,17 @@ func (s statusRender) FormatVotingPower(entry statusEntry) string {
 	return fmt.Sprintf("%.2f%% VP", entry.Validator.VotingPowerPercent*100)
 }
 
-type jailsEntry struct {
+type renderedHistoricalEvent struct {
 	Height        int64
 	Time          time.Time
 	RenderedEvent template.HTML
 }
 
-func (j jailsEntry) FormatTime() string {
+func (j renderedHistoricalEvent) FormatTime() string {
 	return j.Time.Format(time.DateTime)
+}
+
+type eventsRender struct {
+	ValidatorLink types.Link
+	Events        []renderedHistoricalEvent
 }

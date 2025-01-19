@@ -220,6 +220,13 @@ func (m *Manager) FindLastEventsByType(eventTypes []constants.EventName) ([]type
 	)
 }
 
+func (m *Manager) FindLastEventsByValidator(operatorAddress string) ([]types.HistoricalEvent, error) {
+	return m.database.FindLastEventsByValidator(
+		m.config.Name,
+		operatorAddress,
+	)
+}
+
 func (m *Manager) GetValidators() types.ValidatorsMap {
 	return m.state.GetValidators()
 }

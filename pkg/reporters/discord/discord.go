@@ -92,6 +92,7 @@ func (reporter *Reporter) Init() {
 		"help":        reporter.GetHelpCommand(),
 		"notifiers":   reporter.GetNotifiersCommand(),
 		"jails":       reporter.GetJailsCommand(),
+		"events":      reporter.GetValidatorEventsCommand(),
 	}
 
 	for query := range reporter.Commands {

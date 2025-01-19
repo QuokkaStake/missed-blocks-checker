@@ -361,9 +361,70 @@ func (d *Database) FindLastEventsByType(
 	events := []types.HistoricalEvent{}
 
 	rows, err := d.client.Query(
-		"SELECT event, height, validator, payload, time FROM events WHERE event = any($1) AND chain = $2 ORDER BY time DESC LIMIT 20",
+		"SELECT event, height, validator, payload, time FROM events WHERE event = any($1) AND chain = $2 ORDER BY time DESC LIMIT $3",
 		pq.Array(eventTypes),
 		chain,
+		constants.LastEventsCount,
+	)
+	if err != nil {
+		d.logger.Error().Err(err).Msg("Error getting events by operator address and type")
+		return events, err
+	}
+	defer func() {
+		_ = rows.Close()
+		_ = rows.Err()
+	}()
+
+	for rows.Next() {
+		var (
+			validator string
+			eventType constants.EventName
+			height    int64
+			payload   []byte
+			eventTime time.Time
+		)
+
+		err = rows.Scan(&eventType, &height, &validator, &payload, &eventTime)
+		if err != nil {
+			d.logger.Error().Err(err).Msg("Error fetching historical event data")
+			return events, err
+		}
+
+		event := eventsPkg.MapEventTypesToEvent(eventType)
+		if unmarshallErr := json.Unmarshal(payload, &event); unmarshallErr != nil {
+			d.logger.Error().Err(unmarshallErr).Msg("Could not unmarshal event!")
+			return nil, unmarshallErr
+		}
+
+		newEvent := types.HistoricalEvent{
+			Chain:     chain,
+			Type:      eventType,
+			Height:    height,
+			Validator: validator,
+			Time:      eventTime,
+			Event:     event,
+		}
+
+		events = append(events, newEvent)
+	}
+
+	return events, nil
+}
+
+func (d *Database) FindLastEventsByValidator(
+	chain string,
+	operatorAddress string,
+) ([]types.HistoricalEvent, error) {
+	d.MaybeMutexLock()
+	defer d.MaybeMutexUnlock()
+
+	events := []types.HistoricalEvent{}
+
+	rows, err := d.client.Query(
+		"SELECT event, height, validator, payload, time FROM events WHERE validator = $1 AND chain = $2 ORDER BY time DESC LIMIT $3",
+		operatorAddress,
+		chain,
+		constants.LastEventsCount,
 	)
 	if err != nil {
 		d.logger.Error().Err(err).Msg("Error getting events by operator address and type")
