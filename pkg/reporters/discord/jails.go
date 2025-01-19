@@ -26,8 +26,8 @@ func (reporter *Reporter) GetJailsCommand() *Command {
 				return
 			}
 
-			jailsRendered := utils.Map(jailsRaw, func(j types.HistoricalEvent) jailsEntry {
-				return jailsEntry{
+			jailsRendered := utils.Map(jailsRaw, func(j types.HistoricalEvent) renderedHistoricalEvent {
+				return renderedHistoricalEvent{
 					Height: j.Height,
 					Time:   j.Time,
 					RenderedEvent: reporter.TemplatesManager.SerializeEvent(types.RenderEventItem{

@@ -105,12 +105,17 @@ type helpRender struct {
 	Commands map[string]*Command
 }
 
-type jailsEntry struct {
+type renderedHistoricalEvent struct {
 	Height        int64
 	Time          time.Time
 	RenderedEvent string
 }
 
-func (j jailsEntry) FormatTime() string {
+func (j renderedHistoricalEvent) FormatTime() string {
 	return j.Time.Format(time.DateTime)
+}
+
+type eventsRender struct {
+	ValidatorLink types.Link
+	Events        []renderedHistoricalEvent
 }

@@ -15,3 +15,4 @@ The bot can understand the following commands:
 - </params:{{ .Commands.params.Info.ID }}> - see the app config and chain params
 - </notifiers:{{ .Commands.notifiers.Info.ID }}> - see notifiers for each validator
 - </jails:{{ .Commands.jails.Info.ID }}> - see latest jails and tombstones events
+- </events:{{ .Commands.events.Info.ID }}> [validator address] - see latest events for a validator

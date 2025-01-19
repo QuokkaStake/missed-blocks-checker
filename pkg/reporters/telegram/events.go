@@ -44,12 +44,12 @@ func (reporter *Reporter) HandleValidatorEventsList(c tele.Context) error {
 		return reporter.BotReply(c, "Validator is not found!")
 	}
 
-	jailsRaw, err := reporter.Manager.FindLastEventsByValidator(address)
+	eventsRaw, err := reporter.Manager.FindLastEventsByValidator(address)
 	if err != nil {
 		return reporter.BotReply(c, "Error searching for historical events!")
 	}
 
-	eventsRendered := utils.Map(jailsRaw, func(j types.HistoricalEvent) renderedHistoricalEvent {
+	eventsRendered := utils.Map(eventsRaw, func(j types.HistoricalEvent) renderedHistoricalEvent {
 		return renderedHistoricalEvent{
 			Height: j.Height,
 			Time:   j.Time,
