@@ -235,3 +235,10 @@ func MustJSONMarshall(v any) []byte {
 
 	return bytes
 }
+
+func MustJSONUnmarshal(data []byte, v any) {
+	err := json.Unmarshal(data, v)
+	if err != nil {
+		panic(err)
+	}
+}

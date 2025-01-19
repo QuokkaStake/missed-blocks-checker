@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"fmt"
+	"html/template"
 	"main/pkg/config"
 	"main/pkg/types"
 	"main/pkg/utils"
@@ -90,4 +91,14 @@ func (s statusRender) FormatNotSignedPercent(entry statusEntry) string {
 
 func (s statusRender) FormatVotingPower(entry statusEntry) string {
 	return fmt.Sprintf("%.2f%% VP", entry.Validator.VotingPowerPercent*100)
+}
+
+type jailsEntry struct {
+	Height        int64
+	Time          time.Time
+	RenderedEvent template.HTML
+}
+
+func (j jailsEntry) FormatTime() string {
+	return j.Time.Format(time.DateTime)
 }

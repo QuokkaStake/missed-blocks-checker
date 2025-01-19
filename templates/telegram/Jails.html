@@ -1,0 +1,8 @@
+{{- if . }}
+<strong>Showing the last {{ len . }} entries:</strong>
+{{- range . }}
+{{ .FormatTime }}: {{ .RenderedEvent }}
+{{- end }}
+{{- else }}
+Nobody has been jailed since the app launch.
+{{- end }}

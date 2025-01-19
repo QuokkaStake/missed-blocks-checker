@@ -9,8 +9,6 @@ type PopulatorType string
 const (
 	NewBlocksQuery = "tm.event='NewBlock'"
 
-	ValidatorBonded int32 = 3
-
 	ValidatorSigned       = 2
 	ValidatorNilSignature = 3
 

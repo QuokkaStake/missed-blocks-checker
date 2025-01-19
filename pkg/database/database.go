@@ -4,11 +4,14 @@ import (
 	"encoding/json"
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
+	eventsPkg "main/pkg/events"
 	snapshotPkg "main/pkg/snapshot"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"sync"
 	"time"
+
+	"github.com/lib/pq"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog"
@@ -346,4 +349,60 @@ func (d *Database) InsertEvent(chain string, height int64, entry types.ReportEve
 	}
 
 	return nil
+}
+
+func (d *Database) FindLastEventsByType(
+	chain string,
+	eventTypes []constants.EventName,
+) ([]types.HistoricalEvent, error) {
+	d.MaybeMutexLock()
+	defer d.MaybeMutexUnlock()
+
+	events := []types.HistoricalEvent{}
+
+	rows, err := d.client.Query(
+		"SELECT event, height, validator, payload, time FROM events WHERE event = any($1) AND chain = $2 ORDER BY time DESC LIMIT 20",
+		pq.Array(eventTypes),
+		chain,
+	)
+	if err != nil {
+		d.logger.Error().Err(err).Msg("Error getting events by operator address and type")
+		return events, err
+	}
+	defer func() {
+		_ = rows.Close()
+		_ = rows.Err()
+	}()
+
+	for rows.Next() {
+		var (
+			validator string
+			eventType constants.EventName
+			height    int64
+			payload   []byte
+			eventTime time.Time
+		)
+
+		err = rows.Scan(&eventType, &height, &validator, &payload, &eventTime)
+		if err != nil {
+			d.logger.Error().Err(err).Msg("Error fetching historical event data")
+			return events, err
+		}
+
+		event := eventsPkg.MapEventTypesToEvent(eventType)
+		utils.MustJSONUnmarshal(payload, &event)
+
+		newEvent := types.HistoricalEvent{
+			Chain:     chain,
+			Type:      eventType,
+			Height:    height,
+			Validator: validator,
+			Time:      eventTime,
+			Event:     event,
+		}
+
+		events = append(events, newEvent)
+	}
+
+	return events, nil
 }
