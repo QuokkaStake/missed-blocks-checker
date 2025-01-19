@@ -138,6 +138,7 @@ notifiers - See notifiers for each validator
 params - See chain and config params
 config - See chain and config params
 jails - See latest jails and tombstones events
+events - See latest events for a validator
 ```
 
 Then add a Telegram config to your config file (see `config.example.toml` for reference).
