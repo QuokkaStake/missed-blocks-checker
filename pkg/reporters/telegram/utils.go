@@ -2,6 +2,8 @@ package telegram
 
 import (
 	"fmt"
+	"main/pkg/utils"
+	"strings"
 
 	tele "gopkg.in/telebot.v3"
 )
@@ -17,5 +19,10 @@ func (reporter *Reporter) ReplyRender(
 		return c.Reply(fmt.Sprintf("Error rendering template: %s", err))
 	}
 
-	return reporter.BotReply(c, template)
+	// to trim every string, mostly for tests
+	templateSplit := strings.Split(template, "\n")
+	templateTrimmed := utils.Map(templateSplit, strings.TrimSpace)
+	templateJoined := strings.Join(templateTrimmed, "\n")
+
+	return reporter.BotReply(c, templateJoined)
 }

@@ -460,3 +460,65 @@ func TestDatabaseInitUnsupported(t *testing.T) {
 	})
 	database.Init()
 }
+
+func TestDatabaseGetEventsByTypeFail(t *testing.T) {
+	t.Parallel()
+
+	logger := loggerPkg.GetNopLogger()
+	client := NewStubDatabaseClient()
+	database := NewDatabase(*logger, configPkg.DatabaseConfig{})
+	database.SetClient(client)
+
+	client.Mock.
+		ExpectQuery("SELECT event, height, validator, payload, time FROM events").
+		WillReturnError(errors.New("custom error"))
+
+	_, err := database.FindLastEventsByType("chain", constants.GetEventNames())
+	require.Error(t, err)
+	require.ErrorContains(t, err, "custom error")
+}
+
+func TestDatabaseGetEventsByTypeFailToUnmarshal(t *testing.T) {
+	t.Parallel()
+
+	logger := loggerPkg.GetNopLogger()
+	client := NewStubDatabaseClient()
+	database := NewDatabase(*logger, configPkg.DatabaseConfig{})
+	database.SetClient(client)
+
+	client.Mock.
+		ExpectQuery("SELECT event, height, validator, payload, time FROM events").
+		WillReturnRows(sqlmock.
+			NewRows([]string{"event", "height", "validator", "payload", "time"}).
+			AddRow("test", 123, "test", "test", time.Now()),
+		)
+
+	_, err := database.FindLastEventsByType("chain", constants.GetEventNames())
+	require.Error(t, err)
+	require.ErrorContains(t, err, "invalid character 'e' in literal")
+}
+
+func TestDatabaseGetEventsByTypeOk(t *testing.T) {
+	t.Parallel()
+
+	logger := loggerPkg.GetNopLogger()
+	client := NewStubDatabaseClient()
+	database := NewDatabase(*logger, configPkg.DatabaseConfig{})
+	database.SetClient(client)
+
+	client.Mock.
+		ExpectQuery("SELECT event, height, validator, payload, time FROM events").
+		WillReturnRows(sqlmock.
+			NewRows([]string{"event", "height", "validator", "payload", "time"}).
+			AddRow(
+				constants.EventValidatorActive,
+				123,
+				"validator",
+				utils.MustJSONMarshall(events.ValidatorActive{Validator: &types.Validator{}}),
+				time.Now(),
+			),
+		)
+
+	_, err := database.FindLastEventsByType("chain", constants.GetEventNames())
+	require.NoError(t, err)
+}

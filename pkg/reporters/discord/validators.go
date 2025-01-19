@@ -17,7 +17,7 @@ func (reporter *Reporter) GetValidatorsCommand() *Command {
 			Description: "Get the list of all validators and their missing blocks",
 		},
 		Handler: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.TelegramReporterName, "validators")
+			reporter.MetricsManager.LogReporterQuery(reporter.Config.Name, constants.DiscordReporterName, "validators")
 
 			snapshot, found := reporter.SnapshotManager.GetNewerSnapshot()
 			if !found {

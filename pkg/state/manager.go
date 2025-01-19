@@ -213,6 +213,13 @@ func (m *Manager) GetValidator(operatorAddress string) (*types.Validator, bool) 
 	return m.state.GetValidator(operatorAddress)
 }
 
+func (m *Manager) FindLastEventsByType(eventTypes []constants.EventName) ([]types.HistoricalEvent, error) {
+	return m.database.FindLastEventsByType(
+		m.config.Name,
+		eventTypes,
+	)
+}
+
 func (m *Manager) GetValidators() types.ValidatorsMap {
 	return m.state.GetValidators()
 }
