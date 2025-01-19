@@ -104,3 +104,13 @@ type helpRender struct {
 	Version  string
 	Commands map[string]*Command
 }
+
+type jailsEntry struct {
+	Height        int64
+	Time          time.Time
+	RenderedEvent string
+}
+
+func (j jailsEntry) FormatTime() string {
+	return j.Time.Format(time.DateTime)
+}

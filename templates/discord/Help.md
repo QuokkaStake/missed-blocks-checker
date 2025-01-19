@@ -14,3 +14,4 @@ The bot can understand the following commands:
 - </validators:{{ .Commands.validators.Info.ID }}> - see the missed blocks counter of all validators
 - </params:{{ .Commands.params.Info.ID }}> - see the app config and chain params
 - </notifiers:{{ .Commands.notifiers.Info.ID }}> - see notifiers for each validator
+- </jails:{{ .Commands.jails.Info.ID }}> - see latest jails and tombstones events
