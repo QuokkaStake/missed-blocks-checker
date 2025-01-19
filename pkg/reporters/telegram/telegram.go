@@ -110,6 +110,7 @@ func (reporter *Reporter) Init() {
 	bot.Handle("/params", reporter.HandleParams)
 	bot.Handle("/config", reporter.HandleParams)
 	bot.Handle("/jails", reporter.HandleJailsList)
+	bot.Handle("/events", reporter.HandleValidatorEventsList)
 
 	reporter.TelegramBot = bot
 }

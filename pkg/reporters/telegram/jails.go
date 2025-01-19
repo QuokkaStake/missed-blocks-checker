@@ -25,8 +25,8 @@ func (reporter *Reporter) HandleJailsList(c tele.Context) error {
 		return reporter.BotReply(c, "Error searching for historical events!")
 	}
 
-	jailsRendered := utils.Map(jailsRaw, func(j types.HistoricalEvent) jailsEntry {
-		return jailsEntry{
+	jailsRendered := utils.Map(jailsRaw, func(j types.HistoricalEvent) renderedHistoricalEvent {
+		return renderedHistoricalEvent{
 			Height: j.Height,
 			Time:   j.Time,
 			RenderedEvent: template.HTML(reporter.TemplatesManager.SerializeEvent(types.RenderEventItem{
