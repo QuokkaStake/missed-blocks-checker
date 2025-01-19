@@ -18,6 +18,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
+const MaxMessageSize = 2000
+
 type Reporter struct {
 	Token   string
 	Guild   string
@@ -240,17 +242,32 @@ func (reporter *Reporter) Send(report *types.Report) error {
 
 	reportString := sb.String()
 
-	reporter.Logger.Trace().Str("report", reportString).Msg("Sending a report")
+	chunks := utils.SplitStringIntoChunks(reportString, MaxMessageSize)
 
-	_, err := reporter.DiscordSession.ChannelMessageSend(
-		reporter.Channel,
-		reportString,
-	)
-	return err
+	reporter.Logger.Trace().
+		Str("report", reportString).
+		Int("chunks", len(chunks)).
+		Msg("Sending a report")
+
+	for _, chunk := range chunks {
+		_, err := reporter.DiscordSession.ChannelMessageSend(
+			reporter.Channel,
+			strings.TrimSpace(chunk),
+		)
+		if err != nil {
+			reporter.Logger.Error().
+				Err(err).
+				Str("chunk", chunk).
+				Msg("Could not send report chunk")
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (reporter *Reporter) BotRespond(s *discordgo.Session, i *discordgo.InteractionCreate, text string) {
-	chunks := utils.SplitStringIntoChunks(text, 2000)
+	chunks := utils.SplitStringIntoChunks(text, MaxMessageSize)
 	firstChunk, rest := chunks[0], chunks[1:]
 
 	if err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
