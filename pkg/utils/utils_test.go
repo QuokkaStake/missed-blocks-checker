@@ -296,24 +296,3 @@ func TestMustMarshallOk(t *testing.T) {
 	bytes := MustJSONMarshall(map[string]string{"key": "value"})
 	require.JSONEq(t, "{\"key\":\"value\"}", string(bytes))
 }
-
-func TestMustUnmarshallFail(t *testing.T) {
-	t.Parallel()
-
-	defer func() {
-		if r := recover(); r == nil {
-			require.Fail(t, "Expected to have a panic here!")
-		}
-	}()
-
-	out := map[string]string{}
-	MustJSONUnmarshal([]byte("123"), &out)
-}
-
-func TestMustUnmarshallOk(t *testing.T) {
-	t.Parallel()
-
-	out := map[string]string{}
-	MustJSONUnmarshal([]byte("{\"key\":\"value\"}"), &out)
-	require.Equal(t, map[string]string{"key": "value"}, out)
-}

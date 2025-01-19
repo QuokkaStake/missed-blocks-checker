@@ -390,7 +390,10 @@ func (d *Database) FindLastEventsByType(
 		}
 
 		event := eventsPkg.MapEventTypesToEvent(eventType)
-		utils.MustJSONUnmarshal(payload, &event)
+		if unmarshallErr := json.Unmarshal(payload, &event); unmarshallErr != nil {
+			d.logger.Error().Err(unmarshallErr).Msg("Could not unmarshal event!")
+			return nil, unmarshallErr
+		}
 
 		newEvent := types.HistoricalEvent{
 			Chain:     chain,
