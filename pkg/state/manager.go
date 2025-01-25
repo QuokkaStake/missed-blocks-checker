@@ -227,6 +227,10 @@ func (m *Manager) FindLastEventsByValidator(operatorAddress string) ([]types.His
 	)
 }
 
+func (m *Manager) FindAllJailsCount() ([]types.ValidatorWithJailsCount, error) {
+	return m.database.FindAllJailsCount(m.config.Name)
+}
+
 func (m *Manager) GetValidators() types.ValidatorsMap {
 	return m.state.GetValidators()
 }

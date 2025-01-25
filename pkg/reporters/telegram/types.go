@@ -107,3 +107,8 @@ type eventsRender struct {
 	ValidatorLink types.Link
 	Events        []renderedHistoricalEvent
 }
+
+type renderedJailsCount struct {
+	ValidatorLink types.Link
+	JailsCount    int
+}

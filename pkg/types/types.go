@@ -34,3 +34,8 @@ func (validatorsMap ValidatorsMap) ToSlice() Validators {
 
 	return validators
 }
+
+type ValidatorWithJailsCount struct {
+	Validator  string
+	JailsCount int
+}
