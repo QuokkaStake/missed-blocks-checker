@@ -20,7 +20,7 @@ func (reporter *Reporter) HandleJailsCount(c tele.Context) error {
 			Str("sender", c.Sender().Username).
 			Str("text", c.Text()).
 			Msg("No older snapshot on telegram events query!")
-		return reporter.BotReply(c, "Error getting validator events!")
+		return reporter.BotReply(c, "Error getting validators jails!")
 	}
 
 	jailsCount, err := reporter.Manager.FindAllJailsCount()

@@ -478,7 +478,7 @@ func (d *Database) FindAllJailsCount(chain string) ([]types.ValidatorWithJailsCo
 	jailsCount := []types.ValidatorWithJailsCount{}
 
 	rows, err := d.client.Query(
-		"SELECT validator, count(*) from events where chain = $1 AND event = $2 GROUP BY chain, validator ORDER BY count DESC",
+		"SELECT validator, count(*) from events WHERE chain = $1 AND event = $2 GROUP BY chain, validator ORDER BY count DESC",
 		chain,
 		constants.EventValidatorJailed,
 	)
