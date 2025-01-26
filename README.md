@@ -139,7 +139,7 @@ params - See chain and config params
 config - See chain and config params
 jails - See latest jails and tombstones events
 events - See latest events for a validator
-jailscount - see jails count for each validator since the app was started
+jailscount - See jails count for each validator since the app was started
 ```
 
 Then add a Telegram config to your config file (see `config.example.toml` for reference).
