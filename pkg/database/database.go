@@ -470,3 +470,44 @@ func (d *Database) FindLastEventsByValidator(
 
 	return events, nil
 }
+
+func (d *Database) FindAllJailsCount(chain string) ([]types.ValidatorWithJailsCount, error) {
+	d.MaybeMutexLock()
+	defer d.MaybeMutexUnlock()
+
+	jailsCount := []types.ValidatorWithJailsCount{}
+
+	rows, err := d.client.Query(
+		"SELECT validator, count(*) from events WHERE chain = $1 AND event = $2 GROUP BY chain, validator ORDER BY count DESC",
+		chain,
+		constants.EventValidatorJailed,
+	)
+	if err != nil {
+		d.logger.Error().Err(err).Msg("Error getting events by operator address and type")
+		return jailsCount, err
+	}
+	defer func() {
+		_ = rows.Close()
+		_ = rows.Err()
+	}()
+
+	for rows.Next() {
+		var (
+			validator string
+			count     int
+		)
+
+		err = rows.Scan(&validator, &count)
+		if err != nil {
+			d.logger.Error().Err(err).Msg("Error fetching jails count")
+			return jailsCount, err
+		}
+
+		jailsCount = append(jailsCount, types.ValidatorWithJailsCount{
+			Validator:  validator,
+			JailsCount: count,
+		})
+	}
+
+	return jailsCount, nil
+}

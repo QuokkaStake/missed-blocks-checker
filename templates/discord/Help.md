@@ -16,3 +16,4 @@ The bot can understand the following commands:
 - </notifiers:{{ .Commands.notifiers.Info.ID }}> - see notifiers for each validator
 - </jails:{{ .Commands.jails.Info.ID }}> - see latest jails and tombstones events
 - </events:{{ .Commands.events.Info.ID }}> [validator address] - see latest events for a validator
+- </jailscount:{{ .Commands.jailscount.Info.ID }}> - see jails count for each validator since the app was started

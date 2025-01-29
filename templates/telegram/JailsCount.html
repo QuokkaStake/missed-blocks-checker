@@ -1,0 +1,8 @@
+{{- if . }}
+<strong>Validators jails count observed by the app:</strong>
+{{- range . }}
+- {{ SerializeLink .ValidatorLink }}: {{ .JailsCount }}
+{{- end }}
+{{- else }}
+Nobody has been jailed since the app launch.
+{{- end }}
