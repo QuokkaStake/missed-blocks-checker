@@ -46,8 +46,17 @@ func (rpc *RPC) GetBlock(height int64) (*responses.SingleBlockResponse, error) {
 	var blockResponse responses.SingleBlockResponse
 	if err := rpc.Get(queryURL, constants.QueryTypeBlock, &blockResponse, rpc.clients, func(v interface{}) error {
 		response, _ := v.(*responses.SingleBlockResponse)
+
+		if response == nil {
+			return errors.New("malformed result of block: result is nil")
+		}
+
 		if response.Error != nil {
 			return fmt.Errorf("error in Tendermint response: %s", response.Error.Data)
+		}
+
+		if response.Result == nil {
+			return errors.New("malformed result of block: result is not present")
 		}
 
 		if response.Result.Block.Header.Height == "" {
