@@ -78,7 +78,7 @@ func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 		if err := rpc.Get(queryURL, constants.QueryTypeHistoricalValidators, &validatorsResponse, rpc.clients, func(v interface{}) error {
 			response, _ := v.(*responses.ValidatorsResponse)
 
-			if response != nil {
+			if response == nil {
 				return errors.New("malformed result of validators active set: response is nil")
 			}
 
