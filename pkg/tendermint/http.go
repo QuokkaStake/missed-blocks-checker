@@ -95,6 +95,10 @@ func (rpc *RPC) GetActiveSetAtBlock(height int64) (map[string]bool, error) {
 				return fmt.Errorf("error in Tendermint response: %s", response.Error.Data)
 			}
 
+			if response.Result == nil {
+				return errors.New("malformed result of validators active set: got no result")
+			}
+
 			if len(response.Result.Validators) == 0 {
 				return errors.New("malformed result of validators active set: got 0 validators")
 			}
